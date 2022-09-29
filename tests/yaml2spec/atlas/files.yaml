@@ -1,0 +1,28 @@
+files: |
+        %doc doc/README.dist
+        %dir %{_libdir}/atlas
+        %{_libdir}/atlas/*.so.*
+        %config(noreplace) /etc/ld.so.conf.d/atlas-%{_arch}.conf
+
+subpackage.devel.files: |
+        %doc doc
+        %{_libdir}/atlas/*.so
+        %{_libdir}/atlas/*.a
+        %{_includedir}/atlas-%{_arch}-base/
+        %{_includedir}/*.h
+        %ghost %{_includedir}/atlas
+        %{_libdir}/pkgconfig/atlas.pc
+
+subpackage.corei2.files rpmWhen %ifarch x86_64: |
+        %doc doc/README.dist
+        %dir %{_libdir}/atlas-corei2
+        %{_libdir}/atlas-corei2/*.so.*
+        %config(noreplace) /etc/ld.so.conf.d/atlas-%{_arch}-corei2.conf
+
+subpackage.corei2-devel.files rpmWhen %ifarch x86_64: |
+        %doc doc
+        %{_libdir}/atlas-corei2/*.so
+        %{_libdir}/atlas-corei2/*.a
+        %{_includedir}/atlas-%{_arch}-corei2/
+        %{_includedir}/*.h
+        %ghost %{_includedir}/atlas

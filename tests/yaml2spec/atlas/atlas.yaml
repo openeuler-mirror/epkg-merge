@@ -1,0 +1,85 @@
+rpmMacros:
+    - "%global _hardened_build 1"
+    - "%define types base"
+name: atlas
+version: 3.10.3
+release: 11
+meta.summary: Automatically Tuned Linear Algebra Software
+meta.license: BSD
+meta.homepage: "http://math-atlas.sourceforge.net/"
+source:
+        0: http://downloads.sourceforge.net/math-atlas/%{name}%{version}.tar.bz2
+        1: PPRO32.tgz
+        2: README.dist
+        3: POWER332.tar.bz2
+        4: IBMz932.tar.bz2
+        5: IBMz964.tar.bz2
+        6: ARMv732NEON.tar.bz2
+        7: IBMz1264.tar.bz2
+        8: ARMa732.tar.bz2
+patchset:
+        0: atlas-melf.patch
+        1: atlas-shared_libraries.patch
+        2: atlas-genparse.patch
+        3: atlas.3.10.1-unbundle.patch
+        4: 0001-sed-tune-macro-value-to-repair-binary-diffence.patch
+        5: atl-date-to-eliminate-difference.patch
+        6: ret-iaff-to-eliminate-difference.patch
+        7: mv-res-taffinity.patch
+        8: atlas-compatible-with-hcc.patch
+        9: 0001-fix-gcc-version-check.patch
+        10: atlas-riscv64-port.patch
+meta.description: |
+    The ATLAS (Automatically Tuned Linear Algebra Software) project is an
+    ongoing research effort focusing on applying empirical techniques in
+    order to provide portable performance. At present, it provides C and
+    Fortran77 interfaces to a portably efficient BLAS implementation, as
+    well as a few routines from LAPACK
+buildRequires:
+    - "gcc-gfortran, lapack-devel, gcc"
+obsoletes:
+    - "atlas-sse3 < 3.10.3-1 %ifarch x86_64"
+
+subpackage:
+  devel:
+      meta.summary: Development libraries for ATLAS
+      meta.description: |
+          This package contains headers and static librariesfor development with
+          ATLAS (Automatically Tuned Linear Algebra Software).
+      requires:
+          - "%{name} = %{version}-%{release}"
+          - "(posttrans):chkconfig"
+          - "(postun):chkconfig"
+      provides:
+          - "%{name}-static = %{version}-%{release}"
+      obsoletes:
+          - "%{name}-header <= %{version}-%{release}"
+          - "%{name}-static < %{version}-%{release}"
+          - "atlas-sse3-devel < 3.10.3-1 %ifarch x86_64"
+          - "atlas-sse3-static < 3.10.3-1 %ifarch x86_64"
+
+  corei2 rpmWhen %ifarch x86_64:
+      rpmMacros:
+          - "%define types base corei2 %ifarch x86_64"
+      meta.ummary: ATLAS libraries for Corei2 (Ivy/Sandy bridge) CPUs 
+      meta.description: |
+          This package contains the ATLAS (Automatically Tuned Linear Algebra
+          Software) libraries compiled with optimizations for the Corei2 (Ivy/Sandy bridge)
+          CPUs.
+          The base ATLAS builds for the x86_64 architecture are made for the hammer64 CPUs.
+
+  corei2-devel rpmWhen %ifarch x86_64:
+      meta.summary: ATLAS development libraries for ATLAS for Corei2 (Ivy/Sandy bridge) CPUs 
+      meta.description: |
+          This package contains shared and static versions of the ATLAS libraries compiled with
+          optimizations for the corei2 (Ivy/Sandy bridge) CPUs.
+          The base ATLAS builds for the x86_64 architecture are made for the hammer64 CPUs.
+      requires:
+          - "%{name}-corei2 = %{version}-%{release} "
+          - "(posttrans):chkconfig"
+          - "(postun):chkconfig"
+      provides:
+          - "%{name}-corei2-static = %{version}-%{release} "
+      obsoletes:
+          - "%{name}-header <= %{version}-%{release} "
+          - "%{name}-corei2-static < %{version}-%{release} "
