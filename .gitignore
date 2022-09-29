@@ -1,0 +1,9 @@
+# pycharm
+.idea/
+.DS_Store
+
+__pycharm__/
+*.py[cod]
+*$py.class
+*.pyc
+configs/
