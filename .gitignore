@@ -7,3 +7,4 @@ __pycharm__/
 *$py.class
 *.pyc
 configs/
+*.txt
