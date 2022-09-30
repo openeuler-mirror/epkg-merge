@@ -15,14 +15,27 @@ input:
 output:
     value: 返回替换后的str_macro
 
-"""
+
+
+```mermaid
+sequenceDiagram
+yamlloader->>expand_macro: 请求宏扩展
+expand_macro->>expand_macro: 提取%%key，d.key的元素内容
+expand_macro->>config-space: 获取$key的value
+config-space-->>expand_macro: 返回value
+expand_macro->>expand_macro: 替换%%key，d.key元素
+expand_macro-->>yamlloader: 返回扩展完成的内容
+
+```
+
 def expand_macro(str_macro):
-    # import re，正则匹配
-    keys = re 匹配到的内容
-    sub_values = {}
-    for key in keys:
-        sub_values[key] = config_space.get(key) 
-    return substitute(str_macro, sub_values)
+
+// import re，正则匹配
+​    keys = re 匹配到的内容
+​    sub_values = {}
+​    for key in keys:
+​        sub_values[key] = config_space.get(key) 
+​    return substitute(str_macro, sub_values)
 
 def substitute(str_macro, sub_values):
     # 将%%{} %%%{} d.xxx, dd.xxx的字符串 替换为sub_values对应的值

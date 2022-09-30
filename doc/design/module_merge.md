@@ -18,6 +18,26 @@ input:
 output:
     value: 返回合入后的值
 
+
+
+```mermaid
+sequenceDiagram
+config-space->>merge_values: 请求合并特定key的values
+merge_values->>evaluate_when: 计算所有when条件满足的values
+evaluate_when->>expand_macro: 扩展宏
+expand_macro-->>evaluate_when: 返回宏扩展
+evaluate_when->>python_interpreter: 获取结果
+python_interpreter-->>evaluate_when: 返回结果
+evaluate_when-->>merge_values: 返回满足条件的values
+merge_values->merge_values: 对values进行排序
+merge_values->merge_lib: 获取merge策略
+merge_lib-->merge_values: 返回merge策略
+merge_values->>merge_values: 执行merge策略
+merge_values-->>config-space: 返回扩展完成的内容
+```
+
+
+
 """
 def merge_values(key):
     values = config-sapce.get(key)
@@ -37,11 +57,30 @@ def evaluate_when(values):
     return values_temp
 
 def merge_lib(key):
-    # 根据key的内容获取merge_func
-    pass
+    //根据key的内容获取merge_func
+​    pass
 """
 
 ## 与其他模块的交互
 config-sapec.get(key): 当key不存在时，能够自动加载yaml，# 理论这一步再get时候就已经开始了，不会再此处才加载
 merge_value(py.code): 再内部展开 %%{} %%%{} d.xxx, dd.xxx；并调用python解释器执行，返回结果
+
+
+
+## 内部使用的数据结构
+
+```python
+# values的值
+values = [{
+  "value": "%%key2 + %%%pkgs.gcc.epol",
+  "fspath": "/xx/cc1/x1.yaml",
+  "when": "{{ 1==d.xxx }}"
+},{
+  "value": "%%key2 + %%%pkgs.gcc.epol",
+  "fspath": "/xx/cc2/x2.yaml",
+  "when": "{{ 2==dd.pkgs.gcc.epol }}"
+},]
+```
+
+
 
