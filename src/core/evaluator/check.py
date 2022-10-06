@@ -9,9 +9,8 @@
 # KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
 # NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
+from src.core.evaluator.lib.check_funcs import get_check_func
 
-
-class YAMLLoader():
-    # 避免模块的循环依赖
-    from src.module.config_space import config_space
-    pass
+def check_value(key, value):
+    check_func = get_check_func(key)
+    return check_func(value)

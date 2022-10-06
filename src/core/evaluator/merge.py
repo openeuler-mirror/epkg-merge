@@ -9,7 +9,7 @@
 # KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
 # NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
-from src.module.evaluator.lib.merge_funcs import get_merge_func
+from src.core.evaluator.lib.merge_funcs import get_merge_func
 
 
 def merge_sorted(values):
@@ -17,7 +17,7 @@ def merge_sorted(values):
 
 
 def merge_overrides(key, values):
-    from src.module.config_space import config_space
+    from src.core.config_space import config_space
     temp_values = values
     prepend_values = config_space.get(f"{key}:prepend:values")
     append_values = config_space.get(f"{key}:append:values")
@@ -28,7 +28,7 @@ def merge_overrides(key, values):
 
 
 def merge_values(key):
-    from src.module.config_space import config_space
+    from src.core.config_space import config_space
     values = config_space.get(f"{key}:values")
     values_sorted = merge_sorted(values)
     values_all = merge_overrides(key, values_sorted)

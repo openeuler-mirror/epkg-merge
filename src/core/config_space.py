@@ -10,10 +10,10 @@
 # NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
 
-from src.module.loader.layer_loader import LayerLoader
-from src.module.loader.yaml_loader import YAMLLoader
-from src.module.evaluator.merge import merge_values
-from src.module.evaluator.check import check_value
+from src.core.loader.layer_loader import LayerLoader
+from src.core.loader.yaml_loader import YAMLLoader
+from src.core.evaluator.merge import merge_values
+from src.core.evaluator.check import check_value
 
 
 def make_synchronized(func):

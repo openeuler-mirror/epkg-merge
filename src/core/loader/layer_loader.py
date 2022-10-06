@@ -13,5 +13,5 @@
 
 class LayerLoader():
     # 避免模块的循环依赖
-    from src.module.config_space import config_space
+    from src.core.config_space import config_space
     pass
