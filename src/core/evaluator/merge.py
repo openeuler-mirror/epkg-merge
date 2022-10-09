@@ -10,10 +10,43 @@
 # NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PSL v2 for more details.
 from src.core.evaluator.lib.merge_funcs import get_merge_func
+from functools import cmp_to_key
+from src.core.evaluator.expand import expand_macro
+from src.core.common import is_pycode
+from src.core.py_interpreter.pycode import eval_python
+from src.core.evaluator.lib.merge_funcs import sort_doctype
+
+
+def cmp(v_left, v_right):
+    from src.core.config_space import config_space
+    # 如何获取value的
+    v_left_fspath = v_left["fspath"]
+    v_right_fspath = v_right["fspath"]
+    v_left_doctype = config_space.get_key(f"files.{v_left_fspath}.docType")
+    v_right_doctype = config_space.get_key(f"files.{v_right_fspath}.docType")
+    sort_result = sort_doctype(v_left_doctype, v_right_doctype)
+    if sort_result != 0:
+        return sort_result
+
+    v_left_layername = config_space.get_key(f"files.{v_left_fspath}.layerName")
+    v_right_layername = config_space.get_key(f"files.{v_right_fspath}.layerName")
+    if v_left_layername < v_right_layername:
+        return -1
+    else:
+        return 1
+
+
+def eval_val(val):
+    result = val
+    if is_pycode(val):
+        result = eval_python(val)
+    return result
 
 
 def merge_sorted(values):
-    return values
+    # 如何通过fspath 获取doctype
+    values_sorted = sorted(values, key=cmp_to_key(cmp))
+    return values_sorted
 
 
 def merge_overrides(key, values):
@@ -24,7 +57,39 @@ def merge_overrides(key, values):
     remove_values = config_space.get(f"{key}:remove:values")
     replace_values = config_space.get(f"{key}:replace:values")
     # 依次处理，这里假设prepend和append是解耦的
+    for i in prepend_values:
+        if i.info in temp_values:
+            temp_values.insert(temp_values.index(i.info), i)
+
+    for i in append_values:
+        if i.info in temp_values:
+            temp_values.insert(temp_values.index(i.info + 1), i)
+
+    for i in replace_values:
+        if i.info in temp_values:
+            temp_values[temp_values.index(i.info)] = i
+
+    for i in remove_values:
+        if i.info in temp_values:
+            temp_values.remove(i)
+
     return temp_values
+
+
+def get_val(val):
+    val_expanded = expand_macro(val)
+    value = eval_val(val_expanded)
+    return value
+
+
+def merge_with_func(merge_func, values_all):
+    current = ""
+    for value in values_all:
+        when_value = get_val(value.get("when"))
+        if not when_value:
+            continue
+        current = merge_func(current, value)
+    return current
 
 
 def merge_values(key):
@@ -33,4 +98,4 @@ def merge_values(key):
     values_sorted = merge_sorted(values)
     values_all = merge_overrides(key, values_sorted)
     merge_func = get_merge_func(key)
-    return merge_func(values_all)
+    return merge_with_func(merge_func, values_all)
