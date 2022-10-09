@@ -1,14 +1,5 @@
-# Copyright (c) 2022 Huawei Technologies Co.,Ltd. All rights reserved.
-#
-# StratoVirt is licensed under Mulan PSL v2.
-# You can use this software according to the terms and conditions of the Mulan
-# PSL v2.
-# You may obtain a copy of Mulan PSL v2 at:
-#         http:#license.coscl.org.cn/MulanPSL2
-# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY
-# KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-# NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-# See the Mulan PSL v2 for more details.
+# SPDX-License-Identifier: MulanPSL-2.0+
+# Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 
 
 def sort_doctype(left, right):
@@ -60,16 +51,6 @@ merge_funcs = {
 
 
 def get_merge_func(key):
-    # 	pkgs.bash.phase.build:type <not found>
-    # 	pkgs.bash.phase.build:referAttrs <not found>
-    # 	pkgs.bash.phase:referAttrs = types.package.phase <found, redirect>
-    # 	types.package.phase:type = str <found, finish>
-    #
-    # 	pkgs.bash.version:checkFunc <not found>
-    # 	pkgs.bash.version:referAttrs <not found>
-    # 	pkgs.bash:referAttrs = types.package <found, redirect>
-    # 	types.package.version:checkFunc = is_version <found, finish>
-
     # 根据类型获取merge_func
     from src.core.config_space import config_space
     from src.core.evaluator.lib.types import get_func
