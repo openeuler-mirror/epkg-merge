@@ -7,3 +7,5 @@ __pycharm__/
 *$py.class
 *.pyc
 configs/
+__pycache__/
+.gitignore

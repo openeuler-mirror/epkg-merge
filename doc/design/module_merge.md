@@ -62,8 +62,13 @@ def merge_lib(key):
 """
 
 ## 与其他模块的交互
-config-sapec.get(key): 当key不存在时，能够自动加载yaml，# 理论这一步再get时候就已经开始了，不会再此处才加载
+config-space.get(key): 当key不存在时，能够自动加载yaml，# 理论这一步再get时候就已经开始了，不会再此处才加载
 merge_value(py.code): 再内部展开 %%{} %%%{} d.xxx, dd.xxx；并调用python解释器执行，返回结果
+
+// 用于values的优先级排序
+config-space.get(yaml:origin?):读取yaml的origin的实现
+config-space.get(yaml:doctype):读取yaml的doctype的实现
+config-space.get(yaml:layerPrio):读取yaml的layerprio的实现
 
 
 
