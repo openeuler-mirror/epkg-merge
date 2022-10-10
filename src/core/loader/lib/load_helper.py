@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MulanPSL-2.0+
+# Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 from typing import overload, Any, Dict
 
 
@@ -22,6 +24,11 @@ def expand_yaml(val: dict, prefix: str = None, implicit_fields: Dict[str, str] =
 
 
 @overload
+def expand_yaml(val: list, prefix: str = None, implicit_fields: Dict[str, str] = None) -> dict:
+    ...
+
+
+@overload
 def expand_yaml(val, prefix: str = None, implicit_fields: Dict[str, str] = None) -> dict:
     ...
 
@@ -33,5 +40,9 @@ def expand_yaml(val, prefix: str = None, implicit_fields: Dict[str, str] = None)
             key = expand_implicit_fields(expand_key(k, prefix), implicit_fields)
             result.update(expand_yaml(v, key, implicit_fields))
         return result
+    elif isinstance(val, list):
+        return {
+            expand_implicit_fields(prefix, implicit_fields): [expand_implicit_fields(v, implicit_fields) for v in val]
+        }
     else:
         return {expand_implicit_fields(prefix, implicit_fields): expand_implicit_fields(val, implicit_fields)}
