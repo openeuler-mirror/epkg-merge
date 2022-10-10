@@ -26,24 +26,24 @@ def sort_doctype(left, right):
         return 1
 
 
-def merge_policy_first(collect_str, new_val):
-    pass
+def merge_policy_first(collect_str, new_val, merge_params):
+    return new_val, False
 
 
-def merge_policy_concat(collect_str, new_val):
-    pass
+def merge_policy_concat(collect_str, new_val, merge_params):
+    return new_val, False
 
 
-def merge_policy_append(collect_set, new_item):
-    pass
+def merge_policy_append(collect_set, new_val, merge_params):
+    return new_val, False
 
 
-def merge_policy_and(collect_bool, new_val):
-    pass
+def merge_policy_and(collect_bool, new_val, merge_params):
+    return new_val, False
 
 
-def merge_policy_or(collect_bool, new_val):
-    pass
+def merge_policy_or(collect_bool, new_val, merge_params):
+    return new_val, False
 
 
 merge_funcs = {
@@ -51,6 +51,7 @@ merge_funcs = {
     "merge_policy_append": merge_policy_append,
     "merge_policy_and": merge_policy_and,
     "merge_policy_or": merge_policy_or,
+    "merge_policy_first": merge_policy_first,
 }
 
 
@@ -60,8 +61,8 @@ def get_merge_func(key):
     from src.core.evaluator.lib.types import get_func
     merge_func = config_space.get_key(f"{key}:mergeFunc")
     if merge_func:
-        return merge_funcs.get(merge_func)
-    merge_func = get_func(key, "mergeFunc")
+        return merge_funcs.get(merge_func), config_space.get(f"{key}:mergeParams", "")
+    merge_func, merge_params = get_func(key, "mergeFunc", "mergeParams")
     if merge_func:
-        return merge_funcs.get(merge_func)
-    return None
+        return merge_funcs.get(merge_func), merge_params
+    return merge_policy_first, ""

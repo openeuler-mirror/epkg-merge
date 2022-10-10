@@ -68,18 +68,24 @@ def merge_overrides(key, values):
 
 
 def get_val(val):
+    if val is None:
+        return True
     val_expanded = expand_macro(val)
     value = eval_val(val_expanded)
     return value
 
 
-def merge_with_func(merge_func, values_all):
+def merge_with_func(merge_func, merge_params, values_all):
     current = ""
-    for value in values_all:
-        when_value = get_val(value.get("when"))
+    for cur_value in values_all:
+        when_value = get_val(cur_value.get("when"))
         if not when_value:
             continue
-        current = merge_func(current, value)
+        raw_value = cur_value.get("value", "")
+        value = get_val(raw_value)
+        current, is_continue = merge_func(current, value, merge_params)
+        if not is_continue:
+            break
     return current
 
 
@@ -87,6 +93,7 @@ def merge_values(key):
     from src.core.config_space import config_space
     values = config_space.get(f"{key}:values")
     values_sorted = merge_sorted(values)
-    values_all = merge_overrides(key, values_sorted)
-    merge_func = get_merge_func(key)
-    return merge_with_func(merge_func, values_all)
+    # values_all = merge_overrides(key, values_sorted)
+    values_all = values_sorted
+    merge_func, merge_params = get_merge_func(key)
+    return merge_with_func(merge_func, merge_params, values_all)
