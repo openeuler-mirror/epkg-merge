@@ -2,7 +2,7 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 
 from src.core.loader.layer_loader import LayerLoader
-from src.core.loader.yaml_loader import YAMLLoader
+from src.core.loader.yaml_loader import YamlLoader
 from src.core.evaluator.merge import merge_values
 from src.core.evaluator.check import check_value
 
@@ -56,7 +56,7 @@ class ConfigSpace(dict):
             # 文件已加载，但没有这个key 
             return None
 
-        YAMLLoader.load(key, fspath)
+        YamlLoader(key, fspath).load()
 
         value = self.get_key_value(key)
         if value:
