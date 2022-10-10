@@ -1,0 +1,65 @@
+# type: key的变量类型
+# doc: 说明
+# example: 样例
+# checkFunc: 测试脚本
+# checkParams: 检测参数
+# mergeFunc: 合并函数
+# mergeParams: 合并函数参数
+# transformFunc: 转换函数
+# transformParams: 转换函数参数
+
+
+types.path:type: str
+types.path:doc: filesystem path name
+types.path:example: pkgs/bash/bash.yaml
+types.path:checkFunc: is_path
+types.path:mergeFunc: is_path
+
+types.PATH:type: str
+types.PATH:checkFunc: is_PATH
+
+types.package:validSubkeys: |
+  name version versions release meta source patchset requires buildRequires
+  subpackage phase runtimePhase includePhase 
+  includeRuntimePhase includeLib files use env
+
+types.package.name:type: str
+types.package.name:doc: package's spec_name
+types.package.name:example: busybox
+types.package.name:checkFunc: is_str
+types.package.name:mergeFunc: merge_policy_first
+
+types.package.epoch:type: int
+types.package.epoch:checkFunc: is_between
+types.package.epoch:checkParams: "0,3"
+types.package.epoch:mergeFunc: merge_policy_first
+
+types.package.version:type: str
+types.package.version:checkFunc: is_version
+types.package.version:mergeFunc: merge_policy_first
+
+types.package.release:type: str
+types.package.release:checkFunc: is_release
+types.package.release:mergeFunc: merge_policy_first
+
+types.package.meta:type: str
+
+types.package.phase:type: str
+types.package.phase:mergeFunc: concat
+types.package.phase:mergeParams: "\n"
+
+types.package.includePhase:type: str
+types.package.includePhase:mergeFunc: concat
+types.package.includePhase:mergeParams: "\n"
+
+types.package.source:type: str
+types.package.source:mergeFunc: merge_policy_first
+
+types.package.patchset:type: str
+types.package.patchset:mergeFunc: merge_policy_first
+
+types.package.buildRoot:type: str
+types.package.buildRoot:mergeFunc: merge_policy_append
+
+types.package.buildRequires:type: str
+types.package.buildRequires:mergeFunc: merge_policy_append
