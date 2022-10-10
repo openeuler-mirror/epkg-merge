@@ -7,11 +7,11 @@ from enum import Enum
 #     "math"
 # )
 
-class Deafult_Libs(Enum):
+class DeafultLibs(Enum):
     math = 'math'
     datetime = 'datetime'
 
     @staticmethod
     def list():
-        return list(map(lambda c: c.value, Deafult_Libs))
+        return list(map(lambda c: c.value, DeafultLibs))
 
