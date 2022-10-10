@@ -1,0 +1,559 @@
+Name: python3
+Summary: Interpreter of the Python3 programming language
+Version: 3.9.8
+Release: 9
+License: Python-2.0
+URL: "https://www.python.org/"
+Sources:
+    - https://www.python.org/ftp/python/%{version}/Python-%{version}.tar.xz
+    - pyconfig.h
+Patches:
+    - 00001-rpath.patch
+    - 00251-change-user-install-location.patch
+    - backport-bpo-46811-Make-test-suite-support-Expat-2.4.5.patch
+    - backport-CVE-2015-20107.patch
+    - backport-CVE-2021-28861.patch
+    - backport-0001-CVE-2020-10735.patch
+    - backport-0002-CVE-2020-10735.patch
+    - backport-0003-CVE-2020-10735.patch
+    - add-the-sm3-method-for-obtaining-the-salt-value.patch
+Description: |
+    Python combines remarkable power with very clear syntax. It has modules,
+    classes, exceptions, very high level dynamic data types, and dynamic
+    typing. There are interfaces to many system calls and libraries, as well
+    as to various windowing systems. New built-in modules are easily written
+    in C or C++ (or other languages, depending on the chosen implementation).
+    Python is also usable as an extension language for applications written
+    in other languages that need easy-to-use scripting or automation interfaces.
+    
+    This package Provides python version 3.
+Requires:
+    - "python-setuptools-wheel"
+    - "python-pip-wheel"
+BuildRequires:
+    - "autoconf"
+    - "bluez-libs-devel"
+    - "bzip2"
+    - "bzip2-devel"
+    - "desktop-file-utils"
+    - "expat-devel"
+    - "findutils"
+    - "gcc-c++"
+    - "gcc"
+    - "gdbm-devel"
+    - "glibc-all-langpacks"
+    - "glibc-devel"
+    - "gmp-devel"
+    - "libappstream-glib"
+    - "libffi-devel"
+    - "libnsl2-devel"
+    - "libtirpc-devel"
+    - "libGL-devel"
+    - "libuuid-devel"
+    - "libX11-devel"
+    - "ncurses-devel"
+    - "openssl-devel"
+    - "pkgconfig"
+    - "readline-devel"
+    - "system-rpm-config"
+    - "sqlite-devel"
+    - "tar"
+    - "tcl-devel"
+    - "tix-devel"
+    - "tk-devel"
+    - "valgrind-devel %ifarch %{valgrind_arches}"
+    - "xz-devel"
+    - "zlib-devel"
+    - "systemtap-sdt-devel"
+    - "net-tools"
+    - "python-setuptools-wheel"
+    - "python-pip-wheel"
+Provides:
+    - "python%{branchversion} = %{version}-%{release}"
+    - "python(abi) = %{branchversion}"
+    - "python%{pyshortver} = %{version}-%{release}"
+    - "python3-libs"
+    - "python3-enum34 = 1.0.4-5"
+Obsoletes:
+    - "python%{pyshortver}"
+    - "python3-libs"
+    - "python3-enum34 < 1.0.4-5"
+Files: |
+    %license LICENSE
+    %doc README.rst
+    
+    %{_bindir}/pydoc*
+    %{_bindir}/python3
+    
+    %{_bindir}/python%{branchversion}
+    
+    %dir %{pylibdir}
+    %dir %{dynload_dir}
+    
+    %{pylibdir}/lib2to3
+    %exclude %{pylibdir}/lib2to3/tests
+    
+    %dir %{pylibdir}/unittest/
+    %dir %{pylibdir}/unittest/__pycache__/
+    %{pylibdir}/unittest/*.py
+    %{pylibdir}/unittest/__pycache__/*%{bytecode_suffixes}
+    
+    %dir %{pylibdir}/asyncio/
+    %dir %{pylibdir}/asyncio/__pycache__/
+    %{pylibdir}/asyncio/*.py
+    %{pylibdir}/asyncio/__pycache__/*%{bytecode_suffixes}
+    
+    %dir %{pylibdir}/venv/
+    %dir %{pylibdir}/venv/__pycache__/
+    %{pylibdir}/venv/*.py
+    %{pylibdir}/venv/__pycache__/*%{bytecode_suffixes}
+    %{pylibdir}/venv/scripts
+    
+    %{pylibdir}/wsgiref
+    %{pylibdir}/xmlrpc
+    
+    %dir %{pylibdir}/ensurepip/
+    %dir %{pylibdir}/ensurepip/__pycache__/
+    %{pylibdir}/ensurepip/*.py
+    %{pylibdir}/ensurepip/__pycache__/*%{bytecode_suffixes}
+    
+    %exclude %{pylibdir}/ensurepip/_bundled
+    
+    %dir %{pylibdir}/test/
+    %dir %{pylibdir}/test/__pycache__/
+    %dir %{pylibdir}/test/support/
+    %dir %{pylibdir}/test/support/__pycache__/
+    %{pylibdir}/test/__init__.py
+    %{pylibdir}/test/__pycache__/__init__%{bytecode_suffixes}
+    %{pylibdir}/test/support/*.py
+    %{pylibdir}/test/support/__pycache__/*%{bytecode_suffixes}
+    
+    %dir %{pylibdir}/concurrent/
+    %dir %{pylibdir}/concurrent/__pycache__/
+    %{pylibdir}/concurrent/*.py
+    %{pylibdir}/concurrent/__pycache__/*%{bytecode_suffixes}
+    
+    %dir %{pylibdir}/concurrent/futures/
+    %dir %{pylibdir}/concurrent/futures/__pycache__/
+    %{pylibdir}/concurrent/futures/*.py
+    %{pylibdir}/concurrent/futures/__pycache__/*%{bytecode_suffixes}
+    
+    %{pylibdir}/pydoc_data
+    
+    %{dynload_dir}/_blake2.%{SOABI_optimized}.so
+    %{dynload_dir}/_md5.%{SOABI_optimized}.so
+    %{dynload_dir}/_sha1.%{SOABI_optimized}.so
+    %{dynload_dir}/_sha256.%{SOABI_optimized}.so
+    %{dynload_dir}/_sha3.%{SOABI_optimized}.so
+    %{dynload_dir}/_sha512.%{SOABI_optimized}.so
+    
+    %{dynload_dir}/_asyncio.%{SOABI_optimized}.so
+    %{dynload_dir}/_bisect.%{SOABI_optimized}.so
+    %{dynload_dir}/_bz2.%{SOABI_optimized}.so
+    %{dynload_dir}/_codecs_cn.%{SOABI_optimized}.so
+    %{dynload_dir}/_codecs_hk.%{SOABI_optimized}.so
+    %{dynload_dir}/_codecs_iso2022.%{SOABI_optimized}.so
+    %{dynload_dir}/_codecs_jp.%{SOABI_optimized}.so
+    %{dynload_dir}/_codecs_kr.%{SOABI_optimized}.so
+    %{dynload_dir}/_codecs_tw.%{SOABI_optimized}.so
+    %{dynload_dir}/_contextvars.%{SOABI_optimized}.so
+    %{dynload_dir}/_crypt.%{SOABI_optimized}.so
+    %{dynload_dir}/_csv.%{SOABI_optimized}.so
+    %{dynload_dir}/_ctypes.%{SOABI_optimized}.so
+    %{dynload_dir}/_curses.%{SOABI_optimized}.so
+    %{dynload_dir}/_curses_panel.%{SOABI_optimized}.so
+    %{dynload_dir}/_dbm.%{SOABI_optimized}.so
+    %{dynload_dir}/_decimal.%{SOABI_optimized}.so
+    %{dynload_dir}/_elementtree.%{SOABI_optimized}.so
+    %{dynload_dir}/_gdbm.%{SOABI_optimized}.so
+    %{dynload_dir}/_hashlib.%{SOABI_optimized}.so
+    %{dynload_dir}/_heapq.%{SOABI_optimized}.so
+    %{dynload_dir}/_json.%{SOABI_optimized}.so
+    %{dynload_dir}/_lsprof.%{SOABI_optimized}.so
+    %{dynload_dir}/_lzma.%{SOABI_optimized}.so
+    %{dynload_dir}/_multibytecodec.%{SOABI_optimized}.so
+    %{dynload_dir}/_multiprocessing.%{SOABI_optimized}.so
+    %{dynload_dir}/_opcode.%{SOABI_optimized}.so
+    %{dynload_dir}/_pickle.%{SOABI_optimized}.so
+    %{dynload_dir}/_posixsubprocess.%{SOABI_optimized}.so
+    %{dynload_dir}/_queue.%{SOABI_optimized}.so
+    %{dynload_dir}/_random.%{SOABI_optimized}.so
+    %{dynload_dir}/_socket.%{SOABI_optimized}.so
+    %{dynload_dir}/_sqlite3.%{SOABI_optimized}.so
+    %{dynload_dir}/_ssl.%{SOABI_optimized}.so
+    %{dynload_dir}/_struct.%{SOABI_optimized}.so
+    %{dynload_dir}/array.%{SOABI_optimized}.so
+    %{dynload_dir}/audioop.%{SOABI_optimized}.so
+    %{dynload_dir}/binascii.%{SOABI_optimized}.so
+    %{dynload_dir}/cmath.%{SOABI_optimized}.so
+    %{dynload_dir}/_datetime.%{SOABI_optimized}.so
+    %{dynload_dir}/fcntl.%{SOABI_optimized}.so
+    %{dynload_dir}/grp.%{SOABI_optimized}.so
+    %{dynload_dir}/math.%{SOABI_optimized}.so
+    %{dynload_dir}/mmap.%{SOABI_optimized}.so
+    %{dynload_dir}/nis.%{SOABI_optimized}.so
+    %{dynload_dir}/ossaudiodev.%{SOABI_optimized}.so
+    %{dynload_dir}/_posixshmem.%{SOABI_optimized}.so
+    %{dynload_dir}/pyexpat.%{SOABI_optimized}.so
+    %{dynload_dir}/readline.%{SOABI_optimized}.so
+    %{dynload_dir}/resource.%{SOABI_optimized}.so
+    %{dynload_dir}/select.%{SOABI_optimized}.so
+    %{dynload_dir}/spwd.%{SOABI_optimized}.so
+    %{dynload_dir}/syslog.%{SOABI_optimized}.so
+    %{dynload_dir}/termios.%{SOABI_optimized}.so
+    %{dynload_dir}/_testmultiphase.%{SOABI_optimized}.so
+    %{dynload_dir}/unicodedata.%{SOABI_optimized}.so
+    %{dynload_dir}/_uuid.%{SOABI_optimized}.so
+    %{dynload_dir}/xxlimited.%{SOABI_optimized}.so
+    %{dynload_dir}/zlib.%{SOABI_optimized}.so
+    %{dynload_dir}/_statistics.%{SOABI_optimized}.so
+    %{dynload_dir}/_xxsubinterpreters.%{SOABI_optimized}.so
+    %{dynload_dir}/_zoneinfo.%{SOABI_optimized}.so
+    %{dynload_dir}/xxlimited_35.%{SOABI_optimized}.so
+    
+    %dir %{pylibdir}/site-packages/
+    %dir %{pylibdir}/site-packages/__pycache__/
+    %{pylibdir}/site-packages/README.txt
+    %{pylibdir}/*.py
+    %dir %{pylibdir}/__pycache__/
+    %{pylibdir}/__pycache__/*%{bytecode_suffixes}
+    
+    %dir %{pylibdir}/collections/
+    %dir %{pylibdir}/collections/__pycache__/
+    %{pylibdir}/collections/*.py
+    %{pylibdir}/collections/__pycache__/*%{bytecode_suffixes}
+    
+    %dir %{pylibdir}/ctypes/
+    %dir %{pylibdir}/ctypes/__pycache__/
+    %{pylibdir}/ctypes/*.py
+    %{pylibdir}/ctypes/__pycache__/*%{bytecode_suffixes}
+    %{pylibdir}/ctypes/macholib
+    
+    %{pylibdir}/curses
+    
+    %dir %{pylibdir}/dbm/
+    %dir %{pylibdir}/dbm/__pycache__/
+    %{pylibdir}/dbm/*.py
+    %{pylibdir}/dbm/__pycache__/*%{bytecode_suffixes}
+    
+    %dir %{pylibdir}/distutils/
+    %dir %{pylibdir}/distutils/__pycache__/
+    %{pylibdir}/distutils/*.py
+    %{pylibdir}/distutils/__pycache__/*%{bytecode_suffixes}
+    %{pylibdir}/distutils/README
+    %{pylibdir}/distutils/command
+    
+    %dir %{pylibdir}/email/
+    %dir %{pylibdir}/email/__pycache__/
+    %{pylibdir}/email/*.py
+    %{pylibdir}/email/__pycache__/*%{bytecode_suffixes}
+    %{pylibdir}/email/mime
+    %doc %{pylibdir}/email/architecture.rst
+    
+    %{pylibdir}/encodings
+    
+    %{pylibdir}/html
+    %{pylibdir}/http
+    
+    %dir %{pylibdir}/importlib/
+    %dir %{pylibdir}/importlib/__pycache__/
+    %{pylibdir}/importlib/*.py
+    %{pylibdir}/importlib/__pycache__/*%{bytecode_suffixes}
+    
+    %dir %{pylibdir}/importlib/metadata/
+    %dir %{pylibdir}/importlib/metadata/__pycache__/
+    %{pylibdir}/importlib/metadata/
+    
+    %dir %{pylibdir}/json/
+    %dir %{pylibdir}/json/__pycache__/
+    %{pylibdir}/json/*.py
+    %{pylibdir}/json/__pycache__/*%{bytecode_suffixes}
+    
+    %{pylibdir}/logging
+    %{pylibdir}/multiprocessing
+    
+    %dir %{pylibdir}/sqlite3/
+    %dir %{pylibdir}/sqlite3/__pycache__/
+    %{pylibdir}/sqlite3/*.py
+    %{pylibdir}/sqlite3/__pycache__/*%{bytecode_suffixes}
+    
+    %exclude %{pylibdir}/turtle.py
+    %exclude %{pylibdir}/__pycache__/turtle*%{bytecode_suffixes}
+    
+    %{pylibdir}/urllib
+    %{pylibdir}/xml
+    %{pylibdir}/zoneinfo
+    
+    %attr(0755,root,root) %dir %{_prefix}/lib/python%{branchversion}
+    %attr(0755,root,root) %dir %{_prefix}/lib/python%{branchversion}/site-packages
+    %attr(0755,root,root) %dir %{_prefix}/lib/python%{branchversion}/site-packages/__pycache__/
+    
+    %dir %{pylibdir}/config-%{LDVERSION_optimized}-%{_arch}-linux%{_gnu}/
+    %{pylibdir}/config-%{LDVERSION_optimized}-%{_arch}-linux%{_gnu}/Makefile
+    %dir %{_includedir}/python%{LDVERSION_optimized}/
+    %{_includedir}/python%{LDVERSION_optimized}/%{_pyconfig_h}
+    
+    %{_libdir}/%{py_INSTSONAME_optimized}
+    %{_libdir}/libpython3.so
+    
+Recommends:
+    - python3-setuptools
+    - python3-pip
+Install:
+    - python3.sh
+Build:
+    - python3.sh
+Check:
+    - python3.sh
+Prep:
+    - python3.sh
+Macros:
+    - "%global branchversion 3.10"
+    - "%global pyshortver 310"
+    - "%bcond_with optimizations %ifarch %{ix86} x86_64"
+    - "%bcond_with optimizations %else %ifarch %{ix86} x86_64"
+    - "%global pylibdir %{_libdir}/python%{branchversion}"
+    - "%global dynload_dir %{pylibdir}/lib-dynload"
+    - "%global LDVERSION_optimized %{branchversion}"
+    - "%global LDVERSION_debug     %{branchversion}d"
+    - "%global SOABI_optimized cpython-%{pyshortver}-%{_arch}-linux%{_gnu}"
+    - "%global SOABI_debug     cpython-%{pyshortver}d-%{_arch}-linux%{_gnu}"
+    - "%global bytecode_suffixes .cpython-%{pyshortver}*.pyc"
+    - "%global py_INSTSONAME_optimized libpython%{LDVERSION_optimized}.so.1.0"
+    - "%global py_INSTSONAME_debug     libpython%{LDVERSION_debug}.so.1.0"
+    - "%undefine py_auto_byte_compile"
+    - "%global wordsize 64"
+    - "%global __requires_exclude ^/usr/bin/python3"
+
+SubPackages:
+    - Name: python3-unversioned-command
+      Summary: 'The \"python\" command that runs Python 3'
+      Description: This package contains /usr/bin/python - the "python" command that runs Python 3.
+      Requires:
+          - "%{name} = %{version}-%{release}"
+      Provides:
+          - "python = %{version}-%{release}"
+      Conflicts:
+          - "python2"
+      Files: "%{_bindir}/python"
+      AsWholeName: yes
+
+    - Name: devel
+      Summary: Libraries and header files needed for Python development
+      Description: |
+          This package contains the header files and configuration needed to develop
+          python3 modules.
+      Requires:
+          - "%{name} = %{version}-%{release}"
+          - "python-rpm-macros"
+          - "python3-rpm-macros"
+          - "python3-rpm-generators"
+          - "python3-setuptools"
+      BuildRequires:
+          - "python-rpm-macros"
+      Provides:
+          - "%{name}-2to3 = %{version}-%{release}"
+          - "2to3 = %{version}-%{release}"
+          - "python3-idle"
+          - "python3-test"
+          - "%{name}-tools = %{version}-%{release}"
+      Obsoletes:
+          - "python3-idle"
+          - "python3-test"
+          - "%{name}-tools < %{version}-%{release}"
+      Conflicts:
+          - "%{name} < %{version}-%{release}"
+      Files: |
+          %{_bindir}/2to3
+          
+          %{pylibdir}/config-%{LDVERSION_optimized}-%{_arch}-linux%{_gnu}/*
+          %exclude %{pylibdir}/config-%{LDVERSION_optimized}-%{_arch}-linux%{_gnu}/Makefile
+          %exclude %{_includedir}/python%{LDVERSION_optimized}/%{_pyconfig_h}
+          %{_includedir}/python%{LDVERSION_optimized}/*.h
+          %{_includedir}/python%{LDVERSION_optimized}/internal/
+          %{_includedir}/python%{LDVERSION_optimized}/cpython/
+          %doc Misc/README.valgrind Misc/valgrind-python.supp Misc/gdbinit
+          
+          %{_bindir}/python3-config
+          %{_libdir}/pkgconfig/python3.pc
+          %{_libdir}/pkgconfig/python3-embed.pc
+          %{_bindir}/pathfix.py
+          %{_bindir}/pygettext3.py
+          %{_bindir}/msgfmt3.py
+          
+          %{_bindir}/pygettext%{branchversion}.py
+          %{_bindir}/msgfmt%{branchversion}.py
+          
+          %{_bindir}/python%{LDVERSION_optimized}-config
+          %{_bindir}/python%{LDVERSION_optimized}-*-config
+          %{_libdir}/libpython%{LDVERSION_optimized}.so
+          %{_libdir}/pkgconfig/python-%{LDVERSION_optimized}.pc
+          %{_libdir}/pkgconfig/python-%{LDVERSION_optimized}-embed.pc
+          
+          %{_bindir}/idle*
+          %{pylibdir}/idlelib
+          
+          %{_datadir}/icons/hicolor/*/apps/idle3.*
+          
+          %{pylibdir}/ctypes/test
+          %{pylibdir}/distutils/tests
+          %{pylibdir}/sqlite3/test
+          %{pylibdir}/test
+          %exclude %{pylibdir}/test/capath
+          %exclude %{pylibdir}/test/*.pem
+          %exclude %{pylibdir}/test/*.crl
+          %{dynload_dir}/_ctypes_test.%{SOABI_optimized}.so
+          %{dynload_dir}/_testbuffer.%{SOABI_optimized}.so
+          %{dynload_dir}/_testcapi.%{SOABI_optimized}.so
+          %{dynload_dir}/_testinternalcapi.%{SOABI_optimized}.so
+          %{dynload_dir}/_testimportmultiple.%{SOABI_optimized}.so
+          %{dynload_dir}/_xxtestfuzz.%{SOABI_optimized}.so
+          %{pylibdir}/lib2to3/tests
+          %{pylibdir}/unittest/test
+          
+          %exclude %dir %{pylibdir}/test/
+          %exclude %dir %{pylibdir}/test/__pycache__/
+          %exclude %{pylibdir}/test/__init__.py
+          %exclude %{pylibdir}/test/__pycache__/__init__%{bytecode_suffixes}
+          %exclude %{pylibdir}/test/support/
+          
+
+    - Name: tkinter
+      Summary: A GUI toolkit for Python
+      Description: |
+          The Tkinter (Tk interface) library is a graphical user interface toolkit for
+          the Python programming language.
+      Requires:
+          - "%{name} = %{version}-%{release}"
+      Provides:
+          - "%{name}-turtle = %{version}-%{release}"
+          - "%{name}-tkinter = %{version}-%{release}"
+      Files: |
+          %{pylibdir}/tkinter
+          %{dynload_dir}/_tkinter.%{SOABI_optimized}.so
+          %{pylibdir}/turtle.py
+          %{pylibdir}/__pycache__/turtle*%{bytecode_suffixes}
+          %dir %{pylibdir}/turtledemo
+          %{pylibdir}/turtledemo/*.py
+          %{pylibdir}/turtledemo/*.cfg
+          %dir %{pylibdir}/turtledemo/__pycache__/
+          %{pylibdir}/turtledemo/__pycache__/*%{bytecode_suffixes}
+          
+
+    - Name: debug
+      Summary: Debug version of the Python runtime
+      Description: |
+          python3-debug provides a version of the Python runtime with numerous debugging
+          features enabled, aimed at advanced Python users such as developers of Python
+          extension modules.
+      Requires:
+          - "%{name} = %{version}-%{release}"
+          - "%{name}-devel = %{version}-%{release}"
+          - "%{name}-tkinter = %{version}-%{release}"
+      Files: |
+          %{_bindir}/python3-debug
+          
+          %{_bindir}/python%{LDVERSION_debug}
+          
+          %{dynload_dir}/_blake2.%{SOABI_debug}.so
+          %{dynload_dir}/_md5.%{SOABI_debug}.so
+          %{dynload_dir}/_sha1.%{SOABI_debug}.so
+          %{dynload_dir}/_sha256.%{SOABI_debug}.so
+          %{dynload_dir}/_sha3.%{SOABI_debug}.so
+          %{dynload_dir}/_sha512.%{SOABI_debug}.so
+          
+          %{dynload_dir}/_asyncio.%{SOABI_debug}.so
+          %{dynload_dir}/_bisect.%{SOABI_debug}.so
+          %{dynload_dir}/_bz2.%{SOABI_debug}.so
+          %{dynload_dir}/_codecs_cn.%{SOABI_debug}.so
+          %{dynload_dir}/_codecs_hk.%{SOABI_debug}.so
+          %{dynload_dir}/_codecs_iso2022.%{SOABI_debug}.so
+          %{dynload_dir}/_codecs_jp.%{SOABI_debug}.so
+          %{dynload_dir}/_codecs_kr.%{SOABI_debug}.so
+          %{dynload_dir}/_codecs_tw.%{SOABI_debug}.so
+          %{dynload_dir}/_contextvars.%{SOABI_debug}.so
+          %{dynload_dir}/_crypt.%{SOABI_debug}.so
+          %{dynload_dir}/_csv.%{SOABI_debug}.so
+          %{dynload_dir}/_ctypes.%{SOABI_debug}.so
+          %{dynload_dir}/_curses.%{SOABI_debug}.so
+          %{dynload_dir}/_curses_panel.%{SOABI_debug}.so
+          %{dynload_dir}/_dbm.%{SOABI_debug}.so
+          %{dynload_dir}/_decimal.%{SOABI_debug}.so
+          %{dynload_dir}/_elementtree.%{SOABI_debug}.so
+          %{dynload_dir}/_gdbm.%{SOABI_debug}.so
+          %{dynload_dir}/_hashlib.%{SOABI_debug}.so
+          %{dynload_dir}/_heapq.%{SOABI_debug}.so
+          %{dynload_dir}/_json.%{SOABI_debug}.so
+          %{dynload_dir}/_lsprof.%{SOABI_debug}.so
+          %{dynload_dir}/_lzma.%{SOABI_debug}.so
+          %{dynload_dir}/_multibytecodec.%{SOABI_debug}.so
+          %{dynload_dir}/_multiprocessing.%{SOABI_debug}.so
+          %{dynload_dir}/_opcode.%{SOABI_debug}.so
+          %{dynload_dir}/_pickle.%{SOABI_debug}.so
+          %{dynload_dir}/_posixsubprocess.%{SOABI_debug}.so
+          %{dynload_dir}/_queue.%{SOABI_debug}.so
+          %{dynload_dir}/_random.%{SOABI_debug}.so
+          %{dynload_dir}/_socket.%{SOABI_debug}.so
+          %{dynload_dir}/_sqlite3.%{SOABI_debug}.so
+          %{dynload_dir}/_ssl.%{SOABI_debug}.so
+          %{dynload_dir}/_struct.%{SOABI_debug}.so
+          %{dynload_dir}/array.%{SOABI_debug}.so
+          %{dynload_dir}/audioop.%{SOABI_debug}.so
+          %{dynload_dir}/binascii.%{SOABI_debug}.so
+          %{dynload_dir}/cmath.%{SOABI_debug}.so
+          %{dynload_dir}/_datetime.%{SOABI_debug}.so
+          %{dynload_dir}/fcntl.%{SOABI_debug}.so
+          %{dynload_dir}/grp.%{SOABI_debug}.so
+          %{dynload_dir}/math.%{SOABI_debug}.so
+          %{dynload_dir}/mmap.%{SOABI_debug}.so
+          %{dynload_dir}/nis.%{SOABI_debug}.so
+          %{dynload_dir}/ossaudiodev.%{SOABI_debug}.so
+          %{dynload_dir}/pyexpat.%{SOABI_debug}.so
+          %{dynload_dir}/readline.%{SOABI_debug}.so
+          %{dynload_dir}/resource.%{SOABI_debug}.so
+          %{dynload_dir}/select.%{SOABI_debug}.so
+          %{dynload_dir}/spwd.%{SOABI_debug}.so
+          %{dynload_dir}/syslog.%{SOABI_debug}.so
+          %{dynload_dir}/termios.%{SOABI_debug}.so
+          %{dynload_dir}/_testmultiphase.%{SOABI_debug}.so
+          %{dynload_dir}/unicodedata.%{SOABI_debug}.so
+          %{dynload_dir}/_uuid.%{SOABI_debug}.so
+          %{dynload_dir}/_xxtestfuzz.%{SOABI_debug}.so
+          %{dynload_dir}/zlib.%{SOABI_debug}.so
+          %{dynload_dir}/_statistics.%{SOABI_debug}.so
+          %{dynload_dir}/_xxsubinterpreters.%{SOABI_debug}.so
+          %{dynload_dir}/_posixshmem.%{SOABI_debug}.so
+          %{dynload_dir}/_zoneinfo.%{SOABI_debug}.so
+          %{dynload_dir}/xxlimited.%{SOABI_debug}.so
+          %{dynload_dir}/xxlimited_35.%{SOABI_debug}.so
+          
+          %{_libdir}/%{py_INSTSONAME_debug}
+          
+          %{pylibdir}/config-%{LDVERSION_debug}-%{_arch}-linux%{_gnu}
+          %{_includedir}/python%{LDVERSION_debug}
+          %{_bindir}/python%{LDVERSION_debug}-config
+          %{_bindir}/python%{LDVERSION_debug}-*-config
+          %{_libdir}/libpython%{LDVERSION_debug}.so
+          %{_libdir}/libpython%{LDVERSION_debug}.so.1.0
+          %{_libdir}/pkgconfig/python-%{LDVERSION_debug}.pc
+          %{_libdir}/pkgconfig/python-%{LDVERSION_debug}-embed.pc
+          
+          %{dynload_dir}/_tkinter.%{SOABI_debug}.so
+          
+          %{dynload_dir}/_ctypes_test.%{SOABI_debug}.so
+          %{dynload_dir}/_testbuffer.%{SOABI_debug}.so
+          %{dynload_dir}/_testcapi.%{SOABI_debug}.so
+          %{dynload_dir}/_testimportmultiple.%{SOABI_debug}.so
+          %{dynload_dir}/_testinternalcapi.%{SOABI_debug}.so
+          
+          %undefine _debuginfo_subpackages
+          
+
+    - Name: help
+      Summary: Documents for %{name}
+      Description: Man pages and other related documents for %{name}.
+      Requires:
+          - "man info"
+      BuildArch: noarch
+      Files: "%{_mandir}/*/*"
+
