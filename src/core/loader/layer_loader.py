@@ -26,10 +26,10 @@ class LayerLoader:
                 f"Invalid main config: can't find yaml key '{MainConfigKey.LAYERS.value}' or empty value")
 
         for layer in layers.get(str(MainConfigKey.LAYERS.value)):
-            LayerConfigLoader(layer, os.path.join(self._dir_name, layer)).load()
+            _LayerConfigLoader(layer, os.path.join(self._dir_name, layer)).load()
 
 
-class LayerConfigLoader:
+class _LayerConfigLoader:
     def __init__(self, layer: str, layer_path: str) -> None:
         if not os.path.isdir(layer_path):
             raise LoadException(f"The path of layer '{layer}' [{layer_path}] is not a directory")
@@ -39,23 +39,27 @@ class LayerConfigLoader:
 
     def load(self) -> None:
         self._load_pkgs()
+        self._load_python_libs()
+        self._load_use()
+        self._load_types()
 
     def _load_pkgs(self) -> None:
         pkgs_dir = os.path.join(self._layer_path, str(Directory.PKGS.value))
         if not os.path.isdir(pkgs_dir):
             return
 
-        self._load_index_yaml(pkgs_dir)
+        self._load_pkgs_index_yaml(pkgs_dir)
 
-    def _load_index_yaml(self, pkgs_dir: str) -> None:
+    def _load_pkgs_index_yaml(self, pkgs_dir: str) -> None:
         index_yaml = os.path.join(pkgs_dir, str(Config.INDEX.value))
         if not os.path.isfile(index_yaml):
-            raise LoadException(f"Index file of layer '{self._layer}' is missing")
+            raise LoadException(f"Pkgs index file of layer '{self._layer}' is missing")
 
         index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
         pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
-            raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' of layer '{self._layer}' is empty")
+            raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
+                                f"of pkgs index file in layer '{self._layer}' is empty")
 
         for pkg in [d for d in os.listdir(pkgs_dir) if os.path.isdir(os.path.join(pkgs_dir, d))]:
             pkg_config = None
@@ -68,10 +72,45 @@ class LayerConfigLoader:
                 print(f"warning: package '{pkg}' of layer '{self._layer}' lacks of main config")
                 continue
 
-            PkgLoader(pkg, pkg_config, index_config).load()
+            _ElementConfigLoader(pkg, pkg_config, index_config).load()
+
+    def _load_python_libs(self) -> None:
+        lib_path = os.path.join(self._layer_path, str(Directory.LIB.value))
+        if not os.path.isdir(lib_path):
+            return
+
+        from src.core.config_space import config_space
+        for f in os.listdir(lib_path):
+            if re.match(r".*\.py", f):
+                config_space.setdefault("lib", []).append(os.path.join(lib_path, f))
+
+    def _load_use(self) -> None:
+        use_dir = os.path.join(self._layer_path, str(Directory.USE.value))
+        if not os.path.isdir(use_dir):
+            return
+
+        self._load_use_index_yaml(use_dir)
+
+    def _load_use_index_yaml(self, use_dir: str) -> None:
+        index_yaml = os.path.join(use_dir, str(Config.INDEX.value))
+        if not os.path.isfile(index_yaml):
+            raise LoadException(f"Use index file of layer '{self._layer}' is missing")
+
+        index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
+        pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
+        if not pattern:
+            raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
+                                f"of use index file in layer '{self._layer}' is empty")
+
+        for use in [f for f in os.listdir(use_dir) if
+                    os.path.isfile(os.path.join(use_dir, f)) and re.match(pattern, f) and f != str(Config.INDEX.value)]:
+            _ElementConfigLoader(use, os.path.join(use_dir, use), index_config).load()
+
+    def _load_types(self) -> None:
+        ...
 
 
-class PkgLoader:
+class _ElementConfigLoader:
     IMPLICIT_FIELDS = {
         "basename": "%%_basename",
         "filepath": "%%_filepath",
@@ -79,19 +118,18 @@ class PkgLoader:
         "filename": "%%_filename",
     }
 
-    def __init__(self, pkg: str, pkg_config_path: str, index_config: Dict[str, Any]) -> None:
+    def __init__(self, element: str, element_config_path: str, index_config: Dict[str, Any]) -> None:
         self._implicit_fields = {
-            self.IMPLICIT_FIELDS["basename"]: pkg,
-            self.IMPLICIT_FIELDS["filepath"]: pkg_config_path,
-            self.IMPLICIT_FIELDS["dirname"]: os.path.dirname(pkg_config_path),
-            self.IMPLICIT_FIELDS["filename"]: os.path.basename(pkg_config_path),
+            self.IMPLICIT_FIELDS["basename"]: element,
+            self.IMPLICIT_FIELDS["filepath"]: element_config_path,
+            self.IMPLICIT_FIELDS["dirname"]: os.path.dirname(element_config_path),
+            self.IMPLICIT_FIELDS["filename"]: os.path.basename(element_config_path),
         }
         self._index_config = index_config
 
     def load(self) -> None:
+        from src.core.config_space import config_space
         configs: Dict[str, Any] = self._index_config.get(str(IndexConfigKey.REGISTER_FOR_FILE.value))
         result = expand_yaml(configs, implicit_fields=self._implicit_fields)
         for k, v in result.items():
-            from src.core.config_space import config_space
             config_space.set_key(k, v, self._implicit_fields[self.IMPLICIT_FIELDS["filepath"]], None)
-
