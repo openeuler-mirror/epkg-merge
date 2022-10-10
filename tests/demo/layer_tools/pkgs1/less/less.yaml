@@ -1,0 +1,23 @@
+name: less
+version: 590
+release: 1
+meta.summary: Less is a pager that displays text files.
+meta.license: GPLv3+ or BSD
+meta.homepage: http://www.greenwoodsoftware.com/less
+source:
+  0: http://www.greenwoodsoftware.com/less/%{name}-%{version}.tar.gz
+patchset:
+  0: less-394-time.patch
+
+buildRequires:	
+  - "gcc make ncurses-devel autoconf automake libtool"
+
+meta.description: |
+  Less is a pager. A pager is a program that displays text files.
+  Other pagers commonly in use are more and pg. Pagers are often
+  used in command-line environments like the Unix shell and the MS-DOS
+  command prompt to display files.
+
+  Less is not an editor. You can't change the contents of the file
+  you're viewing. Less is not a windowing system. It doesn't have
+  fancy scroll bars or other GUI (graphical user interface) elements.

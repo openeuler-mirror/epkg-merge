@@ -1,0 +1,11 @@
+files: |
+  %doc LICENSE README
+  /sbin/busybox
+
+subpackage.petitboot.files: | 
+  %doc LICENSE README
+  /sbin/busybox.petitboot
+
+subpackage.help.files: |
+  %{_mandir}/man1/busybox.1.gz
+  %{_mandir}/man1/busybox.petitboot.1.gz

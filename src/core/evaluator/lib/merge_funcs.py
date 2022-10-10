@@ -26,6 +26,10 @@ def sort_doctype(left, right):
         return 1
 
 
+def merge_policy_first(collect_str, new_val):
+    pass
+
+
 def merge_policy_concat(collect_str, new_val):
     pass
 

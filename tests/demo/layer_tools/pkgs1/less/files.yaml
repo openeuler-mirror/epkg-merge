@@ -1,0 +1,9 @@
+files: |
+  %defattr(-,root,root)
+  %license LICENSE COPYING
+  %{_bindir}/less*
+
+
+subpackage.help.files: |
+  %doc README NEWS INSTALL
+  %{_mandir}/man1/*
