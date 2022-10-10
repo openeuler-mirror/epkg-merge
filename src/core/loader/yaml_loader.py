@@ -34,12 +34,12 @@ class YamlLoader:
     def _load_include_and_inherit(self) -> None:
         from src.core.config_space import config_space
         include_item_transform_dict = {
-            IndexConfigKey.INCLUDE.value: "transform_include_phase",
+            IndexConfigKey.INCLUDE.value: "load_yaml",
             IndexConfigKey.INCLUDE_PHASE.value: "transform_include_phase",
-            IndexConfigKey.INCLUDE_RUNTIME_PHASE.value: "load_yaml",
+            IndexConfigKey.INCLUDE_RUNTIME_PHASE.value: "transform_include_phase",
         }
-        for item, func in include_item_transform_dict:
-            if include := config_space.get_key(f'files."{self._fspath}".include.{item}'):
+        for item, func in include_item_transform_dict.items():
+            if include := config_space.get_key(f'files."{self._fspath}".{item}'):
                 for f in include.split():
                     transform_result = getattr(transform, func)(os.path.join(os.path.dirname(self._fspath), f))
                     result = expand_yaml(transform_result, self._cspath)

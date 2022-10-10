@@ -75,7 +75,7 @@ class _LayerConfigLoader:
             _ElementConfigLoader(pkg, pkg_config, index_config).load()
 
     def _load_python_libs(self) -> None:
-        lib_path = os.path.join(self._layer_path, str(Directory.LIB.value))
+        lib_path = os.path.join(self._layer_path, str(Directory.LIBS.value))
         if not os.path.isdir(lib_path):
             return
 
@@ -107,7 +107,17 @@ class _LayerConfigLoader:
             _ElementConfigLoader(use, os.path.join(use_dir, use), index_config).load()
 
     def _load_types(self) -> None:
-        ...
+        types_path = os.path.join(self._layer_path, str(Directory.TYPES.value))
+        if not os.path.isdir(types_path):
+            return
+
+        from src.core.config_space import config_space
+        for f in os.listdir(types_path):
+            if re.match(r".*\.yaml", f):
+                fspath = os.path.join(types_path, f)
+                result = expand_yaml(yaml.safe_load(open(fspath, encoding="utf-8")))
+                for k, v in result.items():
+                    config_space.set_key(k, v, fspath, None)
 
 
 class _ElementConfigLoader:
@@ -132,4 +142,7 @@ class _ElementConfigLoader:
         configs: Dict[str, Any] = self._index_config.get(str(IndexConfigKey.REGISTER_FOR_FILE.value))
         result = expand_yaml(configs, implicit_fields=self._implicit_fields)
         for k, v in result.items():
-            config_space.set_key(k, v, self._implicit_fields[self.IMPLICIT_FIELDS["filepath"]], None)
+            if "fspath" in k:
+                config_space.setdefault(k, []).append(v)
+            else:
+                config_space[k] = v
