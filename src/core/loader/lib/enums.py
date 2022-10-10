@@ -26,5 +26,6 @@ class IndexConfigKey(Enum):
 # Enum of directory names
 class Directory(Enum):
     PKGS = "pkgs"
-    LIB = "lib"
+    LIBS = "libs"
     USE = "use"
+    TYPES = "types"
