@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
+import yaml
 
 
 def transform_include_phase(file):
@@ -48,3 +49,10 @@ def parse_function_name(name):
     if name.endswith("()"):
         name = name[0:-2]
     return name
+
+
+def load_yaml(file):
+    if not os.path.exists(file):
+        return {}
+    with open(file) as f:
+        return yaml.safe_load(f)
