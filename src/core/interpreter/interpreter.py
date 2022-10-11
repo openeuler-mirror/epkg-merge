@@ -19,7 +19,10 @@ import_user_module()
 # 启动
 def startup(config_space) -> dict:
     # 从ConfigSpace获取py文件
-    py_list = collect_py(config_space)
+    # py_list = collect_py(config_space)
+    py_list = [
+        r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\src\core\interpreter\pycode1.py'
+    ]
     # 扫描模块名
     scan_module(py_list)
     # 扫描risk的import
@@ -40,12 +43,14 @@ def call(py_code) -> dict:
 
 
 def exec_code(py_code):
+    result = 1
     with stdoutIO() as s:
         try:
-            exec(py_code)
+             result = eval(py_code)
         except:
-            return False
-    return s.getvalue()
+            return result
+    # return s.getvalue()
+    return result
 
 
 @contextlib.contextmanager
@@ -59,9 +64,6 @@ def stdoutIO(stdout=None):
 
 
 if __name__ == '__main__':
-    py_list = [
-        ''
-    ]
     startup(1)
-    py_code = 'print(math.sqrt(4))'
-    print(call(py_code))
+    # py_code = 'math.sqrt(4)'
+    # print(call(py_code))
