@@ -8,3 +8,4 @@ def is_pycode(val: str):
     if not val.endswith("}}"):
         return False
     return True
+

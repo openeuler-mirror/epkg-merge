@@ -67,22 +67,36 @@ def merge_overrides(key, values):
     return temp_values
 
 
-def get_val(val):
-    if val is None:
-        return True
-    val_expanded = expand_macro(val)
+def convert_val(val, fspath):
+    if type(val) is not str:
+        return val
+    val_expanded = expand_macro(val, fspath)
     value = eval_val(val_expanded)
     return value
 
 
+def get_val(val, fspath):
+    if val is None:
+        return True
+    if type(val) is not list:
+        return convert_val(val, fspath)
+    temp_val = []
+    for i, value in enumerate(val):
+        val_real = convert_val(value, fspath)
+        temp_val.append(val_real)
+    return temp_val
+
+
 def merge_with_func(merge_func, merge_params, values_all):
     current = ""
+
     for cur_value in values_all:
-        when_value = get_val(cur_value.get("when"))
+        fspath = cur_value.get('fspath')
+        when_value = get_val(cur_value.get("when"), fspath)
         if not when_value:
             continue
         raw_value = cur_value.get("value", "")
-        value = get_val(raw_value)
+        value = get_val(raw_value, fspath)
         current, is_continue = merge_func(current, value, merge_params)
         if not is_continue:
             break
