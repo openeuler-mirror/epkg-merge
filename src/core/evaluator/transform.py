@@ -3,8 +3,6 @@
 import os
 import yaml
 
-from src.core.config_space import config_space
-
 
 def transform_include_phase(file):
     if not os.path.exists(file):
@@ -61,6 +59,7 @@ def load_yaml(file):
 
 
 def transform_real_key(key, value, fspath):
+    from src.core.config_space import config_space
     if "userConfigureFlags" not in key:
         return "", {}
     keys = key.split(".userConfigureFlags.")
@@ -78,7 +77,7 @@ def transform_real_key(key, value, fspath):
     else:
         flag = False
     use_config_flag = use_config_flag[1:]
-    config_space_key = prefix + ".use." + use_config_flag
+    config_space_key = prefix + ".use." + use_config_flag + ":default"
     config_space[config_space_key] = flag
 
     return real_key, {
