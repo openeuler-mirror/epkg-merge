@@ -82,7 +82,7 @@ class _LayerConfigLoader:
         from src.core.config_space import config_space
         for f in os.listdir(lib_path):
             if re.match(r".*\.py", f):
-                config_space.setdefault("lib", []).append(os.path.join(lib_path, f))
+                config_space.setdefault("libs", []).append(os.path.join(lib_path, f))
 
     def _load_use(self) -> None:
         use_dir = os.path.join(self._layer_path, str(Directory.USE.value))
@@ -104,7 +104,7 @@ class _LayerConfigLoader:
 
         for use in [f for f in os.listdir(use_dir) if
                     os.path.isfile(os.path.join(use_dir, f)) and re.match(pattern, f) and f != str(Config.INDEX.value)]:
-            _ElementConfigLoader(use, os.path.join(use_dir, use), index_config).load()
+            _ElementConfigLoader(".".join(use.split(".")[:-1]), os.path.join(use_dir, use), index_config).load()
 
     def _load_types(self) -> None:
         types_path = os.path.join(self._layer_path, str(Directory.TYPES.value))
@@ -114,10 +114,9 @@ class _LayerConfigLoader:
         from src.core.config_space import config_space
         for f in os.listdir(types_path):
             if re.match(r".*\.yaml", f):
-                fspath = os.path.join(types_path, f)
-                result = expand_yaml(yaml.safe_load(open(fspath, encoding="utf-8")))
+                result = expand_yaml(yaml.safe_load(open(os.path.join(types_path, f), encoding="utf-8")))
                 for k, v in result.items():
-                    config_space.set_key(k, v, fspath, None)
+                    config_space[k] = v
 
 
 class _ElementConfigLoader:

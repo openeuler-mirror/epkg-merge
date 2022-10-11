@@ -1,0 +1,7 @@
+doc: description-ssl
+enable: --enable-ssl
+disable: --disable-ssl
+buildRequires: build-deps-for-ssl
+requires: runtime-deps-for-ssl
+recommends: runtime-recommends-for-ssl
+conflicts: packageconfig-conflicts-for-ssl
