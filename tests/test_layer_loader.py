@@ -12,5 +12,5 @@ curdir = os.path.abspath(os.curdir)
 config_file = os.path.join(curdir, "demo/config.yaml")
 LayerLoader(config_file).load()
 
-name = config_space.get_key("pkgs.kernel.name")
+name = config_space.get_key("pkgs.python3.version")
 print(name)

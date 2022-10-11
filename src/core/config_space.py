@@ -1,10 +1,8 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 
-from src.core.loader.layer_loader import LayerLoader
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.evaluator.merge import merge_values
-from src.core.evaluator.check import check_value
 
 
 def make_synchronized(func):
@@ -23,9 +21,10 @@ def get_key_fspath(key):
     fspath_list = config_space.get(f"{raw_key}:fspath")
     return raw_key, fspath_list
 
+
 class ConfigSpace(dict):
     instance = None
-    fspath_readed = set()
+    fspath_loaded = set()
 
     @make_synchronized
     def __new__(cls, *args, **kwargs):
@@ -48,28 +47,28 @@ class ConfigSpace(dict):
         value = self.get(key)
         if value is not None:
             return value
-        
+
         value = self.get_key_value(key)
         if value:
             return value
 
         raw_key, fspath_list = get_key_fspath(key)
         fspath_set = set(fspath_list)
-        fspath_set_not_readed = fspath_set - ConfigSpace.fspath_readed
-        if not fspath_set_not_readed:
+        fspath_set_not_loaded = fspath_set - ConfigSpace.fspath_loaded
+        if not fspath_set_not_loaded:
             return None
-        for fspath in fspath_set_not_readed:
+        for fspath in fspath_set_not_loaded:
             # 文件已加载，但没有这个key
             YamlLoader(raw_key, fspath).load()
-            ConfigSpace.fspath_readed.add(fspath)
+            ConfigSpace.fspath_loaded.add(fspath)
         value = self.get_key_value(key)
         if value:
             return value
 
         return False
 
-    def set_key(self, key, value, fspath, when):
-        self.setdefault(f"{key}:values",[])
+    def add_key(self, key, value, fspath, when):
+        self.setdefault(f"{key}:values", [])
         self[f"{key}:values"].append({
             "value": value,
             "fspath": fspath,
@@ -87,10 +86,11 @@ class ConfigSpace(dict):
             if ":fspath" in key:
                 continue
             if ":values" in key:
-                raw_key = key.replace(":values","")
+                raw_key = key.replace(":values", "")
                 value = self.get_key(raw_key)
                 short_key = raw_key.replace(pre_name, "")
                 package_info[short_key] = value
         return package_info
+
 
 config_space = ConfigSpace()
