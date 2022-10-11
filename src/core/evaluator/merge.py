@@ -13,18 +13,18 @@ def cmp(v_left, v_right):
     # 如何获取value的
     v_left_fspath = v_left["fspath"]
     v_right_fspath = v_right["fspath"]
-    v_left_doctype = config_space.get_key(f"files.{v_left_fspath}.docType")
-    v_right_doctype = config_space.get_key(f"files.{v_right_fspath}.docType")
+    v_left_doctype = config_space.get_key(f"files.\"{v_left_fspath}\".docType")
+    v_right_doctype = config_space.get_key(f"files.\"{v_right_fspath}\".docType")
     sort_result = sort_doctype(v_left_doctype, v_right_doctype)
     if sort_result != 0:
         return sort_result
 
-    v_left_layername = config_space.get_key(f"files.{v_left_fspath}.layerName")
-    v_right_layername = config_space.get_key(f"files.{v_right_fspath}.layerName")
+    v_left_layername = config_space.get_key(f"files.\"{v_left_fspath}\".cspath")
+    v_right_layername = config_space.get_key(f"files.\"{v_right_fspath}\".cspath")
     if v_left_layername < v_right_layername:
-        return -1
-    else:
         return 1
+    else:
+        return -1
 
 
 def eval_val(val):

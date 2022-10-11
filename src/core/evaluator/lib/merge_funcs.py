@@ -13,17 +13,17 @@ def sort_doctype(left, right):
     if (not left_in) and (not right_in):
         return 0
     if not left_in:
-        return -1
-    if not right_in:
         return 1
+    if not right_in:
+        return -1
 
     left_index = type_list.index(left)
     right_index = type_list.index(right)
 
     if left_index < right_index:
-        return -1
-    else:
         return 1
+    else:
+        return -1
 
 
 def merge_policy_first(collect_str, new_val, merge_params):
