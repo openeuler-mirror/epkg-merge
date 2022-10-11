@@ -3,10 +3,9 @@
 
 import re
 
-from src.core.config_space import config_space
-
 
 def expand_macro(str_macro):
+    from src.core.config_space import config_space
     str_macro += " "
     patterns = [r'(%%%?{?(.+?)[}" "\s])', r'(dd?\.(.+?)[" "\s])']
     macro_keys = {}
