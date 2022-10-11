@@ -7,10 +7,48 @@ from src.core.config_space import config_space
 import os
 
 
-curdir = os.path.abspath(os.curdir)
-
-config_file = os.path.join(curdir, "demo/config.yaml")
+current_dir = os.path.abspath(os.curdir)
+config_file = os.path.join(current_dir, "demo/config.yaml")
 LayerLoader(config_file).load()
 
-name = config_space.get_key("pkgs.python3.version")
-print(name)
+# name = config_space.get_key("pkgs.python3.subpackages.python3-unversioned-command.asWholeName")
+# print(name)
+
+c = config_space.get_key("pkgs.python3:loadedKeys")
+
+# for i in c:
+#
+#     if "useConfigureFlags" in i:
+#         continue
+#     print(i)
+#     name = config_space.get_key(i)
+#     print(name)
+p = "python3"
+x  = config_space.get_package(p)
+
+print(x)
+import yaml
+
+import sys
+import yaml
+
+
+with open(f"./{p}.yaml", "w") as f:
+    # x = u"""\
+    # -----BEGIN RSA PRIVATE KEY-----
+    # MIIEogIBAAKCAQEA6oySC+8/N9VNpk0gJS7Gk8vn9sYN7FhjpAQnoHRqTN/Oaiyx
+    # xk2AleP2vXpojA/DHldT1JO+o3j56AHD+yfNFFeYvgWKDY35g49HsZZhbyCEAB45
+    # ...
+    # """
+
+    yaml.SafeDumper.org_represent_str = yaml.SafeDumper.represent_str
+
+
+    def repr_str(dumper, data):
+        if '\n' in data:
+            return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
+        return dumper.org_represent_str(data)
+    yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
+    # yaml.safe_dump(x, sys.stdout)
+
+    yaml.safe_dump(x, f, allow_unicode='uft-8')

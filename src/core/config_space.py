@@ -3,6 +3,7 @@
 
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.evaluator.merge import merge_values
+from src.core.evaluator.transform import transform_key_with_use_configure
 
 
 def make_synchronized(func):
@@ -17,6 +18,7 @@ def make_synchronized(func):
 
 
 def get_key_fspath(key):
+    key = key.rsplit(":",1)[0]
     raw_key = ".".join(key.split(".")[:2])
     fspath_list = config_space.get(f"{raw_key}:fspath")
     return raw_key, fspath_list
@@ -33,8 +35,12 @@ class ConfigSpace(dict):
         return cls.instance
 
     def get_key_value(self, key):
+        value = self.get(key)
+        if value is not None:
+            return value
         values = self.get(f"{key}:values")
         if values is not None:
+
             value = merge_values(key)
             # if not check_value(key, value):
             #     pass # 告警
@@ -68,29 +74,46 @@ class ConfigSpace(dict):
         return False
 
     def add_key(self, key, value, fspath, when):
-        self.setdefault(f"{key}:values", [])
-        self[f"{key}:values"].append({
-            "value": value,
-            "fspath": fspath,
-            "when": when
-        })
+        key_c, value_c = transform_key_with_use_configure(key, value, fspath)
+        if not key_c:
+            self.setdefault(f"{key}:values", [])
+            self[f"{key}:values"].append({
+                "value": value,
+                "fspath": fspath,
+                "when": when
+            })
+        else:
+            self.setdefault(f"{key_c}:values",[]).append(value_c)
 
     def get_package(self, package_name):
         pre_name = f"pkgs.{package_name}"
-        keys = self.keys()
+        # keys = self.keys()
         package_info = {}
         self.get_key(pre_name)
-        for key in keys:
-            if pre_name not in key:
+        loaded_keys = config_space.get_key("pkgs.python3:loadedKeys")
+        for key in loaded_keys:
+            if "useConfigureFlags" in key:
                 continue
-            if ":fspath" in key:
-                continue
-            if ":values" in key:
-                raw_key = key.replace(":values", "")
-                value = self.get_key(raw_key)
-                short_key = raw_key.replace(pre_name, "")
-                package_info[short_key] = value
-        return package_info
+            value = config_space.get_key(key)
+            short_key = key.replace(f"{pre_name}.", "")
+            package_info[short_key] = value
+
+        sorted_keys = sorted(package_info.keys())
+        # for key in keys:
+        #     if pre_name not in key:
+        #         continue
+        #     if ":fspath" in key:
+        #         continue
+        #     if ":values" in key:
+        #         raw_key = key.replace(":values", "")
+        #         value = self.get_key(raw_key)
+        #         short_key = raw_key.replace(pre_name, "")
+        #         package_info[short_key] = value
+        package_info_sorted = {}
+        for key in sorted_keys:
+            package_info_sorted[key] = package_info[key]
+        return package_info_sorted
+
 
 
 config_space = ConfigSpace()
