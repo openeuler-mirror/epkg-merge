@@ -29,7 +29,7 @@ class YamlLoader:
         configs = yaml.safe_load(open(self._fspath, encoding="utf-8"))
         result = expand_yaml(configs, self._cspath)
         for k, v in result.items():
-            config_space.set_key(k, v, self._fspath, None)
+            config_space.add_key(k, v, self._fspath, None)
             if ":" not in k:
                 config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(k)
 
@@ -46,7 +46,7 @@ class YamlLoader:
                     transform_result = getattr(transform, func)(os.path.join(os.path.dirname(self._fspath), f))
                     result = expand_yaml(transform_result, self._cspath)
                     for k, v in result.items():
-                        config_space.set_key(k, v, self._fspath, None)
+                        config_space.add_key(k, v, self._fspath, None)
                         if ":" not in k:
                             config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(k)
 
