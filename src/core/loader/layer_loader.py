@@ -104,7 +104,7 @@ class _LayerConfigLoader:
 
         for use in [f for f in os.listdir(use_dir) if
                     os.path.isfile(os.path.join(use_dir, f)) and re.match(pattern, f) and f != str(Config.INDEX.value)]:
-            _ElementConfigLoader(use, os.path.join(use_dir, use), index_config).load()
+            _ElementConfigLoader(".".join(use.split(".")[:-1]), os.path.join(use_dir, use), index_config).load()
 
     def _load_types(self) -> None:
         types_path = os.path.join(self._layer_path, str(Directory.TYPES.value))
