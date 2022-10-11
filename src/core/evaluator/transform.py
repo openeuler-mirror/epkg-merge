@@ -3,6 +3,8 @@
 import os
 import yaml
 
+from src.core.config_space import config_space
+
 
 def transform_include_phase(file):
     if not os.path.exists(file):
@@ -56,3 +58,31 @@ def load_yaml(file):
         return {}
     with open(file) as f:
         return yaml.safe_load(f)
+
+
+def transform_real_key(key, value, fspath):
+    if "userConfigureFlags" not in key:
+        return "", {}
+    keys = key.split(".userConfigureFlags.")
+    if len(keys) < 2:
+        return "", {}
+    prefix = keys[0]
+    flags = keys[1].split(".", maxsplit=1)
+    if len(flags) < 2:
+        return "", {}
+    use_config_flag = flags[0]
+    suffix = flags[1]
+    real_key = prefix + "." + suffix
+    if use_config_flag.startswith("+"):
+        flag = True
+    else:
+        flag = False
+    use_config_flag = use_config_flag[1:]
+    config_space_key = prefix + ".use." + use_config_flag
+    config_space[config_space_key] = flag
+
+    return real_key, {
+        "value": value,
+        "fspath": fspath,
+        "when": "%%use.{}".format(use_config_flag)
+    }
