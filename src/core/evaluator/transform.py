@@ -92,7 +92,7 @@ def transform_key_with_use_configure(key, value, fspath):
         real_key = f"{prefix}.env.useConfigureFlags"
     elif suffix.endswith('disable'):
         real_key = f"{prefix}.env.useConfigureFlags"
-        value_key["when"] = "{{ not %%use.{} }}".format(use_config_flag)
+        value_key["when"] = "{{ " + "not %%use.{}".format(use_config_flag) + " }}"
 
     config_space_key = prefix + ".use." + use_config_flag + ":default"
     config_space[config_space_key] = flag
