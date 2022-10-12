@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from constants import DeafultLibs
+from src.core.interpreter.constants import DeafultLibs
 
 
 def import_default_lib() -> list:

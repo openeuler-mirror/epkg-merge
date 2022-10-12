@@ -3,8 +3,7 @@
 from src.core.evaluator.lib.merge_funcs import get_merge_func
 from functools import cmp_to_key
 from src.core.evaluator.expand import expand_macro
-from src.core.common import is_pycode
-from src.core.pycode import eval_python
+from src.core.common import is_pycode, eval_python
 from src.core.evaluator.lib.merge_funcs import sort_doctype
 
 
@@ -25,6 +24,7 @@ def cmp(v_left, v_right):
         return 1
     else:
         return -1
+
 
 
 def eval_val(val):

@@ -110,7 +110,7 @@ subpackages:
           - "python = %{version}-%{release}"
       conflicts:
           - "python2"
-      asWholeName: yes
+      asWholeName: "yes"
 
     devel: 
       meta.summary: Libraries and header files needed for Python development

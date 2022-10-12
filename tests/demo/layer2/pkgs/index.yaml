@@ -3,7 +3,7 @@ registerConfigSpaceForEachFile:
   pkgs.%%_basename:fspath: "%%_filepath"
   files."%%_filepath":
     name: "%%_basename" # can catch spell error if conflict with the name defined in yaml
-    docType: base
+    docType: build
     includePhase: phase.sh
     includeRuntimePhase: runtime-phase.sh
     include: versions.yaml files.yaml
