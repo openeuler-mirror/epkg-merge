@@ -104,7 +104,8 @@ useConfigureFlags:
         doc: sqlite3 loadable extension support
         enable: --enable-loadable-sqlite-extensions
         disable: --disable-loadable-sqlite-extensions
-        buildRequires: sqlite-devel
+        buildRequires:
+            - "sqlite-devel"
         files: |
           %{dynload_dir}/_sqlite3.%{SOABI_optimized}.so
           %dir %{pylibdir}/sqlite3/

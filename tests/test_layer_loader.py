@@ -2,7 +2,6 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 
 from src.core.loader.layer_loader import LayerLoader
-from src.core.loader.yaml_loader import YamlLoader
 from src.core.config_space import config_space
 import os
 from src.core.interpreter.interpreter import startup
@@ -16,32 +15,15 @@ startup(config_space)
 # print(name)
 
 c = config_space.get_key("pkgs.python3:loadedKeys")
-
-# for i in c:
-#
-#     if "useConfigureFlags" in i:
-#         continue
-#     print(i)
-#     name = config_space.get_key(i)
-#     print(name)
 p = "python3"
-x  = config_space.get_package_format_json(p)
+x = config_space.get_package_format_json(p)
 # x = format_package_json(x)
 # print(x)
 import yaml
 
 
 with open(f"./{p}.yaml", "w") as f:
-    # x = u"""\
-    # -----BEGIN RSA PRIVATE KEY-----
-    # MIIEogIBAAKCAQEA6oySC+8/N9VNpk0gJS7Gk8vn9sYN7FhjpAQnoHRqTN/Oaiyx
-    # xk2AleP2vXpojA/DHldT1JO+o3j56AHD+yfNFFeYvgWKDY35g49HsZZhbyCEAB45
-    # ...
-    # """
-
     yaml.SafeDumper.org_represent_str = yaml.SafeDumper.represent_str
-
-
     def repr_str(dumper, data):
         if '\n' in data:
             return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')

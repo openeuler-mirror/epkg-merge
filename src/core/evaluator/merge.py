@@ -93,7 +93,7 @@ def merge_with_func(merge_func, merge_params, values_all):
     for cur_value in values_all:
         fspath = cur_value.get('fspath')
         when_value = get_val(cur_value.get("when"), fspath)
-        if not when_value:
+        if not when_value or str(when_value).upper()=="FALSE":
             continue
         raw_value = cur_value.get("value", "")
         value = get_val(raw_value, fspath)
