@@ -1,9 +1,5 @@
 #!/usr/bin/python3
-import os
-import sys
-import re
-import inspect
-
+from constants import DiskLibs
 
 # 扫描模块名
 def scan_module(py_list) -> dict:
@@ -60,6 +56,11 @@ def get_import_name(py):
         while line:
             if line.startswith("import "):
                 import_i = line[7:].strip()
-                import_lists.append(import_i)  # 去除 "import"
+                # 过滤高危库
+                for i in DiskLibs.list():
+                    if import_i == i:
+                        break
+                else:
+                    import_lists.append(import_i)  # 去除 "import"
             line = f.readline()
     return import_lists
