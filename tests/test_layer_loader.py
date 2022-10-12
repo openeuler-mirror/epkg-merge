@@ -6,7 +6,7 @@ from src.core.loader.yaml_loader import YamlLoader
 from src.core.config_space import config_space
 import os
 from src.core.interpreter.interpreter import startup
-
+from src.core.common import format_package_json
 
 current_dir = os.path.abspath(os.curdir)
 config_file = os.path.join(current_dir, "demo/config.yaml")
@@ -25,12 +25,9 @@ c = config_space.get_key("pkgs.python3:loadedKeys")
 #     name = config_space.get_key(i)
 #     print(name)
 p = "python3"
-x  = config_space.get_package(p)
-
-print(x)
-import yaml
-
-import sys
+x  = config_space.get_package_format_json(p)
+# x = format_package_json(x)
+# print(x)
 import yaml
 
 
