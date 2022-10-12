@@ -18,12 +18,12 @@ class StartUp:
         try:
             # from src.core.config_space import config_space
             # 从ConfigSpace获取py文件
-            # py_list = config_space.get('libs')
-            py_list = [
-                    r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py',
-                    r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\exclusive_info.py',
-                    r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\restart.py'
-            ]
+            py_list = config_space.get('libs')
+            # py_list = [
+            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py',
+            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\exclusive_info.py',
+            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\restart.py'
+            # ]
             # 扫描方法名
             modulea_dict = scanner.scan_module(py_list)
             # 扫描risk的import
