@@ -3,8 +3,7 @@
 from src.core.evaluator.lib.merge_funcs import get_merge_func
 from functools import cmp_to_key
 from src.core.evaluator.expand import expand_macro
-from src.core.common import is_pycode
-from src.core.pycode import eval_python
+from src.core.common import is_pycode, eval_python
 from src.core.evaluator.lib.merge_funcs import sort_doctype
 
 
@@ -13,18 +12,19 @@ def cmp(v_left, v_right):
     # 如何获取value的
     v_left_fspath = v_left["fspath"]
     v_right_fspath = v_right["fspath"]
-    v_left_doctype = config_space.get_key(f"files.{v_left_fspath}.docType")
-    v_right_doctype = config_space.get_key(f"files.{v_right_fspath}.docType")
+    v_left_doctype = config_space.get_key(f"files.\"{v_left_fspath}\".docType")
+    v_right_doctype = config_space.get_key(f"files.\"{v_right_fspath}\".docType")
     sort_result = sort_doctype(v_left_doctype, v_right_doctype)
     if sort_result != 0:
         return sort_result
 
-    v_left_layername = config_space.get_key(f"files.{v_left_fspath}.layerName")
-    v_right_layername = config_space.get_key(f"files.{v_right_fspath}.layerName")
+    v_left_layername = config_space.get_key(f"files.\"{v_left_fspath}\".cspath")
+    v_right_layername = config_space.get_key(f"files.\"{v_right_fspath}\".cspath")
     if v_left_layername < v_right_layername:
-        return -1
-    else:
         return 1
+    else:
+        return -1
+
 
 
 def eval_val(val):
@@ -67,22 +67,36 @@ def merge_overrides(key, values):
     return temp_values
 
 
-def get_val(val):
-    if val is None:
-        return True
-    val_expanded = expand_macro(val)
+def convert_val(val, fspath):
+    if type(val) is not str:
+        return val
+    val_expanded = expand_macro(val, fspath)
     value = eval_val(val_expanded)
     return value
 
 
+def get_val(val, fspath):
+    if val is None:
+        return True
+    if type(val) is not list:
+        return convert_val(val, fspath)
+    temp_val = []
+    for i, value in enumerate(val):
+        val_real = convert_val(value, fspath)
+        temp_val.append(val_real)
+    return temp_val
+
+
 def merge_with_func(merge_func, merge_params, values_all):
     current = ""
+
     for cur_value in values_all:
-        when_value = get_val(cur_value.get("when"))
-        if not when_value:
+        fspath = cur_value.get('fspath')
+        when_value = get_val(cur_value.get("when"), fspath)
+        if not when_value or str(when_value).upper()=="FALSE":
             continue
         raw_value = cur_value.get("value", "")
-        value = get_val(raw_value)
+        value = get_val(raw_value, fspath)
         current, is_continue = merge_func(current, value, merge_params)
         if not is_continue:
             break

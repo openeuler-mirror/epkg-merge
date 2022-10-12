@@ -56,3 +56,47 @@ def load_yaml(file):
         return {}
     with open(file) as f:
         return yaml.safe_load(f)
+
+
+def transform_key_with_use_configure(key, value, fspath):
+    from src.core.config_space import config_space
+    if "useConfigureFlags" not in key:
+        return "", {}
+    keys = key.split(".useConfigureFlags.")
+    if len(keys) < 2:
+        return "", {}
+    prefix = keys[0]
+    flags = keys[1].split(".", maxsplit=1)
+    if len(flags) < 2:
+        return "", {}
+    use_config_flag = flags[0]
+    suffix = flags[1]
+
+    if use_config_flag.startswith("+"):
+        flag = True
+        use_config_flag = use_config_flag[1:]
+    elif use_config_flag.startswith("-"):
+        flag = False
+        use_config_flag = use_config_flag[1:]
+    else:
+        flag = True
+
+
+    value_key = {
+        "value": value,
+        "fspath": fspath,
+        "when": "%%use.{}".format(use_config_flag)
+    }
+    real_key = prefix + "." + suffix
+    if suffix.endswith('enable'):
+        real_key = f"{prefix}.env.useConfigureFlags"
+    elif suffix.endswith('disable'):
+        real_key = f"{prefix}.env.useConfigureFlags"
+        value_key["when"] = "{{ " + "not %%use.{}".format(use_config_flag) + " }}"
+
+    config_space_key = prefix + ".use." + use_config_flag + ":default"
+    config_space[config_space_key] = flag
+
+
+
+    return real_key, value_key

@@ -104,7 +104,8 @@ useConfigureFlags:
         doc: sqlite3 loadable extension support
         enable: --enable-loadable-sqlite-extensions
         disable: --disable-loadable-sqlite-extensions
-        buildRequires: sqlite-devel
+        buildRequires:
+            - "sqlite-devel"
         files: |
           %{dynload_dir}/_sqlite3.%{SOABI_optimized}.so
           %dir %{pylibdir}/sqlite3/
@@ -115,7 +116,7 @@ useConfigureFlags:
           %{pylibdir}/sqlite3/test
           %{dynload_dir}/_sqlite3.%{SOABI_debug}.so
 
-subpackages:
+subpackage:
     python3-unversioned-command: 
       meta.summary: 'The \"python\" command that runs Python 3'
       meta.description: This package contains /usr/bin/python - the "python" command that runs Python 3.

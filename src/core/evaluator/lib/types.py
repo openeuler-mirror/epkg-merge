@@ -11,9 +11,9 @@ def get_func(key, func_name, params_name):
         else:
             key_refer_attrs = config_space.get(f"{temp_key}:referAttrs")
         if key_refer_attrs:
-            func_ = config_space.get(f"{temp_key}.{last_key}:{func_name}")
+            func_ = config_space.get(f"{key_refer_attrs}.{last_key}:{func_name}")
             if func_:
-                return func_, config_space.get(f"{temp_key}.{last_key}:{params_name}", "")
+                return func_, config_space.get(f"{key_refer_attrs}.{last_key}:{params_name}", "")
         last_temp_key = temp_key.rsplit(".", 1)[0]
         if last_temp_key == temp_key:
             return None, ""
