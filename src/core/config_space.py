@@ -4,7 +4,7 @@
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.evaluator.merge import merge_values
 from src.core.evaluator.transform import transform_key_with_use_configure
-
+from src.core.common import format_package_json
 
 def make_synchronized(func):
     import threading
@@ -104,6 +104,10 @@ class ConfigSpace(dict):
         for key in sorted_keys:
             package_info_sorted[key] = package_info[key]
         return package_info_sorted
+
+    def get_package_format_json(self, package_name):
+        pacakge_json = self.get_package(package_name)
+        return format_package_json(pacakge_json)
 
 
 config_space = ConfigSpace()
