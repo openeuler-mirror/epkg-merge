@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 import ast
-import constants
+from src.core.interpreter import constants
 import sys
 import re
-sys.path.append(r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\src\core\interpreter')
 
 
 import_list = constants.import_list

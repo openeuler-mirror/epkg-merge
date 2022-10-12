@@ -1,13 +1,11 @@
 #!/usr/bin/python3
-from scanner import scan_module, scan_risk_import
-from importer import import_default_lib
-import constants
-import sys
-sys.path.append(r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\src\core\interpreter')
+from src.core.interpreter import scanner
+from src.core.interpreter import importer
+from src.core.interpreter import constants
 
 
 # 导入常用库
-default_lib = import_default_lib()
+default_lib = importer.import_default_lib()
 for lib in default_lib:
     exec('import ' + lib)
 
@@ -27,9 +25,9 @@ class StartUp:
                     r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\restart.py'
             ]
             # 扫描方法名
-            modulea_dict = scan_module(py_list)
+            modulea_dict = scanner.scan_module(py_list)
             # 扫描risk的import
-            imports_dict = scan_risk_import(py_list)
+            imports_dict = scanner.scan_risk_import(py_list)
             for i in imports_dict:
                 for j in i['import_lists']:
                     # 添加扫描到的第三方库

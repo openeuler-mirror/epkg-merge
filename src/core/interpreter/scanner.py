@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from constants import DiskLibs
+from src.core.interpreter import constants
 
 # 扫描模块名
 def scan_module(py_list) -> dict:
@@ -53,7 +53,7 @@ def get_import_name(py):
             if line.startswith("import "):
                 import_i = line[7:].strip()
                 # 过滤高危库
-                for i in DiskLibs.list():
+                for i in constants.DiskLibs.list():
                     if import_i == i:
                         break
                 else:
