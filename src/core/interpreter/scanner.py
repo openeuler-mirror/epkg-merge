@@ -1,5 +1,7 @@
 #!/usr/bin/python3
-from src.core.interpreter.constants import DiskLibs
+from constants import DiskLibs
+import re
+import sys
 
 # 扫描模块名
 def scan_module(py_list) -> dict:
@@ -9,10 +11,6 @@ def scan_module(py_list) -> dict:
             "py_name": py,
             "module_lists": get_methods_name(py)
         }
-        # py_name = re.findall(r'(\w+)+\.', py)
-        # py_path = re.findall(r'^.*\\', py)
-        # sys.path.append(py_path[0])
-        # exec('import ' + py_name[0])
         list_modules.append(method_dict)
     print("扫描的方法名：")
     print(list_modules)
