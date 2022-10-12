@@ -3,6 +3,8 @@ import ast
 import constants
 import sys
 import re
+sys.path.append(r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\src\core\interpreter')
+
 
 import_list = constants.import_list
 import_py = constants.import_py

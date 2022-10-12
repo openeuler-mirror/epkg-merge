@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 from constants import DiskLibs
-import re
-import sys
 
 # 扫描模块名
 def scan_module(py_list) -> dict:
