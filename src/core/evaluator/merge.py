@@ -4,7 +4,7 @@ from src.core.evaluator.lib.merge_funcs import get_merge_func
 from functools import cmp_to_key
 from src.core.evaluator.expand import expand_macro
 from src.core.common import is_pycode
-from src.core.py_interpreter.pycode import eval_python
+from src.core.pycode import eval_python
 from src.core.evaluator.lib.merge_funcs import sort_doctype
 
 

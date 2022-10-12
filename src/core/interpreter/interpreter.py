@@ -2,7 +2,6 @@
 import contextlib
 import sys
 
-from collecter import collect_py
 from scanner import scan_module, scan_risk_import
 from importer import import_user_module, import_default_lib
 from executor import validate_code
@@ -19,11 +18,19 @@ import_user_module()
 # 启动
 def startup(config_space) -> dict:
     # 从ConfigSpace获取py文件
-    py_list = collect_py(config_space)
+    # py_list = collect_py(config_space)
+    py_list = [
+        r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py',
+        r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\exclusive_info.py',
+        r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\restart.py'
+    ]
     # 扫描模块名
-    scan_module(py_list)
+    modulea_dict = scan_module(py_list)
     # 扫描risk的import
-    scan_risk_import(py_list)
+    imports_dict = scan_risk_import(py_list)
+    for i in imports_dict:
+        for j in i['import_lists']:
+            exec('import ' + j)
 
 
 # 执行
@@ -40,12 +47,14 @@ def call(py_code) -> dict:
 
 
 def exec_code(py_code):
+    result = 1
     with stdoutIO() as s:
         try:
-            exec(py_code)
+             result = eval(py_code)
         except:
-            return False
-    return s.getvalue()
+            return result
+    # return s.getvalue()
+    return result
 
 
 @contextlib.contextmanager
@@ -59,9 +68,6 @@ def stdoutIO(stdout=None):
 
 
 if __name__ == '__main__':
-    py_list = [
-        ''
-    ]
-    startup(1)
-    py_code = 'print(math.sqrt(4))'
+    # startup(1)
+    py_code = 'not False'
     print(call(py_code))
