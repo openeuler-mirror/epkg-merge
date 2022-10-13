@@ -5,7 +5,7 @@ import os
 import yaml
 import argparse
 
-from src.core.py_interpreter.interpreter import startup
+from src.core.interpreter.interpreter import StartUp
 
 
 def handle_load(file):
@@ -47,7 +47,7 @@ def main():
     args = vars(parser.parse_args())
     if args["config_file"]:
         handle_load(args["config_file"])
-        startup(config_space)
+        StartUp.startup(config_space)
     packages = []
     if args["packages"]:
         packages = args["packages"].split()

@@ -2,6 +2,7 @@
 import ast
 from src.core.interpreter import constants
 import sys
+import os
 import re
 
 
@@ -11,8 +12,10 @@ for i in import_list:
     exec('import ' + i)
 for j in import_py:
     py_name = re.findall(r'(\w+)+\.', j)
-    py_path = re.findall(r'^.*\\', j)
-    sys.path.append(py_path[0])
+    py_path, _ = os.path.split(j)
+    # py_path = re.findall(r'^.*\\', j)
+    if py_path:
+        sys.path.append(py_path)
     exec('from ' + py_name[0] + ' import *')
 
 
