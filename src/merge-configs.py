@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import sys
@@ -5,7 +6,6 @@ import argparse
 import os
 
 sys.path.append(os.path.abspath("."))
-
 from src.core.interpreter.interpreter import StartUp
 from src.cli.cli_handler import handle_load, handle_output, handle_package
 

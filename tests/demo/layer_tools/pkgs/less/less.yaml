@@ -8,10 +8,8 @@ source:
   0: http://www.greenwoodsoftware.com/less/%{name}-%{version}.tar.gz
 patchset:
   0: less-394-time.patch
-
-buildRequires:	
+buildRequires:
   - "gcc make ncurses-devel autoconf automake libtool"
-
 meta.description: |
   Less is a pager. A pager is a program that displays text files.
   Other pagers commonly in use are more and pg. Pagers are often
