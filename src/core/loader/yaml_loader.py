@@ -29,9 +29,9 @@ class YamlLoader:
         configs = yaml.safe_load(open(self._fspath, encoding="utf-8"))
         result = expand_yaml(configs, self._cspath)
         for k, v in result.items():
-            config_space.add_key(k, v, self._fspath, None)
+            kk = config_space.add_key(k, v, self._fspath, None)
             if ":" not in k:
-                config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(k)
+                config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(kk)
 
     def _load_include_and_inherit(self) -> None:
         from src.core.config_space import config_space

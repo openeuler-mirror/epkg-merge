@@ -3,7 +3,8 @@
 
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.evaluator.merge import merge_values
-from src.core.evaluator.transform import transform_key_with_use_configure
+from src.core.evaluator.transform import \
+    transform_key_with_use_configure, transform_key_with_when, transform_key_default
 from src.core.common import format_package_json
 
 def make_synchronized(func):
@@ -19,8 +20,17 @@ def make_synchronized(func):
 
 def get_key_fspath(key):
     key = key.rsplit(":", 1)[0]
-    raw_key = ".".join(key.split(".")[:2])
-    fspath_list = config_space.get(f"{raw_key}:fspath")
+    temp_key = key
+    fspath_list = None
+    while True:
+        raw_key = temp_key
+        fspath_list = config_space.get(f"{raw_key}:fspath")
+        if fspath_list:
+            break
+        raw_key = temp_key.rsplit(".", 1)[0]
+        if temp_key == raw_key:
+            break
+        temp_key = raw_key
     return raw_key, fspath_list
 
 
@@ -55,7 +65,9 @@ class ConfigSpace(dict):
             return value
 
         raw_key, fspath_list = get_key_fspath(key)
-        fspath_set = set(fspath_list)
+        fspath_set = set()
+        if type(fspath_list) is list:
+            fspath_set = set(fspath_list)
         fspath_set_not_loaded = fspath_set - ConfigSpace.fspath_loaded
         if not fspath_set_not_loaded:
             return None
@@ -70,15 +82,20 @@ class ConfigSpace(dict):
         return False
 
     def add_key(self, key, value, fspath, when):
-        key_c, value_c = transform_key_with_use_configure(key, value, fspath)
+        # key_c, value_c = transform_key_with_use_configure(key, value, fspath)
+        key_c, value_c = transform_key_default(key, value, fspath)
         if not key_c:
             self.setdefault(f"{key}:values", []).append({
                 "value": value,
                 "fspath": fspath,
                 "when": when
             })
+            return key
         else:
             self.setdefault(f"{key_c}:values", []).append(value_c)
+            return key_c
+
+
 
     def get_package(self, package_name):
         pre_name = f"pkgs.{package_name}"

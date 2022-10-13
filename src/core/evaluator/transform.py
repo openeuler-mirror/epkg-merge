@@ -118,3 +118,16 @@ def transform_key_with_when(key, value, fspath):
     }
     return real_key, value_key
 
+
+def transform_key_default(key, value, fspath):
+    key_c, value_c = transform_key_with_use_configure(key, value, fspath)
+    if key_c == "":
+        key_c, value_c = transform_key_with_when(key, value, fspath)
+    else:
+        key_c, value_c = transform_key_with_when(key_c, value_c, fspath)
+    if key_c == "":
+        return key, {"value": value,
+                     "fspath": fspath,
+                     "when": None}
+    else:
+        return key_c, value_c

@@ -14,8 +14,9 @@ StartUp.startup(config_space)
 # name = config_space.get_key("pkgs.python3.subpackages.python3-unversioned-command.asWholeName")
 # print(name)
 
-# c = config_space.get_key("pkgs.python3:loadedKeys")
-p = "python3"
+c = config_space.get_key("use.ssl.doc")
+print(c)
+p = "busybox"
 x = config_space.get_package_format_json(p)
 # x = format_package_json(x)
 # print(x)
