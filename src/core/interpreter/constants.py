@@ -1,6 +1,10 @@
 from enum import Enum
 
 
+import_list = []
+import_py = []
+
+
 class DeafultLibs(Enum):
     math = 'math'
     datetime = 'datetime'

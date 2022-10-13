@@ -1,74 +1,50 @@
 #!/usr/bin/python3
-import contextlib
-import sys
+from src.core.interpreter import scanner
+from src.core.interpreter import importer
+from src.core.interpreter import constants
 
-from src.core.interpreter.scanner import scan_module, scan_risk_import
-from src.core.interpreter.importer import import_user_module, import_default_lib
-from src.core.interpreter.executor import validate_code
-from io import StringIO
-from src.core.interpreter.collecter import collect_py
 
 # 导入常用库
-default_lib = import_default_lib()
+default_lib = importer.import_default_lib()
 for lib in default_lib:
     exec('import ' + lib)
-# 导入ConfigSpace获取的所有python模块
-import_user_module()
 
 
-# 启动
-def startup(config_space) -> dict:
-    # 从ConfigSpace获取py文件
-    py_list = collect_py(config_space)
-    # py_list = [
-    #     r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py',
-    #     r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\exclusive_info.py',
-    #     r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\restart.py'
-    # ]
-    # 扫描模块名
-    # modulea_dict = scan_module(py_list)
-    # # 扫描risk的import
-    # imports_dict = scan_risk_import(py_list)
-    # for i in imports_dict:
-    #     for j in i['import_lists']:
-    #         exec('import ' + j)
+class StartUp:
+    # 启动
 
-
-# 执行
-def call(py_code) -> dict:
-    result = {
-        # 代码
-        'code': py_code,
-        # 合法性校验
-        'legality': validate_code(py_code),
-        # 代码执行
-        'result': exec_code(py_code)
-    }
-    return result
-
-
-def exec_code(py_code):
-    result = 1
-    with stdoutIO() as s:
+    @staticmethod
+    def startup(config_space) -> dict:
         try:
-             result = eval(py_code)
+            # from src.core.config_space import config_space
+            # 从ConfigSpace获取py文件
+            py_list = config_space.get('libs')
+            # py_list = [
+            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py',
+            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\exclusive_info.py',
+            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\restart.py'
+            # ]
+            # 扫描方法名
+            modulea_dict = scanner.scan_module(py_list)
+            # 扫描risk的import
+            imports_dict = scanner.scan_risk_import(py_list)
+            for i in imports_dict:
+                for j in i['import_lists']:
+                    # 添加扫描到的第三方库
+                    constants.import_list.append(j)
+                # 添加扫描到的py文件
+                constants.import_py.append(i['py_name'])
+            # 加载executor中刚刚加入的import
+            import executor
         except:
-            return result
-    # return s.getvalue()
-    return result
-
-
-@contextlib.contextmanager
-def stdoutIO(stdout=None):
-    old = sys.stdout
-    if stdout is None:
-        stdout = StringIO()
-    sys.stdout = stdout
-    yield stdout
-    sys.stdout = old
+            return {'startup_status': False}
+        else:
+            return {'startup_status': True}
 
 
 if __name__ == '__main__':
-    # startup(1)
-    py_code = 'not False'
-    print(call(py_code))
+    # config_space = ConfigSpace()
+    print(StartUp.startup(''))
+    py_code = 'cal_floor(4)'
+    import executor
+    print(executor.call(py_code))

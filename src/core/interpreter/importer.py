@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
-from src.core.interpreter.constants import DeafultLibs
+from src.core.interpreter import constants
 
 
 def import_default_lib() -> list:
-    return DeafultLibs.list()
+    return constants.DeafultLibs.list()
 
 def import_user_module() -> bool:
     pass
