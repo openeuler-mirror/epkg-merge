@@ -1,6 +1,6 @@
 import unittest
 
-from src.core.evaluator.transform import parse_shell_file
+from src.core.evaluator.transform import parse_shell_file, transform_key_with_when
 
 
 class TestExpand(unittest.TestCase):
@@ -65,3 +65,19 @@ function test_h
         }
         res = parse_shell_file(file_content.splitlines(keepends=True))
         self.assertEqual(res, expectation)
+
+    def test_transform_key_with_when(self):
+        k1 = "patch.1 when +ssl"
+        k2 = "patch.1 when ssl"
+        k3 = "patch.1 when -ssl"
+        value = "test"
+        fspath = "fspath"
+        k, v = transform_key_with_when(k1, value, fspath)
+        self.assertEqual(k, "patch.1")
+        self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '%%use.ssl'})
+        k, v = transform_key_with_when(k2, value, fspath)
+        self.assertEqual(k, "patch.1")
+        self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '%%use.ssl'})
+        k, v = transform_key_with_when(k3, value, fspath)
+        self.assertEqual(k, "patch.1")
+        self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '{{ not %%use.ssl }}'})
