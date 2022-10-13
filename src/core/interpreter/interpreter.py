@@ -35,7 +35,7 @@ class StartUp:
                 # 添加扫描到的py文件
                 constants.import_py.append(i['py_name'])
             # 加载executor中刚刚加入的import
-            import executor
+            import src.core.interpreter.executor
         except:
             return {'startup_status': False}
         else:
@@ -46,5 +46,5 @@ if __name__ == '__main__':
     # config_space = ConfigSpace()
     print(StartUp.startup(''))
     py_code = 'cal_floor(4)'
-    import executor
-    print(executor.call(py_code))
+    import src.core.interpreter.executor
+    print(src.core.interpreter.executor.call(py_code))

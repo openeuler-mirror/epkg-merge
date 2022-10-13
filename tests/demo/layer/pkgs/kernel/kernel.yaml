@@ -33,7 +33,7 @@ version: "%{upstream_version}.%{upstream_sublevel}"
 release: "%{devel_release}%{?maintenance_release}%{?pkg_release}%{?extra_release}"
 meta.license: GPLv2
 meta.homepage: "http://www.kernel.org/"
-sources:
+source:
     0: kernel.tar.gz
     1: sign-modules
     2: x509.genkey
