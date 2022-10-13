@@ -3,9 +3,6 @@
 
 import os
 import yaml
-import argparse
-
-from src.core.interpreter.interpreter import StartUp
 
 
 def handle_load(file):
@@ -22,6 +19,8 @@ def handle_output(package_name, content, output):
         return
     if not output:
         output = "./" + package_name
+    else:
+        output = output + "/" + package_name
     # $output/$package_name.yaml
     if not os.path.exists(output):
         os.makedirs(output)
@@ -36,25 +35,3 @@ def handle_output(package_name, content, output):
 
         yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
         yaml.safe_dump(content, f, allow_unicode='uft-8')
-
-
-def main():
-    from src.core.config_space import config_space
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config_file", help="the configuration file to be parsed")
-    parser.add_argument("-p", "--packages", help="the parsed packages， use -p 'A B' to specify multiple packages")
-    parser.add_argument("-o", "--output", help="which dir the output is redirected to")
-    args = vars(parser.parse_args())
-    if args["config_file"]:
-        handle_load(args["config_file"])
-        StartUp.startup(config_space)
-    packages = []
-    if args["packages"]:
-        packages = args["packages"].split()
-    for package in packages:
-        package_info = handle_package(package, config_space)
-        handle_output(package, package_info, args["output"])
-
-
-if __name__ == '__main__':
-    main()
