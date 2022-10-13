@@ -88,9 +88,7 @@ def get_merge_func(key):
     # 根据类型获取merge_func
     from src.core.config_space import config_space
     from src.core.evaluator.lib.types import get_func
-    merge_func = config_space.get_key(f"{key}:mergeFunc")
-    if merge_func:
-        return merge_funcs.get(merge_func), config_space.get(f"{key}:mergeParams", "")
+
     merge_func, merge_params = get_func(key, "mergeFunc", "mergeParams")
     if merge_func:
         return merge_funcs.get(merge_func), merge_params

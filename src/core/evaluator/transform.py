@@ -81,7 +81,6 @@ def transform_key_with_use_configure(key, value, fspath):
     else:
         flag = True
 
-
     value_key = {
         "value": value,
         "fspath": fspath,
@@ -97,6 +96,25 @@ def transform_key_with_use_configure(key, value, fspath):
     config_space_key = prefix + ".use." + use_config_flag + ":default"
     config_space[config_space_key] = flag
 
-
-
     return real_key, value_key
+
+
+def transform_key_with_when(key, value, fspath):
+    if "when" not in key:
+        return "", {}
+    keys = key.split()
+    real_key = keys[0]
+    use_config_flag = keys[2]
+    if use_config_flag.startswith("+"):
+        when = "%%use.{}".format(use_config_flag[1:])
+    elif use_config_flag.startswith("-"):
+        when = "{{ " + "not %%use.{}".format(use_config_flag[1:]) + " }}"
+    else:
+        when = "%%use.{}".format(use_config_flag)
+    value_key = {
+        "value": value,
+        "fspath": fspath,
+        "when": when
+    }
+    return real_key, value_key
+
