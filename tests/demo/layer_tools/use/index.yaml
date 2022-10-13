@@ -3,5 +3,5 @@ registerConfigSpaceForEachFile:
   use.%%_basename:fspath: "%%_filepath"
   use."%%_filepath":
     name: "%%_basename"
-    :referAttrs: types.package
-    meta:referAttrs: types.package.meta
+    :referAttrs: types.use
+    meta:referAttrs: types.use.meta
