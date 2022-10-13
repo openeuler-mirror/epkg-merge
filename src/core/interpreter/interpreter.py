@@ -16,13 +16,11 @@ class StartUp:
     @staticmethod
     def startup(config_space) -> dict:
         try:
-            # from src.core.config_space import config_space
+            from src.core.config_space import config_space
             # 从ConfigSpace获取py文件
             py_list = config_space.get('libs')
             # py_list = [
-            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py',
-            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\exclusive_info.py',
-            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\restart.py'
+            #     r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py'
             # ]
             # 扫描方法名
             modulea_dict = scanner.scan_module(py_list)
@@ -35,9 +33,9 @@ class StartUp:
                 # 添加扫描到的py文件
                 constants.import_py.append(i['py_name'])
             # 加载executor中刚刚加入的import
-            import executor
-        except:
-            return {'startup_status': False}
+            from src.core.interpreter import executor
+        except Exception as e:
+            return {'startup_status': e}
         else:
             return {'startup_status': True}
 
@@ -45,6 +43,6 @@ class StartUp:
 if __name__ == '__main__':
     # config_space = ConfigSpace()
     print(StartUp.startup(''))
-    py_code = 'cal_floor(4)'
-    import executor
+    py_code = 'cal_floor(44)'
+    from src.core.interpreter import executor
     print(executor.call(py_code))

@@ -7,11 +7,21 @@ import re
 
 import_list = constants.import_list
 import_py = constants.import_py
+
+
 for i in import_list:
     exec('import ' + i)
 for j in import_py:
-    py_name = re.findall(r'(\w+)+\.', j)
-    py_path = re.findall(r'^.*\\', j)
+    py_name = []
+    py_path = []
+    # 解析Linux路径
+    if j.startswith('/'):
+        py_name = re.findall(r'^/.*/', j)
+        py_path = j.replace(py_name[0], '')
+    # 解析windows路径
+    else:
+        py_name = re.findall(r'(\w+)+\.', j)
+        py_path = re.findall(r'^.*\\', j)
     sys.path.append(py_path[0])
     exec('from ' + py_name[0] + ' import *')
 
@@ -33,7 +43,8 @@ def exec_code(py_code) -> str:
     result = 'Code execution error'
     try:
         result = eval(py_code)
-    except:
+    except Exception as e:
+        result = e
         return result
     else:
         return result
@@ -42,8 +53,8 @@ def exec_code(py_code) -> str:
 def validate_code(py_code) -> bool:
     try:
         ast.parse(py_code.strip())
-    except SyntaxError:
-        print('Input isnt code.')
+    except SyntaxError as e:
+        print('Input isnt code.' + e)
         return False
     print('Code is ok.')
     return True
