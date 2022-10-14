@@ -8,7 +8,6 @@
 # transformFunc: 转换函数
 # transformParams: 转换函数参数
 
-
 types.path:type: str
 types.path:doc: filesystem path name
 types.path:example: pkgs/bash/bash.yaml
@@ -29,6 +28,9 @@ types.package.name:example: busybox
 types.package.name:checkFunc: is_str
 types.package.name:mergeFunc: merge_policy_first
 
+types.package.use.sqlite:checkFunc: bool
+types.package.use.sqlite:example: True/False
+
 types.package.epoch:type: int
 types.package.epoch:checkFunc: is_between
 types.package.epoch:checkParams: "0,3"
@@ -39,15 +41,24 @@ types.package.version:checkFunc: is_version
 types.package.version:mergeFunc: merge_policy_first
 
 types.package.rpmMacros:type: list
+types.package.rpmMacros:checkFunc: is_list
 types.package.rpmMacros:mergeFunc: merge_policy_first
 
 types.package.release:type: str
 types.package.release:checkFunc: is_release
 types.package.release:mergeFunc: merge_policy_first
 
+types.package.meta.license:type: str
+types.package.meta.license:checkFunc: is_str
+
 types.package.meta:type: str
+types.package.meta:checkFunc: is_str
+
+types.package.meta.summary:type: str
+types.package.meta.summary:checkFunc: is_str
 
 types.package.phase:type: str
+types.package.phase:checkFunc: is_str
 types.package.phase:mergeFunc: merge_policy_concat
 types.package.phase:mergeParams: "\n"
 
@@ -62,12 +73,33 @@ types.package.patchset:type: str
 types.package.patchset:mergeFunc: merge_policy_first
 
 types.package.buildRoot:type: list
+types.package.buildRoot:checkFunc: is_list
 types.package.buildRoot:mergeFunc: merge_policy_extend
 
+types.package.requires:type: list
+types.package.requires:checkFunc: is_list
+
+types.package.subpackage.devel.conflicts:type: list
+types.package.subpackage.devel.conflicts:checkFunc: is_list
+
+types.package.subpackage.devel.buildRequires:type: list
+types.package.subpackage.devel.buildRequires:checkFunc: is_list
+
+types.package.subpackage.help.requires:type: list
+types.package.subpackage.help.requires:checkFunc: is_list
+
+types.package.recommends:type: list
+types.package.recommends:checkFunc: is_list
+
+types.package.patchset.0:checkFunc: is_pattern
+types.package.patchset.0:checkParams: .*\.patch
+
 types.package.buildRequires:type: list
+types.package.buildRequires:checkFunc: is_list
 types.package.buildRequires:mergeFunc: merge_policy_pre_extend
 
 types.package.requires:type: list
+types.package.requires:checkFunc: is_list
 types.package.requires:mergeFunc: merge_policy_pre_extend
 
 types.package.files:type: str

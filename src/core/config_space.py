@@ -51,10 +51,8 @@ class ConfigSpace(dict):
         values = self.get(f"{key}:values")
         if values is not None:
             value = merge_values(key)
-            # todo: 待补充check部分的验证
-            # if not check_value(key, value):
-            #     pass # 告警
-            #     return None
+            if not check_value(key, value):
+                return None
             self[key] = value
             return value
         return None
