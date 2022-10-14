@@ -9,3 +9,4 @@ __pycharm__/
 configs/
 __pycache__/
 .gitignore
+.VSCodeCounter

@@ -3,6 +3,11 @@
 
 def get_func(key, func_name, params_name):
     from src.core.config_space import config_space
+
+    merge_func = config_space.get_key(f"{key}:mergeFunc")
+    if merge_func:
+        return merge_func, config_space.get(f"{key}:mergeParams", "")
+
     temp_key = key
     last_key = key.split(".")[-1]
     while temp_key:

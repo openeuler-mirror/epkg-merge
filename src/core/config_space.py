@@ -50,10 +50,6 @@ class ConfigSpace(dict):
         return None
 
     def get_key(self, key):
-        value = self.get(key)
-        if value is not None:
-            return value
-
         value = self.get_key_value(key)
         if value is not None:
             return value
@@ -76,8 +72,7 @@ class ConfigSpace(dict):
     def add_key(self, key, value, fspath, when):
         key_c, value_c = transform_key_with_use_configure(key, value, fspath)
         if not key_c:
-            self.setdefault(f"{key}:values", [])
-            self[f"{key}:values"].append({
+            self.setdefault(f"{key}:values", []).append({
                 "value": value,
                 "fspath": fspath,
                 "when": when
@@ -90,7 +85,7 @@ class ConfigSpace(dict):
         # keys = self.keys()
         package_info = {}
         self.get_key(pre_name)
-        loaded_keys = config_space.get_key("pkgs.python3:loadedKeys")
+        loaded_keys = config_space.get_key(f"pkgs.{package_name}:loadedKeys")
         for key in loaded_keys:
             if "useConfigureFlags" in key:
                 continue

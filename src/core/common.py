@@ -12,7 +12,7 @@ def is_pycode(val: str):
 
 
 def eval_python(val: str):
-    from src.core.interpreter.interpreter import call
+    import src.core.interpreter.executor
     # result = {
     #     # 代码
     #     'code': py_code,
@@ -24,7 +24,7 @@ def eval_python(val: str):
     val = val.strip()
     val = val.lstrip("{{")
     val = val.rstrip("}}")
-    result = call(val.strip())
+    result = src.core.interpreter.executor.call(val.strip())
 
     if result["legality"]:
         return result.get("result")

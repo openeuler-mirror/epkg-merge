@@ -65,10 +65,10 @@ types.package.buildRoot:type: list
 types.package.buildRoot:mergeFunc: merge_policy_extend
 
 types.package.buildRequires:type: list
-types.package.buildRequires:mergeFunc: merge_policy_extend
+types.package.buildRequires:mergeFunc: merge_policy_pre_extend
 
 types.package.requires:type: list
-types.package.requires:mergeFunc: merge_policy_extend
+types.package.requires:mergeFunc: merge_policy_pre_extend
 
 types.package.files:type: str
 types.package.files:mergeFunc: merge_policy_concat
