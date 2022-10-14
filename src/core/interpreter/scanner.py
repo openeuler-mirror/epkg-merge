@@ -47,16 +47,16 @@ def get_methods_name(py):
 
 def get_import_name(py):
     import_lists = []
+    constants.import_py.append(py)
     with open(py, encoding='utf-8') as f:
         line = f.readline()
         while line:
-            if line.startswith("import "):
-                import_i = line[7:].strip()
-                # 过滤高危库
-                for i in constants.DiskLibs.list():
-                    if import_i == i:
+            if line.startswith('import') | line.startswith('from '):
+                # 白名单匹配
+                for i in constants.WhiteListLibs.list():
+                    if i in line:
+                        constants.from_import_list.append(line)
+                        import_lists.append(line)
                         break
-                else:
-                    import_lists.append(import_i)  # 去除 "import"
             line = f.readline()
     return import_lists

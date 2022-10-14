@@ -16,28 +16,21 @@ class StartUp:
     @staticmethod
     def startup(config_space) -> dict:
         try:
-            # from src.core.config_space import config_space
+            from src.core.config_space import config_space
             # 从ConfigSpace获取py文件
             py_list = config_space.get('libs')
             # py_list = [
-            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py',
-            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\exclusive_info.py',
-            #         r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\restart.py'
+            #     r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\calculate.py',
+            #     r'C:\Users\zhangshengjie\PycharmProjects\merge-package\merge-package-configs\tests\demo\layer\libs\exclusive_info.py'
             # ]
             # 扫描方法名
-            modulea_dict = scanner.scan_module(py_list)
-            # 扫描risk的import
-            imports_dict = scanner.scan_risk_import(py_list)
-            for i in imports_dict:
-                for j in i['import_lists']:
-                    # 添加扫描到的第三方库
-                    constants.import_list.append(j)
-                # 添加扫描到的py文件
-                constants.import_py.append(i['py_name'])
-            # 加载executor中刚刚加入的import
-            import src.core.interpreter.executor
-        except:
-            return {'startup_status': False}
+            scanner.scan_module(py_list)
+            # 扫描risk的import,并将白名单内的import加入constant中
+            scanner.scan_risk_import(py_list)
+            # # 加载executor中刚刚加入的import
+            from src.core.interpreter import executor
+        except Exception as e:
+            return {'startup_status': e}
         else:
             return {'startup_status': True}
 
@@ -45,6 +38,6 @@ class StartUp:
 if __name__ == '__main__':
     # config_space = ConfigSpace()
     print(StartUp.startup(''))
-    py_code = 'cal_floor(4)'
-    import src.core.interpreter.executor
-    print(src.core.interpreter.executor.call(py_code))
+    py_code = 'cal_sqrt(4)'
+    from src.core.interpreter import executor
+    print(executor.call(py_code))
