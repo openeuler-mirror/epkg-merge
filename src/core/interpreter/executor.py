@@ -5,19 +5,19 @@ import sys
 import re
 
 
-import_list = constants.import_list
 import_py = constants.import_py
-
-
-for i in import_list:
-    exec('import ' + i)
+from_import_list = constants.from_import_list
+# 导入from import
+for i in from_import_list:
+    exec(i)
+# 导入import的文件
 for j in import_py:
     py_name = []
     py_path = []
     # 解析Linux路径
-    if j.startswith('/'):
-        py_name = re.findall(r'^/.*/', j)
-        py_path = j.replace(py_name[0], '')
+    if sys.platform == 'linux':
+        py_name = re.findall(r'(\w+)+\.', j)
+        py_path = re.findall(r'^/.*/', j)
     # 解析windows路径
     else:
         py_name = re.findall(r'(\w+)+\.', j)
