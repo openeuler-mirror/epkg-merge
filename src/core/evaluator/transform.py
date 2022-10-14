@@ -129,6 +129,20 @@ def transform_key_with_iuse(key, value):
     for k in keys:
         use_value = config_space.get_key("use.{}.{}".format(value, k))
         use_configure = "{}.useConfigureFlags.{}.{}".format(package, value, k)
-        real_key, v = transform_key_with_use_configure(use_configure, use_value, "")
+        real_key, v = transform_key_with_use_configure(use_configure, use_value, None)
         res[real_key] = v
     return res
+
+
+def transform_key_default(key, value, fspath):
+    key_c, value_c = transform_key_with_use_configure(key, value, fspath)
+    if key_c == "":
+        key_c, value_c = transform_key_with_when(key, value, fspath)
+    else:
+        key_c, value_c = transform_key_with_when(key_c, value_c, fspath)
+    if key_c == "":
+        return key, {"value": value,
+                     "fspath": fspath,
+                     "when": None}
+    else:
+        return key_c, value_c

@@ -2,8 +2,9 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 
 import os
+import shutil
 import yaml
-
+from src.core.config_space import ConfigSpace
 
 def handle_load(file):
     from src.core.loader.layer_loader import LayerLoader
@@ -35,3 +36,15 @@ def handle_output(package_name, content, output):
 
         yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
         yaml.safe_dump(content, f, allow_unicode='uft-8')
+
+    os.system(f"python3 ./src/tools/transition/openEulerTransitionMain.py -t {file}")
+
+    for path in ConfigSpace.fspath_loaded:
+        package_path, file_name = os.path.split(path)
+        if f"{package_name}.yaml" == file_name:
+            sub_files = os.listdir(package_path)
+            for sub_file in sub_files:
+                if sub_file.endswith(".yaml") or sub_file.endswith(".spec"):
+                    continue
+                src_path = os.path.join(package_path, sub_file)
+                shutil.copy(src_path, output)

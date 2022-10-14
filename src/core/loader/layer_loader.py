@@ -2,6 +2,7 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
 import re
+import threading
 from typing import Any, Dict, List
 
 import yaml
@@ -12,6 +13,8 @@ from src.core.loader.load_exception import LoadException
 
 
 class LayerLoader:
+    __LOCK = threading.Lock()
+
     def __init__(self, config_file: str = Config.MAIN_CONFIG.value) -> None:
         if not os.path.isfile(config_file):
             raise LoadException(f"Main config '{config_file}' is not a file")
@@ -20,13 +23,16 @@ class LayerLoader:
         self._dir_name = os.path.dirname(os.path.abspath(config_file))
 
     def load(self) -> None:
-        layers: Dict[str, List[str]] = yaml.safe_load(open(self._config_file, encoding="utf-8"))
-        if not layers.get(str(MainConfigKey.LAYERS.value)):
-            raise LoadException(
-                f"Invalid main config: can't find yaml key '{MainConfigKey.LAYERS.value}' or empty value")
+        with self.__LOCK:
+            print(f"Loading layers with main config: '{self._config_file}'")
+            layers: Dict[str, List[str]] = yaml.safe_load(open(self._config_file, encoding="utf-8"))
+            if not layers.get(str(MainConfigKey.LAYERS.value)):
+                raise LoadException(
+                    f"Invalid main config: can't find yaml key '{MainConfigKey.LAYERS.value}' or empty value")
 
-        for layer in layers.get(str(MainConfigKey.LAYERS.value)):
-            _LayerConfigLoader(layer, os.path.join(self._dir_name, layer)).load()
+            for layer in layers.get(str(MainConfigKey.LAYERS.value)):
+                _LayerConfigLoader(layer, os.path.join(self._dir_name, layer)).load()
+            print(f"Successfully load layers with main config: '{self._config_file}'")
 
 
 class _LayerConfigLoader:
@@ -38,10 +44,12 @@ class _LayerConfigLoader:
         self._layer_path = layer_path
 
     def load(self) -> None:
+        print(f"Loading layer: '{self._layer}' with layer path: '{self._layer_path}'")
         self._load_pkgs()
         self._load_python_libs()
         self._load_use()
         self._load_types()
+        print(f"Successfully load layer: '{self._layer}' with layer path: '{self._layer_path}'")
 
     def _load_pkgs(self) -> None:
         pkgs_dir = os.path.join(self._layer_path, str(Directory.PKGS.value))
@@ -73,6 +81,8 @@ class _LayerConfigLoader:
                 continue
 
             _ElementConfigLoader(pkg, pkg_config, index_config).load()
+            from src.core.config_space import config_space
+            config_space.setdefault("allPkgs", set()).add(pkg)
 
     def _load_python_libs(self) -> None:
         lib_path = os.path.join(self._layer_path, str(Directory.LIBS.value))
