@@ -2,7 +2,6 @@
 import ast
 from src.core.interpreter import constants
 import sys
-import os
 import re
 
 
