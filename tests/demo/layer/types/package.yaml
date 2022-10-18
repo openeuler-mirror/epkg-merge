@@ -28,7 +28,7 @@ types.package.name:example: busybox
 types.package.name:checkFunc: is_str
 types.package.name:mergeFunc: merge_policy_first
 
-types.package.use.sqlite:checkFunc: bool
+types.package.use.sqlite:checkFunc: is_bool
 types.package.use.sqlite:example: True/False
 
 types.package.epoch:type: int

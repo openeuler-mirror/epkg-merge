@@ -108,7 +108,16 @@ def is_env_path(key, value, check_func, check_params):
     return None
 
 def is_version(key, value, check_func, check_params):
-    pass # check value is in version format?
+    # version string should like: 1.1, 1.1.1
+    # it should startwith and end with a integer, and filled with ingeter and '.' between them.
+    if re.match("^[0-9][0-9.]*[0-9]$", value):
+        return None
+
+    err_code = {
+        'value': value,
+        'err_msg': 'Offered value is not in right version format.'
+        }
+    return err_code
 
 def is_release(key, value, check_func, check_params):
     pass # check value is in release format?
@@ -225,7 +234,7 @@ def is_str_set(key, value, check_func, check_params):
 
     return None
 
-def no_check_func(key, value , check_params):
+def no_check_func(key, value, check_params):
     return None
 
 check_funcs = {
