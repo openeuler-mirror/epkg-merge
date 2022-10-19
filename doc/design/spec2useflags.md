@@ -65,6 +65,59 @@ Notes: spec 里
 		%if %{build_pdf_doc}
 除了控制%configureFlags，可能还会控制别的代码块。为简单起见，保留之，暂不移入YAML，只是在YAML里创建对应的use定制选项。
 
+# 在YAML里引用/展开简单的 RPM macro
+
+	rpmMacros:
+	    - "%global debuginfodir /usr/lib/debug"
+	    - "%global upstream_version    5.10"
+	    - "%global upstream_sublevel   0"
+	    - "%global devel_release       104"
+	    - "%global maintenance_release .0.0"
+	    - "%global pkg_release         .54"
+
+We can move the above "%global var fixed-value" lines to
+
+	rpmEnv:
+	  debuginfodir:         "/usr/lib/debug"
+	  upstream_version:     "5.10"
+	  upstream_sublevel:    "0"
+	  devel_release:        "104"
+	  maintenance_release:  ".0.0"
+	  pkg_release:          ".54"
+
+Then we'll be able to expand %{} in YAML like this
+
+	%{xxx}
+=>
+	%%{rpmEnv.xxx}
+
+For example,
+
+spec file
+
+	%global pcs_snmp_pkg_name  pcs-snmp
+	%package -n %{pcs_snmp_pkg_name}
+	%post -n %{pcs_snmp_pkg_name}
+	%systemd_post pcs_snmp_agent.service
+
+to YAML file
+
+	rpmEnv:
+	  pcs_snmp_pkg_name:  pcs-snmp
+	subpackage:
+	  %{pcs_snmp_pkg_name}:
+	    runtimePhase.post:
+	      %systemd_post pcs_snmp_agent.service
+
+The macro in the above key can be expanded as follows
+
+  %{pcs_snmp_pkg_name}
+  =>
+  %%{rpmEnv.pcs_snmp_pkg_name}
+  =>
+  pcs-snmp
+
+The macro in key shall be expanded before adding to config space.
 
 # reference: %configure examples in real spec:
 
