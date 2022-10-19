@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-import ast
 from src.core.interpreter import constants
+from src.core.interpreter import scanner
+import ast
 import sys
-import re
 
 
 import_py = constants.import_py
@@ -12,16 +12,7 @@ for i in from_import_list:
     exec(i)
 # 导入import的文件
 for j in import_py:
-    py_name = []
-    py_path = []
-    # 解析Linux路径
-    if sys.platform == 'linux':
-        py_name = re.findall(r'(\w+)+\.', j)
-        py_path = re.findall(r'^/.*/', j)
-    # 解析windows路径
-    else:
-        py_name = re.findall(r'(\w+)+\.', j)
-        py_path = re.findall(r'^.*\\', j)
+    py_name, py_path = scanner.path_resolution(j)
     sys.path.append(py_path[0])
     exec('from ' + py_name[0] + ' import *')
 
