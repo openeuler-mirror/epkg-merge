@@ -9,10 +9,17 @@ def transform_include_phase(file):
         return {}
     with open(file, "r") as f:
         content = f.readlines()
-        return parse_shell_file(content)
+        file_name = parse_file_name(file)
+        return parse_shell_file(file_name, content)
 
 
-def parse_shell_file(content):
+def parse_file_name(file):
+    file = file.split("/")[-1]
+    file_name = file.split(".")[0]
+    return file_name
+
+
+def parse_shell_file(file_name, content):
     functions = {}
     function_name = ""
     function_content = ""
@@ -27,8 +34,23 @@ def parse_shell_file(content):
                 continue
             function_content += line
         else:
-            function_name = get_shell_function_name(line)
+            shell_function_name = get_shell_function_name(line)
+            function_name = combinate_function_name(file_name, shell_function_name)
     return functions
+
+
+def combinate_function_name(file_name, function_name):
+    if not function_name:
+        return ""
+    # 不是子包只需要拼接文件名
+    if ":" not in function_name:
+        return "{}.{}".format(file_name, function_name)
+    # runtimePhase.sh下的函数： post:%{wxbasename}-devel
+    # 解析成：subpackage.%{wxbasename}-devel.runtimePhase.post
+    function_info = function_name.split(":")
+    real_name = function_info[0]
+    subpackage = function_info[1]
+    return "subpackage.{}.{}.{}".format(subpackage, file_name, real_name)
 
 
 def get_shell_function_name(line):

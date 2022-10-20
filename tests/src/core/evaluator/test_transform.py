@@ -1,6 +1,6 @@
 import unittest
 
-from src.core.evaluator.transform import parse_shell_file, transform_key_with_when
+from src.core.evaluator.transform import parse_shell_file, transform_key_with_when, parse_file_name
 
 
 class TestExpand(unittest.TestCase):
@@ -47,23 +47,30 @@ function test_h
 {
         echo "test_h"
 }
+
+post:%{wxbasename}-devel(){
+        echo "subpackage"
+}
         '''
         expectation = {
-            'public_network_ok': '        ping -c 1 -W 10 114.114.114.114 >/dev/null 2>&1 '
-                                 '||\n'
-                                 '                curl -k -s -m 10 --retry-delay 2 '
-                                 '--retry 5 https://compass-ci.openeuler.org/ -o '
-                                 '/dev/null\n',
-            'test_a': '        echo "test_a"\n',
-            'test_b': '        echo "test_b"\n',
-            'test_c': '        echo "test_c"\n',
-            'test_d': '        echo "test_d"\n',
-            'test_e': '        echo "test_e"\n',
-            'test_f': '        echo "test_f"\n',
-            'test_g': '        echo "test_g"\n',
-            'test_h': '        echo "test_h"\n'
+            'runtimePhase.public_network_ok': '        ping -c 1 -W 10 114.114.114.114 '
+                                              '>/dev/null 2>&1 ||\n'
+                                              '                curl -k -s -m 10 '
+                                              '--retry-delay 2 --retry 5 '
+                                              'https://compass-ci.openeuler.org/ -o '
+                                              '/dev/null\n',
+            'runtimePhase.test_a': '        echo "test_a"\n',
+            'runtimePhase.test_b': '        echo "test_b"\n',
+            'runtimePhase.test_c': '        echo "test_c"\n',
+            'runtimePhase.test_d': '        echo "test_d"\n',
+            'runtimePhase.test_e': '        echo "test_e"\n',
+            'runtimePhase.test_f': '        echo "test_f"\n',
+            'runtimePhase.test_g': '        echo "test_g"\n',
+            'runtimePhase.test_h': '        echo "test_h"\n',
+            "subpackage.%{wxbasename}-devel.runtimePhase.post": '        echo '
+                                                                 '"subpackage"\n'
         }
-        res = parse_shell_file(file_content.splitlines(keepends=True))
+        res = parse_shell_file("runtimePhase", file_content.splitlines(keepends=True))
         self.assertEqual(res, expectation)
 
     def test_transform_key_with_when(self):
@@ -81,3 +88,8 @@ function test_h
         k, v = transform_key_with_when(k3, value, fspath)
         self.assertEqual(k, "patch.1")
         self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '{{ not %%use.ssl }}'})
+
+    def test_parse_file_name(self):
+        file = "/tmp/xxx/runtimePhase.sh"
+        file_name = parse_file_name(file)
+        self.assertEqual(file_name, "runtimePhase")
