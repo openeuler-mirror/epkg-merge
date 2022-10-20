@@ -4,8 +4,7 @@ import re
 import sys
 
 from src.core.interpreter import constants
-from src.core.interpreter import scanner
-
+from src.core.interpreter import illegal_import_exception
 
 # 扫描模块名
 def scan_module(py_list) -> dict:
@@ -24,9 +23,14 @@ def scan_module(py_list) -> dict:
 def scan_risk_import(py_list) -> dict:
     list_imports = []
     for py in py_list:
+        try:
+            imprt_lists = get_import_name(py)
+        except illegal_import_exception.IllegalImportException as e:
+            raise illegal_import_exception.IllegalImportException('文件包含非法import')
+            imprt_lists = e.error_info
         import_dict = {
             "py_name": py,
-            "import_lists": get_import_name(py)
+            "import_lists": imprt_lists
         }
         list_imports.append(import_dict)
     print("扫描的模块名：")
@@ -55,7 +59,7 @@ def get_methods_name(py):
 def get_import_name(py):
     # 扫描文件路径下所有文件，并加入白名单内
     py_name, py_path = path_resolution(py)
-    scan_files = scanner.scan_dir(py_path[0])
+    scan_files = scan_dir(py_path[0])
     for k in scan_files:
         scan_file, scan_file_path = path_resolution(k)
         constants.white_list_libs.append(scan_file[0])
@@ -68,11 +72,14 @@ def get_import_name(py):
         while line:
             if line.startswith('import ') | line.startswith('from '):
                 # 白名单匹配
+                is_white_list = False
                 for i in constants.white_list_libs:
                     if i in line:
-                        constants.from_import_list.append(line)
                         import_lists.append(line)
+                        is_white_list = True
                         break
+                if not is_white_list:
+                    raise illegal_import_exception.IllegalImportException('文件包含非法import')
             line = f.readline()
     return import_lists
 

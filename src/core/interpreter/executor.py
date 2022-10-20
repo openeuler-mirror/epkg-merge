@@ -6,11 +6,7 @@ import sys
 
 
 import_py = constants.import_py
-from_import_list = constants.from_import_list
-# 导入from import
-for i in from_import_list:
-    exec(i)
-# 导入import的文件
+# 导入方法
 for j in import_py:
     py_name, py_path = scanner.path_resolution(j)
     sys.path.append(py_path[0])

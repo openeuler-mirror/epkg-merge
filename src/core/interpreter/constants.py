@@ -1,8 +1,8 @@
 from enum import Enum
 
-
+# 导入的pylist
 import_py = []
-from_import_list = []
+# 白名单
 white_list_libs = ['math', 'datetime']
 
 
