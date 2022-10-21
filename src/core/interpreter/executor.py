@@ -6,21 +6,16 @@ import sys
 
 
 import_py = constants.import_py
-# 导入方法
 for j in import_py:
     py_name, py_path = scanner.path_resolution(j)
     sys.path.append(py_path[0])
     exec('from ' + py_name[0] + ' import *')
 
 
-# 执行
 def call(py_code) -> dict:
     result = {
-        # 代码
         'code': py_code,
-        # 合法性校验
         'legality': validate_code(py_code),
-        # 代码执行
         'result': exec_code(py_code)
     }
     return result
