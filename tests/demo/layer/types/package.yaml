@@ -105,4 +105,4 @@ types.package.files:mergeParams: "\n"
 
 types.package.configureFlags:type: str
 types.package.configureFlags:mergeFunc: merge_policy_config_concat
-types.package.configureFlags:mergeParams: "\n\\"
+types.package.configureFlags:mergeParams: " \\\n"
