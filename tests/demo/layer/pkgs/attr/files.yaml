@@ -1,0 +1,17 @@
+files: |
+    %doc doc/CHANGES
+    %license doc/COPYING*
+    %{_bindir}/*
+    %{_libdir}/libattr.so.*
+    %config(noreplace) %{_sysconfdir}/xattr.conf
+
+subpackage.libattr-devel.files: |
+    %{_libdir}/libattr.so
+    %{_libdir}/pkgconfig/*.pc
+    %{_libdir}/libattr.a
+    %{_libdir}/libattr.la
+    %{_includedir}/attr
+
+subpackage.help.files: |
+    %{_mandir}/man1/*
+    %{_mandir}/man3/*
