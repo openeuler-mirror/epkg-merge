@@ -2,6 +2,7 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
 import yaml
+import copy
 
 
 def transform_include_phase(file):
@@ -80,10 +81,10 @@ def load_yaml(file):
         return yaml.safe_load(f)
 
 
-def transform_key_with_use_configure(key, value, fspath):
+def transform_key_with_use_configure(key, value: dict):
     from src.core.config_space import config_space
     if "useConfigureFlags" not in key:
-        return "", {}
+        return key, value
     keys = key.split(".useConfigureFlags.")
     if len(keys) < 2:
         return "", {}
@@ -103,27 +104,23 @@ def transform_key_with_use_configure(key, value, fspath):
     else:
         flag = True
 
-    value_key = {
-        "value": value,
-        "fspath": fspath,
-        "when": "%%use.{}".format(use_config_flag)
-    }
+    value["when"] = "%%use.{}".format(use_config_flag)
     real_key = prefix + "." + suffix
     if suffix.endswith('enable'):
         real_key = f"{prefix}.env.useConfigureFlags"
     elif suffix.endswith('disable'):
         real_key = f"{prefix}.env.useConfigureFlags"
-        value_key["when"] = "{{ " + "not %%use.{}".format(use_config_flag) + " }}"
+        value["when"] = "{{ " + "not %%use.{}".format(use_config_flag) + " }}"
 
     config_space_key = prefix + ".use." + use_config_flag + ":default"
     config_space[config_space_key] = flag
 
-    return real_key, value_key
+    return real_key, value
 
 
-def transform_key_with_when(key, value, fspath):
+def transform_key_with_when(key, value: dict):
     if "when" not in key:
-        return "", {}
+        return key, value
     keys = key.split()
     real_key = keys[0]
     use_config_flag = keys[2]
@@ -133,15 +130,27 @@ def transform_key_with_when(key, value, fspath):
         when = "{{ " + "not %%use.{}".format(use_config_flag[1:]) + " }}"
     else:
         when = "%%use.{}".format(use_config_flag)
-    value_key = {
-        "value": value,
-        "fspath": fspath,
-        "when": when
+    value["when"] = when
+    return real_key, value
+
+
+def transform_key_with_rpmWhen(key, value: dict) -> dict:
+    if "rpmWhen" not in key:
+        return {key: value}
+    key_info = key.split(" rpmWhen ")
+    subpackage = key_info[0]
+    condition_info = key_info[1].split(".")
+    condition = condition_info[0]
+    field = condition_info[1]
+    condition_value = copy.copy(value)
+    condition_value["value"] = condition
+    return {
+        "{}.{}".format(subpackage, field): value,
+        "{}:rpmWhen".format(subpackage): condition_value
     }
-    return real_key, value_key
 
 
-def transform_key_with_iuse(key, value):
+def transform_key_with_iuse(key, value: str):
     from src.core.config_space import config_space
     if not key.endswith(".iuse"):
         return {}
@@ -151,20 +160,17 @@ def transform_key_with_iuse(key, value):
     for k in keys:
         use_value = config_space.get_key("use.{}.{}".format(value, k))
         use_configure = "{}.useConfigureFlags.{}.{}".format(package, value, k)
-        real_key, v = transform_key_with_use_configure(use_configure, use_value, None)
+        real_key, v = transform_key_with_use_configure(use_configure, {"value": use_value})
         res[real_key] = v
     return res
 
 
 def transform_key_default(key, value, fspath):
-    key_c, value_c = transform_key_with_use_configure(key, value, fspath)
-    if key_c == "":
-        key_c, value_c = transform_key_with_when(key, value, fspath)
-    else:
-        key_c, value_c = transform_key_with_when(key_c, value_c, fspath)
-    if key_c == "":
-        return key, {"value": value,
-                     "fspath": fspath,
-                     "when": None}
-    else:
-        return key_c, value_c
+    value_key = {
+        "value": value,
+        "fspath": fspath,
+        "when": None
+    }
+    key_c, value_c = transform_key_with_use_configure(key, value_key)
+    key_c, value_c = transform_key_with_when(key_c, value_c)
+    return transform_key_with_rpmWhen(key_c, value_c)

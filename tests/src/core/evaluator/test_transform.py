@@ -1,6 +1,7 @@
 import unittest
 
-from src.core.evaluator.transform import parse_shell_file, transform_key_with_when, parse_file_name
+from src.core.evaluator.transform import parse_shell_file, transform_key_with_when, parse_file_name, \
+    transform_key_default
 
 
 class TestExpand(unittest.TestCase):
@@ -68,7 +69,7 @@ post:%{wxbasename}-devel(){
             'runtimePhase.test_g': '        echo "test_g"\n',
             'runtimePhase.test_h': '        echo "test_h"\n',
             "subpackage.%{wxbasename}-devel.runtimePhase.post": '        echo '
-                                                                 '"subpackage"\n'
+                                                                '"subpackage"\n'
         }
         res = parse_shell_file("runtimePhase", file_content.splitlines(keepends=True))
         self.assertEqual(res, expectation)
@@ -77,15 +78,17 @@ post:%{wxbasename}-devel(){
         k1 = "patch.1 when +ssl"
         k2 = "patch.1 when ssl"
         k3 = "patch.1 when -ssl"
-        value = "test"
-        fspath = "fspath"
-        k, v = transform_key_with_when(k1, value, fspath)
+        value = {
+            "value": "test",
+            "fspath": "fspath"
+        }
+        k, v = transform_key_with_when(k1, value)
         self.assertEqual(k, "patch.1")
         self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '%%use.ssl'})
-        k, v = transform_key_with_when(k2, value, fspath)
+        k, v = transform_key_with_when(k2, value)
         self.assertEqual(k, "patch.1")
         self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '%%use.ssl'})
-        k, v = transform_key_with_when(k3, value, fspath)
+        k, v = transform_key_with_when(k3, value)
         self.assertEqual(k, "patch.1")
         self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '{{ not %%use.ssl }}'})
 
@@ -93,3 +96,10 @@ post:%{wxbasename}-devel(){
         file = "/tmp/xxx/runtimePhase.sh"
         file_name = parse_file_name(file)
         self.assertEqual(file_name, "runtimePhase")
+
+    def test_transform_key_default(self):
+        key = "subpackage.help rpmWhen %ifarch %{arm}.summary"
+        res = transform_key_default(key, "test", "fs")
+        expectation = {'subpackage.help.summary': {'value': 'test', 'fspath': 'fs', 'when': None},
+                       'subpackage.help:rpmWhen': {'value': '%ifarch %{arm}', 'fspath': 'fs', 'when': None}}
+        self.assertEqual(res, expectation)

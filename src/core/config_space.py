@@ -3,8 +3,7 @@
 
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.evaluator.merge import merge_values
-from src.core.evaluator.transform import \
-    transform_key_with_use_configure, transform_key_with_when, transform_key_default
+from src.core.evaluator.transform import transform_key_default
 from src.core.common import format_package_json
 
 def make_synchronized(func):
@@ -81,19 +80,12 @@ class ConfigSpace(dict):
 
     def add_key(self, key, value, fspath, when):
         # key_c, value_c = transform_key_with_use_configure(key, value, fspath)
-        key_c, value_c = transform_key_default(key, value, fspath)
-        if not key_c:
-            self.setdefault(f"{key}:values", []).append({
-                "value": value,
-                "fspath": fspath,
-                "when": when
-            })
-            return key
-        else:
-            self.setdefault(f"{key_c}:values", []).append(value_c)
-            return key_c
-
-
+        key_info = transform_key_default(key, value, fspath)
+        real_keys = []
+        for k, v in key_info:
+            real_keys.append(k)
+            self.setdefault(f"{k}:values", []).append(v)
+        return real_keys
 
     def get_package(self, package_name):
         pre_name = f"pkgs.{package_name}"
