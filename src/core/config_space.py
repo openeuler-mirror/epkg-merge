@@ -6,6 +6,7 @@ from src.core.evaluator.merge import merge_values
 from src.core.evaluator.transform import \
     transform_key_with_use_configure, transform_key_with_when, transform_key_default
 from src.core.common import format_package_json
+from src.core.evaluator.check import check_value
 
 def make_synchronized(func):
     import threading

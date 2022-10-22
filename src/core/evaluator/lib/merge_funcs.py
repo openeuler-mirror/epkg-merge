@@ -37,6 +37,14 @@ def merge_policy_concat(collect_str, new_val, merge_params="\n"):
     return concat_val, True
 
 
+def merge_policy_config_concat(collect_str, new_val, merge_params=" \\\n"):
+    if collect_str == "":
+        return new_val.replace("\n", merge_params), True
+    new_val = new_val.replace("\n", merge_params)
+    concat_val = merge_params.join([collect_str, new_val])
+    return concat_val, True
+
+
 def merge_policy_pre_concat(collect_str, new_val, merge_params="\n"):
     if collect_str == "":
         return new_val, True
@@ -81,6 +89,7 @@ merge_funcs = {
     "merge_policy_or": merge_policy_or,
     "merge_policy_first": merge_policy_first,
     "merge_policy_pre_concat": merge_policy_pre_concat,
+    "merge_policy_config_concat": merge_policy_config_concat,
 }
 
 
