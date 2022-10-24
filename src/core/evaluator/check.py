@@ -2,6 +2,7 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 
 from src.core.evaluator.lib.check_funcs import value_check_func
+from src.log import log
 
 def check_value(key, value):
     from src.core.evaluator.lib.types import get_func
@@ -10,7 +11,7 @@ def check_value(key, value):
     if check_func:
         check_func_result = value_check_func(key, value, check_func, check_params)
         if check_func_result:
-            print(check_func_result)
+            log.info(check_func_result)
             return False
         return True
 
@@ -19,6 +20,6 @@ def check_value(key, value):
         'value': value,
         'err_msg': 'No checkFunc specified for key: ' + key + '!'
         }
-    print(err_code)
+    log.info(err_code)
 
     return True

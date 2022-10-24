@@ -35,6 +35,8 @@ def eval_python(val: str):
 def format_subpackage(k, v, format_json, raw_json):
     if ":rpmWhen" in k:
         return
+    if len(k.split(".")) < 3:
+        return
     subpackage, name, key = k.split(".", 2)
     rpm_when_name = "{}.{}:rpmWhen".format(subpackage, name)
     if raw_json.get(rpm_when_name):

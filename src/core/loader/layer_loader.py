@@ -10,6 +10,7 @@ import yaml
 from src.core.loader.lib.enums import Config, MainConfigKey, Directory, IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
+from src.log import log
 
 
 class LayerLoader:
@@ -24,7 +25,7 @@ class LayerLoader:
 
     def load(self) -> None:
         with self.__LOCK:
-            print(f"Loading layers with main config: '{self._config_file}'")
+            log.info(f"Loading layers with main config: '{self._config_file}'")
             layers: Dict[str, List[str]] = yaml.safe_load(open(self._config_file, encoding="utf-8"))
             if not layers.get(str(MainConfigKey.LAYERS.value)):
                 raise LoadException(
@@ -32,7 +33,7 @@ class LayerLoader:
 
             for layer in layers.get(str(MainConfigKey.LAYERS.value)):
                 _LayerConfigLoader(layer, os.path.join(self._dir_name, layer)).load()
-            print(f"Successfully load layers with main config: '{self._config_file}'")
+            log.info(f"Successfully load layers with main config: '{self._config_file}'")
 
 
 class _LayerConfigLoader:
@@ -44,12 +45,12 @@ class _LayerConfigLoader:
         self._layer_path = layer_path
 
     def load(self) -> None:
-        print(f"Loading layer: '{self._layer}' with layer path: '{self._layer_path}'")
+        log.info(f"Loading layer: '{self._layer}' with layer path: '{self._layer_path}'")
         self._load_pkgs()
         self._load_python_libs()
         self._load_use()
         self._load_types()
-        print(f"Successfully load layer: '{self._layer}' with layer path: '{self._layer_path}'")
+        log.info(f"Successfully load layer: '{self._layer}' with layer path: '{self._layer_path}'")
 
     def _load_pkgs(self) -> None:
         pkgs_dir = os.path.join(self._layer_path, str(Directory.PKGS.value))
