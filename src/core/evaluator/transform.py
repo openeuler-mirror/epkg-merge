@@ -147,10 +147,11 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
     res = {}
     for key, value in key_dict.items():
         if "rpmWhen" not in key:
-            return {key: value}
+            res[key] = value
+            continue
         key_info = key.split(" rpmWhen ")
         subpackage = key_info[0]
-        condition_info = key_info[1].split(".")
+        condition_info = key_info[1].split(".", maxsplit=1)
         condition = condition_info[0]
         field = condition_info[1]
         condition_value = copy.copy(value)
@@ -172,12 +173,17 @@ def transform_key_with_iuse(key_dict: dict):
         for k in keys:
             use_value = config_space.get_key("use.{}.{}".format(value, k))
             use_configure = "{}.useConfigureFlags.{}.{}".format(package, value, k)
-            res = res.merge(transform_key_with_use_configure({use_configure: {"value": use_value}}))
+            res[use_configure] = {"value": use_value}
     return res
 
 
 def transform_key_default(key, value, fspath):
-    transform_list = [transform_key_with_use_configure, transform_key_with_when, transform_key_with_rpmWhen]
+    transform_list = [
+        transform_key_with_iuse,
+        transform_key_with_use_configure,
+        transform_key_with_when,
+        transform_key_with_rpmWhen
+    ]
     value_key = {
         "value": value,
         "fspath": fspath,
