@@ -1,0 +1,40 @@
+name: cifs-utils
+meta.summary: Utilities for doing and managing mounts of the Linux CIFS filesystem
+version: 6.15
+release: 1
+meta.license: GPLv3+
+meta.homepage: "http://linux-cifs.samba.org/cifs-utils/"
+source:
+    "0": https://download.samba.org/pub/linux-cifs/cifs-utils/%{name}-%{version}.tar.bz2
+meta.description: |
+    The in-kernel CIFS filesystem is generally the preferred method for mounting
+    SMB/CIFS shares on Linux.
+    
+    The in-kernel CIFS filesystem relies on a set of user-space tools. That package
+    of tools is called cifs-utils.Although not really part of Samba proper, these
+    tools were originally part of the Samba package. For several reasons, shipping
+    these tools as part of Samba was problematic and it was deemed better to split
+    them off into their own package.
+requires:
+    - "keyutils"
+buildRequires:
+    - "python3-docutils libcap-ng-devel libtalloc-devel krb5-devel keyutils-libs-devel autoconf"
+    - "automake libwbclient-devel pam-devel pkg-config fdupes gcc"
+provides:
+    - "pam_cifscreds"
+obsoletes:
+    - "pam_cifscreds"
+subpackage:
+    cifs-utils-devel:
+        meta.summary: Files needed for building plugins for cifs-utils
+        meta.description: |
+            The SMB/CIFS protocol is a standard file sharing protocol widely deployed
+            on Microsoft Windows machines. This package contains the header file
+            necessary for building ID mapping plugins for cifs-utils.
+    cifs-utils-help:
+        meta.summary: Including man files for cifs-utils
+        meta.description: This contains man files for the using of cifs-utils.
+        requires:
+            - "man"
+env.configureFlags: |
+    --with-pamdir=%{_libdir}/security

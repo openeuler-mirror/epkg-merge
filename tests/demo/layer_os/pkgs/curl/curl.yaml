@@ -1,0 +1,85 @@
+name: curl
+meta.summary: Curl is used in command lines or scripts to transfer data
+version: 7.79.1
+release: 10
+meta.license: MIT
+meta.homepage: "https://curl.haxx.se/"
+source:
+    "0": https://curl.haxx.se/download/curl-%{version}.tar.xz
+patchset:
+    "0": backport-0101-curl-7.32.0-multilib.patch
+    "1": backport-CVE-2022-22576.patch
+    "2": backport-CVE-2022-27775.patch
+    "3": backport-CVE-2022-27776.patch
+    "4": backport-pre-CVE-2022-27774.patch
+    "5": backport-001-CVE-2022-27774.patch
+    "6": backport-002-CVE-2022-27774.patch
+    "7": backport-CVE-2022-27781.patch
+    "8": backport-pre-CVE-2022-27782.patch
+    "9": backport-CVE-2022-27782.patch
+    "10": backport-CVE-2022-32205.patch
+    "11": backport-CVE-2022-32206.patch
+    "12": backport-CVE-2022-32207.patch
+    "13": backport-CVE-2022-32208.patch
+    "14": backport-fix-configure-disable-http-auth-build-error.patch
+    "15": backport-CVE-2022-35252-cookie-reject-cookies-with-control-bytes.patch
+meta.description: |
+    cURL is a computer software project providing a library (libcurl) and
+    command-line tool (curl) for transferring data using various protocols.
+requires:
+    - "libcurl = %{version}-%{release}"
+buildRequires:
+    - "automake brotli-devel coreutils gcc groff krb5-devel"
+    - "libidn2-devel libnghttp2-devel libpsl-devel"
+    - "libssh-devel make openldap-devel openssh-clients openssh-server"
+    - "openssl-devel perl-interpreter pkgconfig python3-devel sed"
+    - "stunnel zlib-devel gnutls-utils nghttp2 perl(IO::Compress::Gzip)"
+    - "perl(Getopt::Long) perl(Pod::Usage) perl(strict) perl(warnings)"
+    - "perl(Cwd) perl(Digest::MD5) perl(Exporter) perl(File::Basename)"
+    - "perl(File::Copy) perl(File::Spec) perl(IPC::Open2) perl(MIME::Base64)"
+    - "perl(Time::Local) perl(Time::HiRes) perl(vars)"
+    - "valgrind %ifarch x86_64"
+    - "glibc-debuginfo %ifarch x86_64"
+provides:
+    - "curl-full = %{version}-%{release} webclient"
+rpmMacros:
+    - "%global libpsl_version %(pkg-config --modversion libpsl 2>/dev/null || echo 0)"
+    - "%global libssh_version %(pkg-config --modversion libssh 2>/dev/null || echo 0)"
+    - "%global openssl_version %({ pkg-config --modversion openssl 2>/dev/null || echo 0;} | sed 's|-|-0.|')"
+    - "%global _configure ../configure"
+
+subpackage:
+    libcurl:
+        meta.summary: A library for getting files from web servers
+        meta.description: A library for getting files from web servers.
+        requires:
+            - "libssh >= %{libssh_version} libpsl >= %{libpsl_version}"
+            - "openssl-libs >= 1:%{openssl_version}"
+        provides:
+            - "libcurl-full = %{version}-%{release}"
+        conflicts:
+            - "curl < 7.66.0-3"
+    libcurl-devel:
+        meta.summary: Header files for libcurl
+        meta.description: Header files for libcurl.
+        requires:
+            - "libcurl = %{version}-%{release}"
+        provides:
+            - "curl-devel = %{version}-%{release}"
+        obsoletes:
+            - "curl-devel < %{version}-%{release}"
+    curl-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch
+          
+env.configureFlags: |
+    --enable-ldap
+    --enable-ldaps
+    --enable-manual
+    --with-brotli
+    --with-libidn2
+    --with-libpsl
+    --with-libssh

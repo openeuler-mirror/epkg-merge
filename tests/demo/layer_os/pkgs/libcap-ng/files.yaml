@@ -1,0 +1,29 @@
+subpackage.libcap-ng-devel.files: |
+    %attr(0644,root,root) %{_includedir}/cap-ng.h
+    %{_libdir}/libcap-ng.so
+    %{_libdir}/libcap-ng.a
+    %{_libdir}/libdrop_ambient.so
+    %{_libdir}/libdrop_ambient.a
+    %attr(0644,root,root) %{_datadir}/aclocal/cap-ng.m4
+    %{_libdir}/pkgconfig/libcap-ng.pc
+    
+    
+subpackage.libcap-ng-python3.files: |
+    %attr(755,root,root) %{python3_sitearch}/*
+    %{python3_sitearch}/capng.py*
+    
+    
+subpackage.libcap-ng-help.files: |
+    %attr(0644,root,root) %{_mandir}/man3/*
+    %attr(0644,root,root) %{_mandir}/man7/*
+    %attr(0644,root,root) %{_mandir}/man8/*
+    
+    
+files: |
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING.LIB COPYING
+    %attr(0755,root,root) %{_bindir}/*
+    /%{_lib}/libcap-ng.so.*
+    /%{_lib}/libdrop_ambient.so.*
+    
+    

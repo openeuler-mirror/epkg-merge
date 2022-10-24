@@ -1,0 +1,15 @@
+name: squashfs-tools
+meta.summary: Utility for the squashfs filesystems
+version: 4.5.1
+release: 1
+meta.license: GPLv2+
+meta.homepage: "http://squashfs.sourceforge.net/"
+source:
+    "0": http://downloads.sourceforge.net/squashfs/squashfs-tools-%{version}.tar.gz
+meta.description: |
+    Squashfs is a highly compressed read-only filesystem for Linux.
+    It uses either gzip/xz/lzo/lz4/zstd compression to compress both files, inodes
+    and directories.
+buildRequires:
+    - "zlib-devel xz-devel libzstd-devel"
+    - "lzo-devel libattr-devel lz4-devel gcc"

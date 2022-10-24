@@ -1,0 +1,52 @@
+name: lcr
+meta.summary: Lightweight Container Runtime
+version: "%{_version}"
+release: "%{_release}"
+group: Applications/System
+meta.license: LGPLv2.1+
+meta.homepage: "https://gitee.com/openeuler/lcr"
+source:
+    "0": https://gitee.com/openeuler/lcr/repository/archive/v%{version}.tar.gz
+patchset:
+    "0": 0001-feat-Add-json-spec-for-rest-resize-api.patch
+    "1": 0002-add-HAVE_ISULAD-definition-for-lxc-header.patch
+    "2": 0003-fix-cpu-quota-out-of-range-when-update-to-1.patch
+    "3": 0004-remove-unused-daemon-config-args.patch
+    "4": 0005-refactor-handle-warnings.patch
+meta.description: |
+    Containers are insulated areas inside a system, which have their own namespace
+    for filesystem, network, PID, IPC, CPU and memory allocation and which can be
+    created using the Control Group and Namespace features included in the Linux
+    kernel.
+    
+    This package provides the lightweight container tools and library to control
+    lxc-based containers.
+requires:
+    - "lxc >= %{lxcver} yajl zlib"
+buildRequires:
+    - "cmake gcc gcc-c++ git"
+    - "lxc >= %{lxcver}"
+    - "lxc-devel >= %{lxcver}"
+    - "zlib-devel yajl-devel gtest-devel"
+provides:
+    - "liblcr.so()(64bit) %ifarch x86_64"
+    - "libisula_libutils.so()(64bit) %ifarch x86_64"
+    - "liblcr.so()(64bit) %ifarch aarch64"
+    - "libisula_libutils.so()(64bit) %ifarch aarch64"
+buildRoot:
+    - "%{_tmppath}/lcr-%{version}"
+rpmMacros:
+    - "%global _version 2.0.8"
+    - "%global _release 5"
+    - "%global _inner_name isula_libutils"
+    - "%define lxcver 4.0.3-2021112501"
+
+subpackage:
+    lcr-devel:
+        meta.summary: Huawei container runtime, json and log C Library
+        group: Libraries
+        meta.description: the %{name}-libs package contains libraries for running iSula applications.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        exclusiveArch:
+            - "x86_64 aarch64"

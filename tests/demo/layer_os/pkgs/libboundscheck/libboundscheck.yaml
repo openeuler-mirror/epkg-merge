@@ -1,0 +1,18 @@
+name: libboundscheck
+meta.summary: Enhanced safety functions
+version: v1.1.11
+release: 6
+meta.license: Mulan PSL v2
+meta.homepage: "https://gitee.com/openeuler/libboundscheck"
+source:
+    "0": https://gitee.com/openeuler/libboundscheck/repository/archive/%{name}-%{version}.tar.gz
+meta.description: |
+    libboundscheck provides a set of functions of
+    the common memory/string operation classes.
+requires:
+    - "glibc"
+buildRequires:
+    - "gcc make rpm-build"
+rpmMacros:
+    - "%define debug_package %{nil}"
+

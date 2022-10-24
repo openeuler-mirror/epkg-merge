@@ -1,0 +1,292 @@
+name: bind
+meta.summary: The Berkeley Internet Name Domain (BIND) DNS (Domain Name System) server
+version: 9.16.23
+release: 9
+epoch: 32
+meta.license: MPLv2.0
+meta.homepage: "https://www.isc.org/downloads/bind/"
+source:
+    "0": https://downloads.isc.org/isc/bind9/%{version}/bind-%{version}.tar.xz
+    "1": named.sysconfig
+    "2": https://downloads.isc.org/isc/bind9/%{version}/bind-%{version}.tar.xz.asc
+    "3": named.logrotate
+    "4": https://downloads.isc.org/isc/pgpkeys/codesign2021.txt
+    "5": named.conf
+    "6": https://www.internic.net/domain/named.root
+    "7": named.localhost
+    "8": named.loopback
+    "9": named.empty
+    "10": named.rfc1912.zones
+    "11": named.conf.sample
+    "12": named.root.key
+    "13": bind.tmpfiles.d
+    "14": trusted-key.key
+    "15": named.service
+    "16": named-chroot.service
+    "17": setup-named-chroot.sh
+    "18": generate-rndc-key.sh
+    "19": named.rwtab
+    "20": named-chroot-setup.service
+    "21": named-setup-rndc.service
+    "22": named-pkcs11.service
+    "23": setup-named-softhsm.sh
+    "24": named-chroot.files
+patchset:
+    "0": bind-9.5-PIE.patch
+    "1": bind-9.16-redhat_doc.patch
+    "2": bind-9.5-dlz-64bit.patch
+    "3": bind93-rh490837.patch
+    "4": bind97-rh645544.patch
+    "5": bind-9.9.1-P2-dlz-libdb.patch
+    "6": bind-9.14-config-pkcs11.patch
+    "7": bind-9.10-dist-native-pkcs11.patch
+    "8": bind-9.11-kyua-pkcs11.patch
+    "9": bind-9.11-fips-tests.patch
+    "10": bind-9.11-rh1666814.patch
+    "11": CVE-2022-0396.patch
+    "12": CVE-2021-25220.patch
+    "13": bugfix-limit-numbers-of-test-threads.patch
+meta.description: |
+    BIND (Berkeley Internet Name Domain) is an implementation of the DNS
+    (Domain Name System) protocols. BIND includes a DNS server (named),
+    which resolves host names to IP addresses; a resolver library
+    (routines for applications to use when interfacing with DNS); and
+    tools for verifying that the DNS server is operating properly.
+requires:
+    - "coreutils"
+    - "shadow-utils"
+    - "glibc-common"
+    - "grep"
+    - "bind-libs%{?_isa} = %{epoch}:%{version}-%{release}"
+    - "systemd"
+    - "policycoreutils-python-utils libselinux-utils"
+    - "selinux-policy selinux-policy-base libuv"
+buildRequires:
+    - "gcc, make"
+    - "openssl-devel, libtool, autoconf, pkgconfig, libcap-devel"
+    - "libidn2-devel, libxml2-devel"
+    - "selinux-policy"
+    - "python3-devel"
+    - "python3-ply"
+    - "findutils sed"
+    - "libuv-devel"
+    - "systemd"
+    - "libnsl2"
+    - "openldap-devel, libpq-devel, sqlite-devel, mariadb-connector-c-devel %if %{with DLZ}"
+    - "libcmocka-devel kyua %if %{with UNITTEST}"
+    - "softhsm %if %{with PKCS11} && (%{with UNITTEST} || %{with SYSTEMTEST})"
+    - "perl(Net::DNS) perl(Net::DNS::Nameserver) perl(Time::HiRes) perl(Getopt::Long) %if %{with SYSTEMTEST}"
+    - "iproute %if %{with SYSTEMTEST}"
+    - "krb5-devel %if %{with GSSTSIG}"
+    - "lmdb-devel %if %{with LMDB}"
+    - "json-c-devel %if %{with JSON}"
+    - "libmaxminddb-devel %if %{with GEOIP2}"
+    - "fstrm-devel protobuf-c-devel %if %{with DNSTAP}"
+    - "python3-sphinx python3-sphinx_rtd_theme %if %{with DOC}"
+    - "doxygen %if %{with DOC}"
+    - "python3-sphinx-latex latexmk texlive-xetex texlive-xindy %if %{with DOCPDF}"
+    - "libtsan %if %{with TSAN}"
+recommends:
+    - bind-utils bind-dnssec-utils
+rpmMacros:
+    - "%bcond_with    SYSTEMTEST"
+    - "%bcond_without GSSTSIG"
+    - "%bcond_without PKCS11"
+    - "%bcond_without JSON"
+    - "%bcond_with    DLZ"
+    - "%bcond_with    GEOIP2"
+    - "%bcond_without UNITTEST"
+    - "%bcond_with    DNSTAP"
+    - "%bcond_without LMDB"
+    - "%bcond_with    DOC"
+    - "%bcond_with    TSAN"
+    - "%{?!bind_uid:  %global bind_uid  25}"
+    - "%{?!bind_gid:  %global bind_gid  25}"
+    - "%{!?_pkgdocdir:%global _pkgdocdir %{_docdir}/bind-9.16.23}"
+    - "%global        bind_dir          /var/named"
+    - "%global        _unitdir          /usr/lib/systemd/system"
+    - "%global        _tmpfilesdir      /usr/lib/tmpfiles.d"
+    - "%global        chroot_prefix     %{bind_dir}/chroot"
+    - "%global        chroot_create_directories /dev /run/named %{_localstatedir}/{log,named,tmp} \\\\\\{os.linesep}                                         %{_sysconfdir}/{crypto-policies/back-ends,pki/dnssec-keys,named} \\\\\\{os.linesep}                                         %{_libdir}/bind %{_libdir}/named %{_datadir}/GeoIP /proc/sys/net/ipv4"
+    - "%global        selinuxbooleans   named_write_master_zones=1"
+    - "%define bind_export_libs isc dns isccfg irs"
+    - "%{!?_export_dir:%global _export_dir /bind9-export/}"
+    - "%undefine _strict_symbol_defs_build"
+    - "%{?systemd_ordering}"
+    - "%{?python_provide:%python_provide python3-bind}"
+    - "%{?python_provide:%python_provide python3-isc}"
+    - "%define chroot_fix_devices() \\{os.linesep}if [ $1 -gt 1 ]; then \\{os.linesep}  for DEV in \"%{1}/dev\"/{null,random,zero}; do \\{os.linesep}    if [ -e \"$DEV\" -a \"$(/bin/stat --printf=\"%G %a\" \"$DEV\")\" = \"root 644\" ]; \\{os.linesep}    then \\{os.linesep}      /bin/chmod 0664 \"$DEV\" \\{os.linesep}      /bin/chgrp named \"$DEV\" \\{os.linesep}    fi \\{os.linesep}  done \\{os.linesep}fi"
+
+subpackage:
+    bind-libs:
+        meta.summary: Libraries used by the BIND DNS packages
+        meta.description: |
+            Contains heavyweight version of BIND suite libraries used by both named DNS
+            server and utilities in bind-utils package.
+        requires:
+            - "bind-license = %{epoch}:%{version}-%{release}"
+        provides:
+            - "bind-libs-lite = %{epoch}:%{version}-%{release}"
+        obsoletes:
+            - "bind-libs-lite < 32:9.16.13"
+    bind-license:
+        meta.summary: License of the BIND DNS suite
+        meta.description: Contains license of the BIND DNS suite.
+        buildArch: noarch
+    bind-utils:
+        meta.summary: Utilities for querying DNS name servers
+        meta.description: Bind-utils contains a collection of utilities for querying DNS (Domain
+        requires:
+            - "bind-libs%{?_isa} = %{epoch}:%{version}-%{release}"
+        provides:
+            - "dnsutils = %{epoch}:%{version}-%{release}"
+    bind-dnssec-utils:
+        meta.summary: DNSSEC keys and zones management utilities
+        meta.description: |
+            Bind-dnssec-utils contains a collection of utilities for editing
+            DNSSEC keys and BIND zone files. These tools provide generation,
+            revocation and verification of keys and DNSSEC signatures in zone files.
+            
+            You should install bind-dnssec-utils if you need to sign a DNS zone
+            or maintain keys for it.
+        requires:
+            - "bind-libs%{?_isa} = %{epoch}:%{version}-%{release}"
+            - "python3-bind = %{epoch}:%{version}-%{release}"
+            - "bind-dnssec-doc = %{epoch}:%{version}-%{release}"
+        recommends:
+            - bind-utils
+    bind-dnssec-doc:
+        meta.summary: Manual pages of DNSSEC utilities
+        meta.description: Bind-dnssec-doc contains manual pages for bind-dnssec-utils.
+        requires:
+            - "bind-license = %{epoch}:%{version}-%{release}"
+        conflicts:
+            - "%{name}-utils < %{epoch}:%{version}-%{release}"
+        buildArch: noarch
+    bind-devel:
+        meta.summary: Header files and libraries needed for bind-dyndb-ldap
+        meta.description: |
+            The bind-devel package contains full version of the header files and libraries
+            required for building bind-dyndb-ldap. Upstream no longer supports nor recommends
+            bind libraries for third party applications.
+        requires:
+            - "bind-libs%{?_isa} = %{epoch}:%{version}-%{release}"
+            - "openssl-devel%{?_isa} libxml2-devel%{?_isa}"
+            - "libcap-devel%{?_isa}"
+            - "krb5-devel%{?_isa} %if %{with GSSTSIG}"
+            - "lmdb-devel%{?_isa} %if %{with LMDB}"
+            - "json-c-devel%{?_isa} %if %{with JSON}"
+            - "fstrm-devel%{?_isa} protobuf-c-devel%{?_isa} %if %{with DNSTAP}"
+            - "libmaxminddb-devel%{?_isa} %if %{with GEOIP2}"
+        provides:
+            - "bind-lite-devel = %{epoch}:%{version}-%{release}"
+        obsoletes:
+            - "bind-lite-devel < 32:9.16.6-3"
+    bind-chroot:
+        meta.summary: A chroot runtime environment for the ISC BIND DNS server, named(8)
+        meta.description: |
+            This package contains a tree of files which can be used as a
+            chroot(2) jail for the named(8) program from the BIND package.
+            Based on the code from Jan "Yenya" Kasprzak <kas@fi.muni.cz>
+        requires:
+            - "grep"
+            - "bind%{?_isa} = %{epoch}:%{version}-%{release}"
+        prefix: "%{chroot_prefix}"
+    python3-bind:
+        meta.summary: A module allowing rndc commands to be sent from Python programs
+        meta.description: This package provides a module which allows commands to be sent to rndc directly from Python programs.
+        requires:
+            - "bind-license = %{epoch}:%{version}-%{release}"
+            - "python3 python3-ply %{?py3_dist:%py3_dist ply}"
+        buildArch: noarch
+    bind-pkcs11 rpmWhen %if %{with PKCS11}:
+        meta.summary: Bind with native PKCS#11 functionality for crypto 
+        meta.description: |
+            This is a version of BIND server built with native PKCS#11 functionality.
+            It is important to have SoftHSM v2+ installed and some token initialized.
+            For other supported HSM modules please check the BIND documentation.
+        requires:
+            - "bind%{?_isa} = %{epoch}:%{version}-%{release} "
+            - "bind-libs%{?_isa} = %{epoch}:%{version}-%{release} "
+            - "bind-pkcs11-libs%{?_isa} = %{epoch}:%{version}-%{release} "
+        recommends:
+            - softhsm 
+    bind-pkcs11-utils rpmWhen %if %{with PKCS11}:
+        meta.summary: Bind tools with native PKCS#11 for using DNSSEC 
+        meta.description: |
+            This is a set of PKCS#11 utilities that when used together create rsa
+            keys in a PKCS11 keystore. Also utilities for working with DNSSEC
+            compiled with native PKCS#11 functionality are included.
+        requires:
+            - "bind-pkcs11-libs%{?_isa} = %{epoch}:%{version}-%{release} "
+            - "bind-dnssec-doc = %{epoch}:%{version}-%{release} "
+        obsoletes:
+            - "bind-pkcs11 < 32:9.9.4-16.P2 "
+    bind-pkcs11-libs rpmWhen %if %{with PKCS11}:
+        meta.summary: Bind libraries compiled with native PKCS#11 
+        meta.description: |
+            This is a set of BIND libraries (dns, isc) compiled with native PKCS#11
+            functionality.
+        requires:
+            - "bind-license = %{epoch}:%{version}-%{release} "
+            - "bind-libs%{?_isa} = %{epoch}:%{version}-%{release} "
+    bind-pkcs11-devel rpmWhen %if %{with PKCS11}:
+        meta.summary: Development files for Bind libraries compiled with native PKCS#11 
+        meta.description: |
+            This a set of development files for BIND libraries (dns, isc) compiled
+            with native PKCS#11 functionality.
+        requires:
+            - "bind-pkcs11-libs%{?_isa} = %{epoch}:%{version}-%{release} "
+            - "bind-devel%{?_isa} = %{epoch}:%{version}-%{release} "
+    bind-dlz-filesystem rpmWhen %if %{with DLZ}:
+        meta.summary: BIND server filesystem DLZ module 
+        meta.description: Dynamic Loadable Zones filesystem module for BIND server.
+        requires:
+            - "bind%{?_isa} = %{epoch}:%{version}-%{release} "
+    bind-dlz-ldap rpmWhen %if %{with DLZ}:
+        meta.summary: BIND server ldap DLZ module 
+        meta.description: Dynamic Loadable Zones LDAP module for BIND server.
+        requires:
+            - "bind%{?_isa} = %{epoch}:%{version}-%{release} "
+    bind-dlz-mysql rpmWhen %if %{with DLZ}:
+        meta.summary: BIND server mysql and mysqldyn DLZ modules 
+        meta.description: |
+            Dynamic Loadable Zones MySQL module for BIND server.
+            Contains also mysqldyn module with dynamic DNS updates (DDNS) support.
+        requires:
+            - "bind%{?_isa} = %{epoch}:%{version}-%{release} "
+        provides:
+            - "%{name}-dlz-mysqldyn = %{epoch}:%{version}-%{release} "
+        obsoletes:
+            - "%{name}-dlz-mysqldyn < 32:9.16.6-3 "
+    bind-dlz-sqlite3 rpmWhen %if %{with DLZ}:
+        meta.summary: BIND server sqlite3 DLZ module 
+        meta.description: Dynamic Loadable Zones sqlite3 module for BIND server.
+        requires:
+            - "bind%{?_isa} = %{epoch}:%{version}-%{release} "
+    bind-doc rpmWhen %if %{with DOC}:
+        meta.summary: BIND 9 Administrator Reference Manual 
+        meta.description: |
+            BIND (Berkeley Internet Name Domain) is an implementation of the DNS
+            (Domain Name System) protocols. BIND includes a DNS server (named),
+            which resolves host names to IP addresses; a resolver library
+            (routines for applications to use when interfacing with DNS); and
+            tools for verifying that the DNS server is operating properly.
+            
+            This package contains BIND 9 Administrator Reference Manual
+            in HTML and PDF format.
+            %end
+        requires:
+            - "bind-license = %{epoch}:%{version}-%{release} "
+            - "python3-sphinx_rtd_theme "
+        buildArch: noarch 
+env.configureFlags: |
+    --with-python=%{__python3}
+    --with-libtool
+    --with-pic
+    --with-tuning=large
+    --with-libidn2
+    --with-dlopen=yes
+    --enable-fixed-rrset
+    --enable-full-report
+    --disable-static

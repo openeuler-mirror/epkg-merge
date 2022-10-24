@@ -1,0 +1,96 @@
+name: openssl
+meta.summary: Cryptography and SSL/TLS Toolkit
+version: 1.1.1m
+release: 7
+epoch: 1
+meta.license: OpenSSL and SSLeay
+meta.homepage: "https://www.openssl.org/"
+source:
+    "0": https://www.openssl.org/source/%{name}-%{version}.tar.gz
+    "1": Makefile.certificate
+patchset:
+    "0": openssl-1.1.1-build.patch
+    "1": openssl-1.1.1-fips.patch
+    "2": CVE-2022-0778-Add-a-negative-testcase-for-BN_mod_sqrt.patch
+    "3": CVE-2022-0778-Fix-possible-infinite-loop-in-BN_mod_sqrt.patch
+    "4": CVE-2022-1292.patch
+    "5": Backport-Support-raw-input-data-in-apps-pkeyutl.patch
+    "6": Backport-Fix-no-ec-no-sm2-and-no-sm3.patch
+    "7": Backport-Support-SM2-certificate-verification.patch
+    "8": Backport-Guard-some-SM2-functions-with-OPENSSL_NO_SM2.patch
+    "9": Backport-Add-test-cases-for-SM2-cert-verification.patch
+    "10": Backport-Add-documents-for-SM2-cert-verification.patch
+    "11": Backport-Fix-a-memleak-in-apps-verify.patch
+    "12": Backport-Skip-the-correct-number-of-tests-if-SM2-is-disabled.patch
+    "13": Backport-Make-X509_set_sm2_id-consistent-with-other-setters.patch
+    "14": Backport-Support-SM2-certificate-signing.patch
+    "15": Backport-Support-parsing-of-SM2-ID-in-hexdecimal.patch
+    "16": Backport-Fix-a-double-free-issue-when-signing-SM2-cert.patch
+    "17": Backport-Fix-a-document-description-in-apps-req.patch
+    "18": Backport-Update-expired-SCT-certificates.patch
+    "19": Backport-ct_test.c-Update-the-epoch-time.patch
+    "20": Feature-Support-TLCP-protocol.patch
+    "21": Feature-X509-command-supports-SM2-certificate-signing-with-default-sm2id.patch
+    "22": CVE-2022-2068-Fix-file-operations-in-c_rehash.patch
+    "23": CVE-2022-2097-Fix-AES-OCB-encrypt-decrypt-for-x86-AES-NI.patch
+meta.description: |
+    OpenSSL is a robust, commercial-grade, and full-featured toolkit for the
+    Transport Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
+requires:
+    - "coreutils %{name}-libs%{?_isa} = %{epoch}:%{version}-%{release}"
+buildRequires:
+    - "gcc perl make lksctp-tools-devel coreutils util-linux zlib-devel"
+provides:
+    - "openssl-SMx = %{epoch}:%{version}-%{release}"
+obsoletes:
+    - "openssl-SMx < %{epoch}:%{version}-%{release}"
+rpmMacros:
+    - "%define soversion 1.1"
+
+subpackage:
+    openssl-libs:
+        meta.summary: A general purpose cryptography library with TLS implementation
+        group: System Environment/Libraries
+        meta.description: |
+            The openssl-libs package contains the libraries that are used
+            by various applications which support cryptographic algorithms
+            and protocols.
+        requires:
+            - "ca-certificates >= 2008-5"
+            - "crypto-policies >= 20180730"
+        provides:
+            - "openssl-fips = %{epoch}:%{version}-%{release}"
+            - "openssl-SMx-libs = %{epoch}:%{version}-%{release}"
+        obsoletes:
+            - "openssl < 1:1.0.1-0.3.beta3"
+            - "openssl-fips < 1:1.0.1e-28"
+            - "openssl-SMx-libs < %{epoch}:%{version}-%{release}"
+        recommends:
+            - openssl-pkcs11%{?_isa}
+    openssl-perl:
+        meta.summary: Perl scripts provided with OpenSSL
+        meta.description: |
+            OpenSSL is a toolkit for supporting cryptography. The openssl-perl
+            package provides Perl scripts for converting certificates and keys
+            from other formats to the formats used by the OpenSSL toolkit.
+        requires:
+            - "perl-interpreter"
+            - "%{name}%{?_isa} = %{epoch}:%{version}-%{release}"
+    openssl-devel:
+        meta.summary: Development files for openssl
+        meta.description: "%{summary}."
+        requires:
+            - "%{name}-libs%{?_isa} = %{epoch}:%{version}-%{release}"
+            - "krb5-devel zlib-devel pkgconfig"
+        provides:
+            - "openssl-static = %{epoch}:%{version}-%{release} openssl-static%{?_isa} = %{epoch}:%{version}-%{release}"
+            - "openssl-SMx-devel = %{epoch}:%{version}-%{release}"
+        obsoletes:
+            - "openssl-static < %{epoch}:%{version}-%{release}"
+            - "openssl-SMx-devel < %{epoch}:%{version}-%{release}"
+    openssl-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

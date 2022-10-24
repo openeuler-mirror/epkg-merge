@@ -1,0 +1,46 @@
+subpackage.ncurses-base.files: |
+    %dir %{_sysconfdir}/terminfo
+    %{_datadir}/tabset
+    %dir %{_datadir}/terminfo
+    
+    
+subpackage.ncurses-libs.files: |
+    %{_libdir}/lib*.so.6*
+    %exclude %{_libdir}/libncurses++*.so.6*
+    
+    
+subpackage.ncurses-devel.files: |
+    %{_bindir}/ncurses*-config
+    %{_libdir}/lib*.so
+    %{_libdir}/lib*.a
+    %{_libdir}/pkgconfig/*.pc
+    %{_includedir}/ncurses/*.h
+    %{_includedir}/ncursesw/*.h
+    %{_includedir}/*.h
+    
+    
+subpackage.ncurses-compat-libs.files: |
+    %{_libdir}/lib*.so.5*
+    
+    
+subpackage.ncurses-help.files: |
+    %doc NEWS.xz README TO-DO
+    %doc doc/html/hackguide.html
+    %doc doc/html/ncurses-intro.html
+    %doc misc/ncurses.supp
+    %{_mandir}/man1/ncurses*-config*
+    %{_mandir}/man3/*
+    %{_mandir}/man1/[cirt]*
+    %{_mandir}/man5/*
+    %{_mandir}/man7/*
+    
+    
+files: |
+    %doc ANNOUNCE AUTHORS
+    %doc c++/README*
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING
+    %{_bindir}/[cirt]*
+    %{_libdir}/libncurses++*.so.6*
+    
+    

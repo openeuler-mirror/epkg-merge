@@ -1,0 +1,23 @@
+subpackage.cifs-utils-devel.files: |
+    %{_includedir}/cifsidmap.h
+    
+    
+subpackage.cifs-utils-help.files: |
+    %{_mandir}/man1/*
+    %{_mandir}/man8/*
+    
+    
+files: |
+    %defattr(-,root,root,-)
+    %doc
+    %{_bindir}/*
+    %{_sbindir}/*
+    %dir %{_libdir}/%{name}
+    %{_libdir}/%{name}/idmapwb.so
+    %{_libdir}/security/pam_cifscreds.so
+    %dir %{_sysconfdir}/cifs-utils
+    %config(noreplace) %{_sysconfdir}/request-key.d/cifs.idmap.conf
+    %config(noreplace) %{_sysconfdir}/request-key.d/cifs.spnego.conf
+    %ghost  %config(noreplace) %{_sysconfdir}/cifs-utils/idmap-plugin
+    
+    

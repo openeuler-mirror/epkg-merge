@@ -1,0 +1,97 @@
+name: ncurses
+meta.summary: Terminal control library
+version: 6.3
+release: 4
+meta.license: MIT
+meta.homepage: "https://invisible-island.net/ncurses/ncurses.html"
+source:
+    "0": https://invisible-mirror.net/archives/ncurses/ncurses-%{version}.tar.gz
+patchset:
+    "0": ncurses-config.patch
+    "1": ncurses-libs.patch
+    "2": ncurses-urxvt.patch
+    "3": ncurses-kbs.patch
+    "4": backport-CVE-2022-29458.patch
+meta.description: |
+    The ncurses (new curses) library is a free software emulation of
+    curses in System V Release 4.0 (SVr4), and more. It uses terminfo
+    format, supports pads and color and multiple highlights and forms
+    characters and function-key mapping, and has all the other SVr4-curses
+    enhancements over BSD curses. SVr4 curses became the basis of X/Open Curses.
+requires:
+    - "%{name}-base = %{version}-%{release}"
+    - "%{name}-libs = %{version}-%{release}"
+buildRequires:
+    - "gcc gcc-c++ gpm-devel pkgconfig"
+provides:
+    - "%{name}-c++-libs = %{version}-%{release}"
+    - "%{name}-term = %{version}-%{release}"
+obsoletes:
+    - "rxvt-unicode-terminfo < 9.22-18"
+    - "%{name}-c++-libs < %{version}-%{release}"
+    - "%{name}-term < %{version}-%{release}"
+filesInput: terms.term
+
+subpackage:
+    ncurses-base:
+        meta.summary: Descriptions of common terminals
+        meta.description: This package contains descriptions of common terminals.
+        buildArch: noarch
+        filesInput: terms.base
+ 
+    ncurses-libs:
+        meta.summary: Libraries for %{name}
+        meta.description: Libraries for %{name}.
+        requires:
+            - "%{name}-base = %{version}-%{release}"
+    ncurses-devel:
+        meta.summary: Development files for the ncurses library
+        meta.description: |
+            The header files and libraries for developing applications that use
+            the ncurses terminal handling library.a, including static libraries
+            of the ncurses library.
+        requires:
+            - "%{name}-libs = %{version}-%{release}"
+            - "%{name}-c++-libs = %{version}-%{release}"
+            - "pkgconfig"
+        provides:
+            - "%{name}-static = %{version}-%{release}"
+            - "libtermcap-devel = 2.0.8-48"
+        obsoletes:
+            - "%{name}-static < %{version}-%{release}"
+            - "libtermcap-devel < 2.0.8-48"
+    ncurses-compat-libs:
+        meta.summary: Ncurses compatibility libraries
+        group: System Environment/Libraries
+        meta.description: |
+            The curses library routines are a terminal-independent method of
+            updating character screens with reasonable optimization.  The ncurses
+            (new curses) library is a freely distributable replacement for the
+            discontinued 4.4 BSD classic curses library.
+            
+            This package contains the ABI version 5 of the ncurses libraries for
+            compatibility.
+        requires:
+            - "%{name}-base = %{version}-%{release}"
+    ncurses-help:
+        meta.summary: Ncurse help document
+        meta.description: |
+            This package contains development documentation, manuals
+            for interface function, and related documents.
+        requires:
+            - "%{name} = %{version}-%{release}"
+env.configureFlags: |
+    --enable-colorfgbg
+    --enable-hard-tabs
+    --enable-overwrite
+    --enable-pc-files
+    --enable-xmc-glitch
+    --disable-wattr-macros
+    --with-cxx-shared
+    --with-ospeed=unsigned
+    --with-pkg-config-libdir=%{_libdir}/pkgconfig
+    --with-shared
+    --with-terminfo-dirs=%{_sysconfdir}/terminfo:%{_datadir}/terminfo
+    --with-termlib=tinfo
+    --with-ticlib=tic
+    --with-xterm-kbs=DEL

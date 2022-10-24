@@ -1,0 +1,75 @@
+name: glib2
+meta.summary: The core library that forms the basis for projects such as GTK+ and GNOME
+version: 2.72.2
+release: 3
+meta.license: LGPLv2+
+meta.homepage: "http://www.gtk.org"
+source:
+    "0": https://download.gnome.org/sources/glib/2.71/glib-%{version}.tar.xz
+patchset:
+    "0": backport-add-version-macros-for-GLib-2.74.patch
+    "1": backport-gtype-Add-G_TYPE_FLAG_NONE.patch
+    "2": backport-gioenums-Add-G_TLS_CERTIFICATE_FLAGS_NONE.patch
+    "3": backport-gtestutils-Add-G_TEST_SUBPROCESS_DEFAULT.patch
+    "4": backport-gsignal-Add-G_CONNECT_DEFAULT.patch
+    "5": backport-giomodule-test-Dont-pass-a-magic-number-to-g_test_trap_subprocess.patch
+    "6": backport-giochannel-Add-G_IO_FLAG_NONE.patch
+    "7": backport-gmarkup-Add-G_MARKUP_PARSE_FLAGS_NONE.patch
+    "8": backport-gregex-Add-G_REGEX_DEFAULT-G_REGEX_MATCH_DEFAULT.patch
+    "9": backport-replace-pcre1-with-pcre2.patch
+    "10": backport-gregex-format-specifier-for-localized-error-message.patch
+    "11": backport-gregex-ensure-we-translate-the-errcode.patch
+    "12": backport-gregex-Free-match-info-if-offset-matching-recalc-failed.patch
+    "13": backport-gregex-use-G_REGEX_OPTIMIZE-flag-to-enable-JIT-compilation.patch
+    "14": backport-gregex-use-g_debug-instead-of-g_warning-in-case-JIT-is-not-available.patch
+    "15": backport-gregex-do-not-set-match-and-recursion-limits-on-match-context.patch
+    "16": backport-gregex-add-original-test-case.patch
+    "17": backport-gregex-use-correct-size-for-pcre2_pattern_info.patch
+meta.description: |
+    GLib is a bundle of three (formerly five) low-level system libraries
+    written in C and developed mainly by GNOME. GLib's code was separated
+    from GTK, so it can be used by software other than GNOME and has been
+    developed in parallel ever since.
+buildRequires:
+    - "chrpath gcc gcc-c++ gettext perl-interpreter"
+    - "glibc-devel libattr-devel libselinux-devel meson"
+    - "systemtap-sdt-devel pkgconfig(libelf) pkgconfig(libffi)"
+    - "pkgconfig(libpcre) pkgconfig(mount) pkgconfig(zlib)"
+    - "python3-devel"
+    - "desktop-file-utils shared-mime-info gtk-doc %ifnarch i686"
+    - "pkgconfig(sysprof-capture-4) %ifnarch i686 %if %{?openEuler:1}0"
+provides:
+    - "%{name}-fam = %{version}-%{release}"
+    - "bundled(gnulib)"
+    - "bundled(gvdb)"
+    - "bundled(libcharset)"
+    - "bundled(xdgmime)"
+obsoletes:
+    - "%{name}-fam < %{version}-%{release}"
+conflicts:
+    - "gcr < 3.28.1"
+filesInput: glib20.lang
+
+recommends:
+    - shared-mime-info
+subpackage:
+    glib2-devel:
+        meta.summary: Development and test files for the GLib library
+        meta.description: Development and test files for the GLib library.
+        requires:
+            - "%{name} = %{version}-%{release}"
+            - "gdb-headless"
+        provides:
+            - "%{name}-static = %{version}-%{release}"
+            - "%{name}-tests = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-static < %{version}-%{release}"
+            - "%{name}-tests < %{version}-%{release}"
+    glib2-help rpmWhen %ifnarch i686:
+        meta.summary: help document for the glib2 package 
+        meta.description: help document for the glib2 package.
+        provides:
+            - "%{name}-doc = %{version}-%{release} "
+        obsoletes:
+            - "%{name}-doc < %{version}-%{release} "
+        buildArch: noarch 

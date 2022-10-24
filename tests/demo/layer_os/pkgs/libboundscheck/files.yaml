@@ -1,0 +1,9 @@
+files: |
+    %defattr(-,root,root)
+    %{_libdir}/libboundscheck.so
+    %{_includedir}/securec.h
+    %{_includedir}/securectype.h
+    %doc README.md
+    %license LICENSE
+    
+    

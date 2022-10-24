@@ -1,0 +1,19 @@
+name: psmisc
+meta.summary: Utilities for managing processes on your system
+version: 23.4
+release: 2
+meta.license: GPLv2+
+meta.homepage: "https://gitlab.com/psmisc/psmisc"
+source:
+    "0": https://sourceforge.net/projects/%{name}/files/%{name}/%{name}-%{version}.tar.xz
+patchset:
+    "0": backport-patch-fix-checking-truncated-process-names.patch
+meta.description: |
+    This PSmisc package is a set of some small useful utilities that use the proc
+    filesystem. We're not about changing the world, but providing the system
+    administrator with some help in common tasks.
+buildRequires:
+    - "libselinux-devel gettext ncurses-devel autoconf automake gcc"
+filesInput: "%{name}.lang"
+env.configureFlags: |
+    --enable-selinux

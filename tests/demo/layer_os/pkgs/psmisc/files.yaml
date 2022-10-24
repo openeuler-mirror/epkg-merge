@@ -1,0 +1,8 @@
+files: |
+    %{_sbindir}/fuser
+    %{_bindir}/*
+    %{_mandir}/man1/*
+    %license COPYING
+    %doc AUTHORS ChangeLog README
+    
+    

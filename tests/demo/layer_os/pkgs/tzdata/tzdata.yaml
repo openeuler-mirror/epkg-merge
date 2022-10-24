@@ -1,0 +1,36 @@
+name: tzdata
+meta.summary: Timezone data
+version: 2022a
+release: 6
+meta.license: Public Domain
+meta.homepage: "https://www.iana.org/time-zones"
+source:
+    "0": https://data.iana.org/time-zones/releases/tzdata%{version}.tar.gz
+    "1": https://data.iana.org/time-zones/releases/tzcode%{version}.tar.gz
+    "2": javazic.tar.gz
+    "3": javazic-1.8-37392f2f5d59.tar.xz
+patchset:
+    "0": backport-Iran-will-stop-DST-in-2023.patch
+    "1": backport-Chile-s-DST-is-delayed-by-a-week-in-September-2022.patch
+    "2": backport-Palestine-transitions-are-now-Saturdays-at-02-00.patch
+    "3": backport-Tweak-expression-of-Palestine-transition.patch
+    "4": bugfix-0001-add-Beijing-timezone.patch
+    "5": remove-country-selection-from-tzselect-steps.patch
+    "6": remove-ROC-timezone.patch
+    "7": rename-Macau-to-Macao.patch
+    "8": remove-El_Aaiun-timezone.patch
+    "9": remove-Israel-timezone.patch
+    "10": skip-check_web-testcase.patch
+meta.description: |
+    This package contains data files with rules for various timezones around
+    the world.
+buildRequires:
+    - "gawk glibc perl-interpreter"
+    - "java-devel"
+    - "glibc-common >= 2.5.90-7"
+Buildarchitectures:
+    - noarch
+subpackage:
+    tzdata-java:
+        meta.summary: Timezone data for Java
+        meta.description: This package contains timezone information for use by Java runtimes.

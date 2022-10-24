@@ -1,0 +1,14 @@
+subpackage.libusbx-devel.files: |
+    %doc examples/*.c
+    %{_includedir}/libusb-1.0
+    %{_libdir}/*.so
+    %{_libdir}/pkgconfig/libusb-1.0.pc
+    
+    
+files: |
+    %doc AUTHORS README ChangeLog
+    %license COPYING
+    %{_libdir}/*.so.*
+    %exclude %{_libdir}/*.la
+    
+    

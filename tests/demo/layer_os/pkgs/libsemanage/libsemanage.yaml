@@ -1,0 +1,56 @@
+name: libsemanage
+meta.summary: SELinux binary policy manipulation library
+version: 3.3
+release: 3
+meta.license: LGPLv2+
+meta.homepage: "https://github.com/SELinuxProject/selinux/wiki"
+source:
+    "0": https://github.com/SELinuxProject/selinux/releases/download/3.3/libsemanage-%{version}.tar.gz
+    "1": semanage.conf
+patchset:
+    "0": fix-test-failure-with-secilc.patch
+meta.description: |
+    libsemanage is the policy management library. Using libsepol and
+    libselinux to interact with the SELinux system, it also calls helper
+    programs for loading policy and for checking whether the
+    file_contexts configuration is valid.
+requires:
+    - "bzip2-libs audit-libs"
+    - "libselinux >= %{libselinux_version}"
+buildRequires:
+    - "gcc python3-devel bison flex bzip2-devel audit-libs-devel"
+    - "libselinux-devel >= %{libselinux_version} swig  libsepol-devel >= %{libsepol_version}"
+    - "CUnit-devel gdb-headless"
+rpmMacros:
+    - "%define libsepol_version 3.3-1"
+    - "%define libselinux_version 3.3-1"
+
+subpackage:
+    libsemanage-devel:
+        meta.summary: Header files and libraries used to build policy manipulation tools
+        meta.description: |
+            The libsemanage-devel package contains the libraries and header files
+            needed for developing applications that manipulate SELinux policies.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "libsemanage-static = %{version}-%{release}"
+        obsoletes:
+            - "libsemanage-static < %{version}-%{release}"
+    python3-libsemanage:
+        meta.summary: python3 bindings for libsemanage
+        meta.description: |
+            The python3-libsemanage package contains the python bindings for developing
+            SELinux management applications.
+        requires:
+            - "%{name} = %{version}-%{release} libselinux-python3"
+        provides:
+            - "%{name}-python3 = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-python3 < %{version}-%{release}"
+    libsemanage-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

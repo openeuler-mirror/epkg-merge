@@ -1,0 +1,34 @@
+name: grep
+meta.summary: A string search utility
+version: 3.7
+release: 7
+meta.license: GPLv3+
+meta.homepage: "http://www.gnu.org/software/grep/"
+source:
+    "0": https://ftp.gnu.org/gnu/grep/grep-%{version}.tar.xz
+    "1": color_grep.sh
+    "2": colorgrep.csh
+    "3": grepconf.sh
+patchset:
+    "0": backport-grep-avoid-sticky-problem-with-f-f.patch
+    "1": backport-grep-s-does-not-suppress-binary-file-matches.patch
+    "2": backport-grep-work-around-PCRE-bug.patch
+    "3": backport-grep-migrate-to-pcre2.patch
+    "4": backport-grep-Don-t-limit-jitstack_max-to-INT_MAX.patch
+    "5": backport-grep-speed-up-fix-bad-UTF8-check-with-P.patch
+    "6": backport-grep-fix-minor-P-memory-leak.patch
+    "7": backport-grep-djb2-correction.patch
+    "8": backport-build-update-gnulib-submodule-to-latest.patch
+    "9": backport-grep-fix-bug-with-and-some-Hangul-Syllables.patch
+    "10": backport-tests-improve-tests-of.patch
+    "11": backport-grep-sanity-check-GREP_COLOR.patch
+    "12": backport-grep-fix-regex-compilation-memory-leaks.patch
+meta.description: |
+    Grep searches one or more input files for lines containing a match to
+    a specified pattern. By default, Grep outputs the matching lines.
+buildRequires:
+    - "gcc pcre2-devel texinfo gettext libsigsegv-devel automake"
+provides:
+    - "/bin/egrep /bin/fgrep /bin/grep bundled(gnulib)"
+env.configureFlags: |
+    --disable-silent-rules

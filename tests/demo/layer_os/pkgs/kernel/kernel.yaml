@@ -1,0 +1,166 @@
+name: kernel%{?package64kb}
+meta.summary: Linux Kernel
+version: "%{upstream_version}.%{upstream_sublevel}"
+release: "%{devel_release}%{?maintenance_release}%{?pkg_release}%{?extra_release}"
+meta.license: GPLv2
+meta.homepage: "http://www.kernel.org/"
+source:
+    "0": kernel.tar.gz
+    "1": sign-modules
+    "2": x509.genkey
+    "3": extra_certificates
+    "4": pubring.gpg
+    "5": check-kabi %if 0%{?with_kabichk}
+    "6": Module.kabi_aarch64 %if 0%{?with_kabichk}
+    "7": mkgrub-menu-aarch64.sh
+    "8": cpupower.service
+    "9": cpupower.config
+    "10": apply-patches %if 0%{?with_patch}
+    "11": guards %if 0%{?with_patch}
+    "12": series.conf %if 0%{?with_patch}
+    "13": patches.tar.bz2 %if 0%{?with_patch}
+meta.description: The Linux Kernel, the operating system core itself.
+requires:
+    - "dracut >= 001-7 grubby >= 8.28-2 initscripts >= 8.11.1-1 linux-firmware >= 20100806-2 module-init-tools >= 3.16-2"
+buildRequires:
+    - "module-init-tools, patch >= 2.5.4, bash >= 2.03, tar"
+    - "bzip2, xz, findutils, gzip, m4, perl, make >= 3.78, diffutils, gawk"
+    - "libcap-devel, libcap-ng-devel, rsync"
+    - "gcc >= 3.4.2, binutils >= 2.12"
+    - "hostname, net-tools, bc"
+    - "xmlto, asciidoc"
+    - "openssl-devel openssl"
+    - "hmaccalc"
+    - "ncurses-devel"
+    - "elfutils-libelf-devel"
+    - "rpm >= 4.14.2"
+    - "python-devel %if 0%{?with_python2}"
+    - "elfutils-devel zlib-devel binutils-devel newt-devel perl(ExtUtils::Embed) bison"
+    - "audit-libs-devel"
+    - "pciutils-devel gettext"
+    - "rpm-build, elfutils"
+    - "numactl-devel python3-devel glibc-static python3-docutils"
+    - "perl-generators perl(Carp) libunwind-devel gtk2-devel libbabeltrace-devel java-1.8.0-openjdk perl-devel"
+    - "flex xz-devel libzstd-devel %if %{with_perf}"
+    - "java-devel %if %{with_perf}"
+    - "dwarves"
+    - "clang >= 10.0.0"
+    - "llvm"
+provides:
+    - "kernel-aarch64 = %{version}-%{release} kernel-drm = 4.3.0 kernel-drm-nouveau = 16 kernel-modeset = 1"
+    - "kernel-uname-r = %{KernelVer} kernel=%{KernelVer}"
+conflicts:
+    - "device-mapper-libs < 1.02.63-2 e2fsprogs < 1.37-4 initscripts < 7.23 iptables < 1.3.2-1"
+    - "ipw2200-firmware < 2.4 isdn4k-utils < 3.2-32 iwl4965-firmware < 228.57.2 jfsutils < 1.1.7-2"
+    - "mdadm < 3.2.1-5 nfs-utils < 1.0.7-12 oprofile < 0.9.1-2 ppp < 2.4.3-3 procps < 3.2.5-6.3"
+    - "reiserfs-utils < 3.6.19-2 selinux-policy-targeted < 1.25.3-14 squashfs-tools < 4.0"
+    - "udev < 063-6 util-linux < 2.12 wireless-tools < 29-3 xfsprogs < 2.6.13-4"
+exclusiveArch:
+    - "noarch aarch64 i686 x86_64"
+Exclusiveos:
+    - Linux
+rpmMacros:
+    - "%define with_signmodules  1"
+    - "%define with_kabichk 0"
+    - "%define modsign_cmd %{SOURCE10}"
+    - "%global Arch $(echo %{_host_cpu} | sed -e s/i.86/x86/ -e s/x86_64/x86/ -e s/aarch64.*/arm64/)"
+    - "%global KernelVer %{upstream_version}.%{upstream_sublevel}-%{release}.%{_target_cpu}"
+    - "%global debuginfodir /usr/lib/debug"
+    - "%global upstream_version    5.10"
+    - "%global upstream_sublevel   0"
+    - "%global devel_release       104"
+    - "%global maintenance_release .0.0"
+    - "%global pkg_release         .54"
+    - "%define with_debuginfo 1"
+    - "%global _missing_build_ids_terminate_build 1"
+    - "%global _no_recompute_build_ids 1"
+    - "%undefine _include_minidebuginfo"
+    - "%undefine _include_gdb_index"
+    - "%undefine _unique_build_ids"
+    - "%define with_source 1"
+    - "%define with_python2 0"
+    - "%define listnewconfig_fail 0"
+    - "%define with_64kb  %{?_with_64kb: 1} %{?!_with_64kb: 0} %ifarch aarch64"
+    - "%global package64kb -64kb %ifarch aarch64 %if %{with_64kb}"
+    - "%define with_64kb  0 %else %ifarch aarch64"
+    - "%define with_perf    %{?_without_perf: 0} %{?!_without_perf: 1}"
+    - "%define _debuginfo_template %{nil} %if 0%{?with_debuginfo}"
+    - "%define _debuginfo_subpackages 0 %if 0%{?with_debuginfo}"
+    - "%define debuginfo_template(n:) \\{os.linesep}%package -n %{-n*}-debuginfo\\{os.linesep}Summary: Debug information for package %{-n*}\\{os.linesep}Group: Development/Debug\\{os.linesep}AutoReq: 0\\{os.linesep}AutoProv: 1\\{os.linesep}%description -n %{-n*}-debuginfo\\{os.linesep}This package provides debug information for package %{-n*}.\\{os.linesep}Debug information is useful when developing applications that use this\\{os.linesep}package or when debugging this package.\\{os.linesep}%{nil} %if 0%{?with_debuginfo}"
+
+subpackage:
+    kernel%{?package64kb}-headers:
+        meta.summary: Header files for the Linux kernel for use by glibc
+        meta.description: |
+            Kernel-headers includes the C header files that specify the interface
+            between the Linux kernel and userspace libraries and programs.  The
+            header files define structures and constants that are needed for
+            building most standard programs and are also needed for rebuilding the
+            glibc package.
+        provides:
+            - "glibc-kernheaders = 3.0-46"
+        obsoletes:
+            - "glibc-kernheaders < 3.0-46"
+    kernel%{?package64kb}-devel:
+        meta.summary: Development package for building kernel modules to match the %{KernelVer} kernel
+        meta.description: |
+            This package provides kernel headers and makefiles sufficient to build modules
+            against the %{KernelVer} kernel package.
+        requires:
+            - "perl findutils"
+        provides:
+            - "kernel-devel-uname-r = %{KernelVer}"
+            - "kernel-devel-%{_target_cpu} = %{version}-%{release}"
+    kernel%{?package64kb}-tools:
+        meta.summary: Assortment of tools for the Linux kernel
+        meta.description: |
+            This package contains the tools/ directory from the kernel source
+            and the supporting documentation.
+        provides:
+            - "%{name}-tools-libs"
+            - "cpufreq-utils = 1:009-0.6.p1"
+            - "cpufrequtils = 1:009-0.6.p1"
+        obsoletes:
+            - "%{name}-tools-libs"
+            - "cpufreq-utils < 1:009-0.6.p1"
+            - "cpufrequtils < 1:009-0.6.p1"
+            - "cpuspeed < 1:1.5-16"
+    kernel%{?package64kb}-tools-devel:
+        meta.summary: Assortment of tools for the Linux kernel
+        meta.description: |
+            This package contains the development files for the tools/ directory from
+            the kernel source.
+        requires:
+            - "%{name}-tools = %{version}-%{release}"
+            - "%{name}-tools-libs = %{version}-%{release}"
+        provides:
+            - "%{name}-tools-libs-devel = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-tools-libs-devel"
+    bpftool:
+        meta.summary: Inspection and simple manipulation of eBPF programs and maps
+        meta.description: |
+            This package contains the bpftool, which allows inspection and simple
+            manipulation of eBPF programs and maps.
+    kernel%{?package64kb}-source:
+        meta.summary: the kernel source
+        meta.description: This package contains vaious source files from the kernel.
+    perf rpmWhen %if %{with_perf}:
+        meta.summary: Performance monitoring for the Linux kernel 
+        meta.description: |
+            This package contains the perf tool, which enables performance monitoring
+            of the Linux kernel.
+    python2-perf rpmWhen %if %{with_perf} rpmWhen %if 0%{?with_python2}:
+        meta.summary: Python bindings for apps which will manipulate perf events 
+        meta.description: |
+            A Python module that permits applications written in the Python programming
+            language to use the interface to manipulate perf events.
+        provides:
+            - "python-perf = %{version}-%{release} "
+        obsoletes:
+            - "python-perf "
+    python3-perf rpmWhen %if %{with_perf}:
+        meta.summary: Python bindings for apps which will manipulate perf events 
+        meta.description: |
+            A Python module that permits applications written in the Python programming
+            language to use the interface to manipulate perf events.

@@ -1,0 +1,31 @@
+name: yajl
+meta.summary: Yet Another JSON Library
+version: 2.1.0
+release: 19
+meta.license: ISC
+meta.homepage: "https://github.com/lloyd/yajl"
+source:
+    "0": https://github.com/lloyd/yajl/archive/%{version}.tar.gz
+patchset:
+    "0": 0001-yajl-2.1.0-pkgconfig-location.patch
+    "1": 0002-yajl-2.1.0-pkgconfig-includedir.patch
+    "2": 0003-yajl-2.1.0-test-location.patch
+    "3": 0004-yajl-2.1.0-dynlink-binaries.patch
+    "4": 0005-yajl-2.1.0-fix-memory-leak.patch
+    "5": 0006-fix-memory-leak-of-ctx-root.patch
+    "6": 0007-add-cmake-option-for-test-and-binary.patch
+    "7": backport-CVE-2022-24795.patch
+    "8": yajl-assert-error-when-memory-allocation-failed.patch
+meta.description: |
+    yajl is a small event-driven JSON parser written in ANSI C, and a small
+    validating JSON generator.
+buildRequires:
+    - "cmake gcc"
+subpackage:
+    yajl-devel:
+        meta.summary: Development files for %{name}
+        meta.description: |
+            This package provides the libraries and includes
+            necessary for developing against the yajl library.
+        requires:
+            - "%{name} = %{version}-%{release}"

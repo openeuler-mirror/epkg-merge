@@ -1,0 +1,29 @@
+subpackage.cracklib-devel.files: |
+    %{_includedir}/*
+    %{_libdir}/libcrack.so
+    
+    
+subpackage.cracklib-help.files: |
+    %doc README README-WORDS NEWS
+    
+    
+subpackage.python3-cracklib %if %{with python3}.files: |
+    %{_libdir}/python3*/site-packages/_cracklib*.so
+    %{_libdir}/python3*/site-packages/*.py*
+    %{_libdir}/python3*/site-packages/__pycache__/*
+    
+files: |
+    %defattr(-,root,root)
+    %doc README-LICENSE AUTHORS
+    %license COPYING.LIB
+    %{_sbindir}/*cracklib*
+    %{_sbindir}/mkdict
+    %{_sbindir}/packer
+    %{_libdir}/libcrack.so.*
+    %{_libdir}/cracklib_dict.*
+    %dir %{_datadir}/cracklib
+    %config(noreplace) %{_datadir}/cracklib/pw_dict.*
+    %{_datadir}/cracklib/cracklib-small.*
+    %{_datadir}/cracklib/cracklib.magic
+    
+    

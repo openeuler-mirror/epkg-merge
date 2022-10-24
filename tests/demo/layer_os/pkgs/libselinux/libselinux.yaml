@@ -1,0 +1,72 @@
+name: libselinux
+meta.summary: SELinux library and simple utilities
+version: 3.3
+release: 2
+meta.license: Public Domain
+meta.homepage: "https://github.com/SELinuxProject/selinux/wiki"
+source:
+    "0": https://github.com/SELinuxProject/selinux/releases/download/3.3/libselinux-3.3.tar.gz
+patchset:
+    "0": backport-libselinux-Close-leaked-FILEs.patch
+    "1": backport-libselinux-free-memory-on-selabel_open-3-failure.patch
+    "2": backport-libselinux-restorecon-misc-tweaks.patch
+    "3": backport-libselinux-free-memory-in-error-branch.patch
+    "4": backport-libselinux-restorecon-avoid-printing-NULL-pointer.patch
+    "5": do-malloc-trim-after-load-policy.patch
+meta.description: |
+    libselinux provides an interface to get and set process and file
+    security contexts and to obtain security policy decisions.
+requires:
+    - "libsepol >= %{libsepol_version} pcre2"
+buildRequires:
+    - "gcc python3-devel systemd swig pcre2-devel xz-devel"
+    - "ruby-devel libsepol-static"
+provides:
+    - "%{name}-utils = %{version}-%{release}"
+obsoletes:
+    - "%{name}-utils < %{version}-%{release}"
+conflicts:
+    - "filesystem < 3, selinux-policy-base < 3.13.1-138"
+rpmMacros:
+    - "%global ruby_inc %(pkg-config --cflags ruby)"
+    - "%global libsepol_version 3.3"
+
+subpackage:
+    libselinux-devel:
+        meta.summary: Header files and libraries used to build SELinux
+        meta.description: |
+            libselinux provides an interface to get and set process and file
+            security contexts and to obtain security policy decisions.
+        requires:
+            - "%{name} = %{version}-%{release}"
+            - "libsepol-devel >= %{libsepol_version}"
+        provides:
+            - "%{name}-static = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-static < %{version}-%{release}"
+    python3-libselinux:
+        meta.summary: SELinux python3 bindings for libselinux
+        meta.description: |
+            The libselinux-python3 package contains the python bindings for developing
+            SELinux applications.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "%{name}-python3 = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-python3 < %{version}-%{release}"
+    libselinux-ruby:
+        meta.summary: SELinux ruby bindings for libselinux
+        meta.description: |
+            The libselinux-ruby package contains the ruby bindings for developing
+            SELinux applications.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "ruby(selinux)"
+    libselinux-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

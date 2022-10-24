@@ -1,0 +1,10 @@
+subpackage.libaio-devel.files: |
+    %attr(0644,root,root) %{_includedir}/*
+    %attr(0755,root,root) %{_libdir}/libaio.so
+    
+    
+files: |
+    %license COPYING
+    %attr(0755,root,root) %{_libdir}/libaio.so.*
+    
+    

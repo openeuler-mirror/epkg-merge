@@ -1,0 +1,21 @@
+subpackage.bzip2-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/bzlib.h
+    %{_libdir}/*.so
+    %{_libdir}/pkgconfig/
+    %{_libdir}/*.a
+    
+    
+subpackage.bzip2-help.files: |
+    %doc manual.html manual.pdf
+    %{_mandir}/man1/b*.1.gz
+    
+    
+files: |
+    %defattr(-,root,root)
+    %doc CHANGES LICENSE README
+    %license LICENSE
+    %{_bindir}/*
+    %{_libdir}/*.so.*
+    
+    

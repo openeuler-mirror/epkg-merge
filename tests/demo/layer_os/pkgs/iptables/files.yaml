@@ -1,0 +1,89 @@
+subpackage.iptables-libs.files: |
+    %defattr(-,root,root)
+    %{_libdir}/libip*tc.so.*
+    %{_libdir}/libxtables.so.*
+    %{_libdir}/libxtables.so.12*
+    %dir %{_libdir}/xtables
+    %{_libdir}/xtables/libipt*
+    %{_libdir}/xtables/libip6t*
+    %{_libdir}/xtables/libxt*
+    
+    
+subpackage.iptables-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/*
+    %{_libdir}/*.so
+    %{_libdir}/pkgconfig/*.pc
+    
+    
+subpackage.iptables-nft.files: |
+    %defattr(-,root,root)
+    %{_sbindir}/iptables-nft*
+    %{_sbindir}/iptables-restore-translate
+    %{_sbindir}/iptables-translate
+    %{_sbindir}/ip6tables-nft*
+    %{_sbindir}/ip6tables-restore-translate
+    %{_sbindir}/ip6tables-translate
+    %{_sbindir}/ebtables-nft*
+    %{_sbindir}/arptables-nft*
+    %{_sbindir}/xtables-nft-multi
+    %{_sbindir}/xtables-monitor
+    %dir %{_libdir}/xtables
+    %{_libdir}/xtables/libarpt*
+    %{_libdir}/xtables/libebt*
+    %ghost %{_sbindir}/iptables
+    %ghost %{_sbindir}/iptables-restore
+    %ghost %{_sbindir}/iptables-save
+    %ghost %{_sbindir}/ip6tables
+    %ghost %{_sbindir}/ip6tables-restore
+    %ghost %{_sbindir}/ip6tables-save
+    %ghost %{_sbindir}/ebtables
+    %ghost %{_sbindir}/ebtables-save
+    %ghost %{_sbindir}/ebtables-restore
+    %ghost %{_sbindir}/arptables
+    %ghost %{_sbindir}/arptables-save
+    %ghost %{_sbindir}/arptables-restore
+    %ghost %{_libexecdir}/arptables-helper
+    
+    
+subpackage.iptables-help.files: |
+    %defattr(-,root,root)
+    %doc INCOMPATIBILITIES
+    %ghost %{_mandir}/man8/arptables.8.gz
+    %ghost %{_mandir}/man8/arptables-save.8.gz
+    %ghost %{_mandir}/man8/arptables-restore.8.gz
+    %ghost %{_mandir}/man8/ebtables.8.gz
+    %{_mandir}/man8/xtables-monitor*
+    %{_mandir}/man8/xtables-translate*
+    %{_mandir}/man8/*-nft*
+    %{_mandir}/man8/nfnl_osf*
+    %{_mandir}/man8/nfbpf_compile*
+    %{_mandir}/man1/iptables-xml*
+    %{_mandir}/man8/iptables*
+    %{_mandir}/man8/ip6tables*
+    %{_mandir}/man8/xtables-legacy*
+    
+    
+files: |
+    %license COPYING
+    %{script_path}/ip*tables.init
+    %config(noreplace) %{_sysconfdir}/sysconfig/*
+    %{_sbindir}/nfnl_osf
+    %{_sbindir}/nfbpf_*
+    %{_sbindir}/iptables-apply
+    %{_sbindir}/ip6tables-apply
+    %{_sbindir}/ip*tables-legacy*
+    %{_sbindir}/xtables-legacy-multi
+    %exclude %{_sbindir}/*-nft*
+    %exclude %{_sbindir}/*-translate
+    %exclude %{_sbindir}/xtables-monitor
+    %{_bindir}/iptables-xml
+    %{_unitdir}/*.service
+    %dir %{legacy_actions}
+    %{legacy_actions}/ip*
+    %{_datadir}/xtables/pf.os
+    %ghost %{_sbindir}/ip*tables
+    %ghost %{_sbindir}/ip*tables-restore
+    %ghost %{_sbindir}/ip*tables-save
+    
+    

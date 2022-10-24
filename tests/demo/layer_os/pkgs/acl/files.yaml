@@ -1,0 +1,26 @@
+subpackage.libacl.files: |
+    %{_libdir}/libacl.so.*
+    
+    
+subpackage.libacl-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/acl/libacl.h
+    %{_includedir}/sys/acl.h
+    %{_libdir}/libacl.so
+    %{_libdir}/pkgconfig/libacl.pc
+    
+    
+subpackage.acl-help.files: |
+    %defattr(-,root,root)
+    %{_mandir}/man1/*
+    %{_mandir}/man3/*
+    %{_mandir}/man5/*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %{!?_licensedir:%global license %%doc}
+    %license doc/COPYING*
+    %{_bindir}/*acl
+    
+    

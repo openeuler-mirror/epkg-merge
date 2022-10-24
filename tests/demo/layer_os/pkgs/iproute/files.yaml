@@ -1,0 +1,23 @@
+subpackage.iproute-devel.files: |
+    %defattr(-,root,root)
+    %license COPYING
+    %{_libdir}/libnetlink.a
+    %{_includedir}/*
+    
+    
+subpackage.iproute-help.files: |
+    %defattr(-,root,root)
+    %doc README
+    %{_mandir}/*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license COPYING
+    %doc README
+    %attr(644,root,root) %config(noreplace) %{_sysconfdir}/iproute2/*
+    %{_sbindir}/*
+    %{_libdir}/tc/*
+    %{_datadir}/bash-completion/completions/*
+    
+    

@@ -1,0 +1,30 @@
+subpackage.cronie-help.files: |
+    %{_mandir}/{man1,man5,man8}/*
+    
+    
+    
+files: |
+    %defattr(-,root,root)
+    
+    %doc AUTHORS ChangeLog COPYING README
+    
+    %dir %{_sysconfdir}/cron.d
+    %dir %{_localstatedir}/spool/cron
+    %dir %{_localstatedir}/spool/anacron
+    %ghost %attr(0644,root,root) %verify(not md5 size mtime) %{_localstatedir}/spool/anacron/{cron.daily,cron.weekly,cron.monthly}
+    %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/cron.d/dailyjobs
+    %attr(0755,root,root) %{_sysconfdir}/cron.hourly/0anacron
+    %config(noreplace) %{_sysconfdir}/anacrontab
+    %config(noreplace) %{_sysconfdir}/pam.d/crond
+    %config(noreplace) %{_sysconfdir}/cron.deny
+    %config(noreplace) %{_sysconfdir}/cron.d/0hourly
+    %attr(0644,root,root) /lib/systemd/system/crond.service
+    %config(noreplace) %{_sysconfdir}/sysconfig/crond
+    
+    %{_sbindir}/crond
+    %{_sbindir}/anacron
+    %attr(4755,root,root) %{_bindir}/crontab
+    %{_bindir}/cronnext
+    
+    
+    

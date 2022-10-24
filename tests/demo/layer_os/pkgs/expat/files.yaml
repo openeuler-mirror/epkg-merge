@@ -1,0 +1,22 @@
+subpackage.expat-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/*
+    %{_libdir}/{libexpat.*a,libexpat.so}
+    %{_libdir}/cmake/expat-%{version}
+    %{_libdir}/pkgconfig/expat.pc
+    
+    
+subpackage.expat-help.files: |
+    %defattr(-,root,root)
+    %doc README.md
+    %{_mandir}/man1/*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license COPYING AUTHORS
+    %{_bindir}/*
+    %{_libdir}/libexpat.so.1*
+    %exclude %{_docdir}/%{name}/AUTHORS
+    
+    

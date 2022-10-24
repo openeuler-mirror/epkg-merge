@@ -1,0 +1,27 @@
+subpackage.bash-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/%{name}
+    %{_libdir}/pkgconfig/*.pc
+    %{_libdir}/bash/*
+    %exclude %{_libdir}/bash/Makefile*
+    
+    
+subpackage.bash-help.files: |
+    %defattr(-,root,root)
+    %doc NOTES
+    %doc doc/*.ps doc/*.0 doc/*.html doc/*.txt
+    %doc %{_docdir}/%{name}/*
+    %{_infodir}/%{name}.info*
+    %{_mandir}/man1/*.gz
+    %exclude %{_infodir}/dir
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license COPYING
+    %config(noreplace) /etc/skel/.b*
+    %{_bindir}/{sh,bash,alias,bg,cd,command,fc,fg,wait,bashbug}
+    %{_bindir}/{hash,getopts,jobs,read,type,ulimit,umask,unalias}
+    %config(noreplace) %{_sysconfdir}/profile.d/alias.sh
+    
+    

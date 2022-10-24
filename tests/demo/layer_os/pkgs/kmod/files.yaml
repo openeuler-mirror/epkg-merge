@@ -1,0 +1,35 @@
+subpackage.kmod-libs.files: |
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING
+    %{_libdir}/libkmod.so.*
+    
+    
+subpackage.kmod-devel.files: |
+    %{_includedir}/libkmod.h
+    %{_libdir}/pkgconfig/libkmod.pc
+    %{_libdir}/libkmod.so
+    
+    
+subpackage.python3-kmod.files: |
+    %{python3_sitearch}/kmod/
+    
+    
+subpackage.kmod-help.files: |
+    %attr(0644,root,root) %{_mandir}/man5/*.5*
+    %attr(0644,root,root) %{_mandir}/man8/*.8*
+    
+    %doc TODO NEWS README.md
+    
+    
+files: |
+    %exclude %{_libdir}/*.la
+    
+    %dir %{_sysconfdir}/*.d
+    %dir %{_prefix}/lib/modprobe.d
+    
+    %{_bindir}/kmod
+    %{_sbindir}/*
+    %{_datadir}/bash-completion/
+    %{_sysconfdir}/depmod.d/dist.conf
+    
+    

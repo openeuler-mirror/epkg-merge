@@ -1,0 +1,15 @@
+subpackage.libffi-devel.files: |
+    %{_libdir}/pkgconfig/*.pc
+    %{_includedir}/ffi*.h
+    %{_libdir}/*.so
+    
+    
+subpackage.libffi-help.files: |
+    %{_mandir}/man3/*.gz
+    %{_infodir}/libffi.info.gz
+    
+    
+files: |
+    %{_libdir}/*.so.*
+    
+    

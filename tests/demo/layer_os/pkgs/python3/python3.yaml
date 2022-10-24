@@ -1,0 +1,188 @@
+rpmMacros:
+    - "%global branchversion 3.10"
+    - "%global pyshortver 310"
+    - "%bcond_with optimizations %ifarch %{ix86} x86_64"
+    - "%bcond_with optimizations %else %ifarch %{ix86} x86_64"
+    - "%global pylibdir %{_libdir}/python%{branchversion}"
+    - "%global dynload_dir %{pylibdir}/lib-dynload"
+    - "%global LDVERSION_optimized %{branchversion}"
+    - "%global LDVERSION_debug     %{branchversion}d"
+    - "%global SOABI_optimized cpython-%{pyshortver}-%{_arch}-linux%{_gnu}"
+    - "%global SOABI_debug     cpython-%{pyshortver}d-%{_arch}-linux%{_gnu}"
+    - "%global bytecode_suffixes .cpython-%{pyshortver}*.pyc"
+    - "%global py_INSTSONAME_optimized libpython%{LDVERSION_optimized}.so.1.0"
+    - "%global py_INSTSONAME_debug     libpython%{LDVERSION_debug}.so.1.0"
+    - "%undefine py_auto_byte_compile"
+    - "%global wordsize 64"
+    - "%global __requires_exclude ^/usr/bin/python3"
+name: python3
+meta.summary: Interpreter of the Python3 programming language
+version: 3.10.2
+release: 9
+meta.license: Python-2.0
+meta.homepage: "https://www.python.org/"
+source:
+    0: https://www.python.org/ftp/python/%{version}/Python-%{version}.tar.xz
+    1: pyconfig.h
+patchset:
+    0: 00001-rpath.patch
+    1: 00251-change-user-install-location.patch
+    2: backport-bpo-46811-Make-test-suite-support-Expat-2.4.5.patch
+    3: backport-CVE-2015-20107.patch
+    4: backport-CVE-2021-28861.patch
+    5: backport-0001-CVE-2020-10735.patch
+    6: backport-0002-CVE-2020-10735.patch
+    7: backport-0003-CVE-2020-10735.patch
+    8: add-the-sm3-method-for-obtaining-the-salt-value.patch
+meta.description: |
+    Python combines remarkable power with very clear syntax. It has modules,
+    classes, exceptions, very high level dynamic data types, and dynamic
+    typing. There are interfaces to many system calls and libraries, as well
+    as to various windowing systems. New built-in modules are easily written
+    in C or C++ (or other languages, depending on the chosen implementation).
+    Python is also usable as an extension language for applications written
+    in other languages that need easy-to-use scripting or automation interfaces.
+    
+    This package Provides python version 3.
+requires:
+    - "python-setuptools-wheel"
+    - "python-pip-wheel"
+buildRequires:
+    - "autoconf"
+    - "bluez-libs-devel"
+    - "bzip2"
+    - "bzip2-devel"
+    - "desktop-file-utils"
+    - "expat-devel"
+    - "findutils"
+    - "gcc-c++"
+    - "gcc"
+    - "gdbm-devel"
+    - "glibc-all-langpacks"
+    - "glibc-devel"
+    - "gmp-devel"
+    - "libappstream-glib"
+    - "libffi-devel"
+    - "libnsl2-devel"
+    - "libtirpc-devel"
+    - "libGL-devel"
+    - "libuuid-devel"
+    - "libX11-devel"
+    - "ncurses-devel"
+    - "openssl-devel"
+    - "pkgconfig"
+    - "readline-devel"
+    - "system-rpm-config"
+    - "tar"
+    - "tcl-devel"
+    - "tix-devel"
+    - "tk-devel"
+    - "valgrind-devel %ifarch %{valgrind_arches}"
+    - "xz-devel"
+    - "zlib-devel"
+    - "systemtap-sdt-devel"
+    - "net-tools"
+    - "python-setuptools-wheel"
+    - "python-pip-wheel"
+provides:
+    - "python%{branchversion} = %{version}-%{release}"
+    - "python(abi) = %{branchversion}"
+    - "python%{pyshortver} = %{version}-%{release}"
+    - "python3-libs"
+    - "python3-enum34 = 1.0.4-5"
+obsoletes:
+    - "python%{pyshortver}"
+    - "python3-libs"
+    - "python3-enum34 < 1.0.4-5"
+    
+recommends:
+    - python3-setuptools
+    - python3-pip
+
+useConfigureFlags:
+    +sqlite:
+        doc: sqlite3 loadable extension support
+        enable: --enable-loadable-sqlite-extensions
+        disable: --disable-loadable-sqlite-extensions
+        buildRequires:
+            - "sqlite-devel"
+        files: |
+          %{dynload_dir}/_sqlite3.%{SOABI_optimized}.so
+          %dir %{pylibdir}/sqlite3/
+          %dir %{pylibdir}/sqlite3/__pycache__/
+          %{pylibdir}/sqlite3/*.py
+          %{pylibdir}/sqlite3/__pycache__/*%{bytecode_suffixes}
+        subpackage.devel.files: |
+          %{pylibdir}/sqlite3/test
+          %{dynload_dir}/_sqlite3.%{SOABI_debug}.so
+
+subpackage:
+    python3-unversioned-command: 
+      meta.summary: 'The \"python\" command that runs Python 3'
+      meta.description: This package contains /usr/bin/python - the "python" command that runs Python 3.
+      requires:
+          - "%{name} = %{version}-%{release}"
+      provides:
+          - "python = %{version}-%{release}"
+      conflicts:
+          - "python2"
+      asWholeName: yes
+
+    devel: 
+      meta.summary: Libraries and header files needed for Python development
+      meta.description: |
+          This package contains the header files and configuration needed to develop
+          python3 modules.
+      requires:
+          - "%{name} = %{version}-%{release}"
+          - "python-rpm-macros"
+          - "python3-rpm-macros"
+          - "python3-rpm-generators"
+          - "python3-setuptools"
+      buildRequires:
+          - "python-rpm-macros"
+      provides:
+          - "%{name}-2to3 = %{version}-%{release}"
+          - "2to3 = %{version}-%{release}"
+          - "python3-idle"
+          - "python3-test"
+          - "%{name}-tools = %{version}-%{release}"
+      obsoletes:
+          - "python3-idle"
+          - "python3-test"
+          - "%{name}-tools < %{version}-%{release}"
+      conflicts:
+          - "%{name} < %{version}-%{release}"
+          
+
+    tkinter: 
+      meta.summary: A GUI toolkit for Python
+      meta.description: |
+          The Tkinter (Tk interface) library is a graphical user interface toolkit for
+          the Python programming language.
+      requires:
+          - "%{name} = %{version}-%{release}"
+      provides:
+          - "%{name}-turtle = %{version}-%{release}"
+          - "%{name}-tkinter = %{version}-%{release}"
+          
+
+    debug: 
+      meta.summary: Debug version of the Python runtime
+      meta.description: |
+          python3-debug provides a version of the Python runtime with numerous debugging
+          features enabled, aimed at advanced Python users such as developers of Python
+          extension modules.
+      requires:
+          - "%{name} = %{version}-%{release}"
+          - "%{name}-devel = %{version}-%{release}"
+          - "%{name}-tkinter = %{version}-%{release}"
+          
+
+    help: 
+      meta.summary: Documents for %{name}
+      meta.description: Man pages and other related documents for %{name}.
+      requires:
+          - "man info"
+      buildArch: noarch
+

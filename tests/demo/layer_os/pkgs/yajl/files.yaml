@@ -1,0 +1,22 @@
+subpackage.yajl-devel.files: |
+    %dir %{_includedir}/yajl
+    %{_includedir}/yajl/yajl_common.h
+    %{_includedir}/yajl/yajl_gen.h
+    %{_includedir}/yajl/yajl_parse.h
+    %{_includedir}/yajl/yajl_tree.h
+    %{_includedir}/yajl/yajl_version.h
+    
+    %{_libdir}/pkgconfig/yajl.pc
+    %{_libdir}/libyajl_s.a
+    
+    
+files: |
+    %defattr(-,root,root)
+    %doc COPYING README ChangeLog TODO
+    %{_bindir}/json_reformat
+    %{_bindir}/json_verify
+    
+    %{_libdir}/libyajl.so.*
+    %{_libdir}/libyajl.so
+    
+    

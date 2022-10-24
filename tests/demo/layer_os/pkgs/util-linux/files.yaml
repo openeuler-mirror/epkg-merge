@@ -1,0 +1,117 @@
+subpackage.libfdisk.files: |
+    %license Documentation/licenses/COPYING.LGPL-2.1* libfdisk/COPYING
+    %{_libdir}/libfdisk.so.*
+    
+    
+subpackage.libsmartcols.files: |
+    %license Documentation/licenses/COPYING.LGPL-2.1* libsmartcols/COPYING
+    %{_libdir}/libsmartcols.so.*
+    
+    
+subpackage.libmount.files: |
+    %license Documentation/licenses/COPYING.LGPL-2.1* libmount/COPYING
+    %{_libdir}/libmount.so.*
+    
+    
+subpackage.libblkid.files: |
+    %doc libblkid/COPYING
+    %{_libdir}/libblkid.so.*
+    
+    
+subpackage.uuidd.files: |
+    %license Documentation/licenses/COPYING.GPL-2.0*
+    %{_sbindir}/uuidd
+    %{_unitdir}/uuidd.*
+    %dir %attr(2775, uuidd, uuidd) /var/lib/libuuid
+    %dir %attr(2775, uuidd, uuidd) /run/uuidd
+    %{compldir}/uuidd
+    
+    
+subpackage.libuuid.files: |
+    %license Documentation/licenses/COPYING.BSD-3* libuuid/COPYING
+    %{_libdir}/libuuid.so.*
+    
+    
+subpackage.util-linux-user.files: |
+    %config(noreplace)	%{_sysconfdir}/pam.d/chfn
+    %config(noreplace)	%{_sysconfdir}/pam.d/chsh
+    %attr(4711,root,root)	%{_bindir}/chfn
+    %attr(4711,root,root)	%{_bindir}/chsh
+    %{compldir}/chfn
+    %{compldir}/chsh
+    
+    
+subpackage.python3-libmount.files: |
+    %{!?_licensedir:%global license %%doc}
+    %license libmount/COPYING
+    %{_libdir}/python*/site-packages/libmount/
+    
+    
+subpackage.util-linux-devel.files: |
+    %{_includedir}/{libfdisk,libsmartcols,uuid,blkid,libmount}
+    %{_libdir}/{libfdisk.so,libsmartcols.so,libuuid.so,libblkid.so,libmount.so}
+    %{_libdir}/pkgconfig/{fdisk.pc,smartcols.pc,uuid.pc,blkid.pc,mount.pc}
+    
+    
+subpackage.util-linux-help.files: |
+    %exclude %{_datadir}/doc/util-linux/getopt/*
+    %{_docdir}/%{name}/getopt-example.*
+    %doc README NEWS Documentation/deprecated.txt
+    %doc %attr(0644,-,-) misc-utils/getopt-*.{bash,tcsh}
+    %{_mandir}/man1/{chfn.1*,chsh.1*,cal.1*,chrt.1*,col.1*,colcrt.1*,colrm.1*,column.1*,dmesg.1*,eject.1*,uclampset.1*}
+    %{_mandir}/man1/{fallocate.1*,fincore.1*,flock.1*,getopt.1*,hexdump.1*,ionice.1*,ipcmk.1*,ipcrm.1*,ipcs.1*}
+    %{_mandir}/man1/{kill.1*,last.1*,lastb.1*,logger.1*,login.1*,look.1*,lscpu.1*,lsipc.1*,lslogins.1*,lsmem.1*}
+    %{_mandir}/man1/{mcookie.1*,mesg.1*,more.1*,mountpoint.1*,namei.1*,nsenter.1*,prlimit.1*,rename.1*,renice.1*}
+    %{_mandir}/man1/{rev.1*,runuser.1*,script.1*,scriptreplay.1*,setpriv.1*,setsid.1*,setterm.1*,su.1*,taskset.1*}
+    %{_mandir}/man1/{ul.1*,unshare.1*,utmpdump.1.gz,uuidgen.1*,uuidparse.1*,wall.1*,whereis.1*,write.1*,choom.1*,scriptlive*,hardlink.1*,irqtop.1*,lsirq.1*}
+    %{_mandir}/man3/{libblkid.3*,uuid.3*,uuid_clear.3*,uuid_compare.3*,uuid_copy.3*,uuid_generate.3*,uuid_generate_random.3*}
+    %{_mandir}/man3/{uuid_generate_time_safe.3*,uuid_is_null.3*,uuid_parse.3*,uuid_time.3*,uuid_unparse.3*,uuid_generate_time.3*}
+    %{_mandir}/man5/{fstab.5*,terminal-colors.d.5*,adjtime_config.5.*}
+    %{_mandir}/man8/{uuidd.8*,fdformat.8*,hwclock.8*,clock.8*,cfdisk.8*,sfdisk.8*,addpart.8*,agetty.8*}
+    %{_mandir}/man8/{blkdiscard.8*,blkid.8*,blkzone.8*,blockdev.8*,chcpu.8*,chmem.8*,ctrlaltdel.8*,delpart.8*}
+    %{_mandir}/man8/{fdisk.8*,findfs.8*,findmnt.8*,fsck.8*,fsck.cramfs.8*,fsck.minix.8*,fsfreeze.8*,fstrim.8*}
+    %{_mandir}/man8/{isosize.8*,ldattach.8*,losetup.8*,lsblk.8*,lslocks.8*,lsns.8*,mkfs.8*,mkfs.cramfs.8*}
+    %{_mandir}/man8/{mkfs.minix.8*,mkswap.8*,mount.8*,nologin.8*,partx.8*,pivot_root.8*,raw.8*,rawdevices.8*}
+    %{_mandir}/man8/{readprofile.8*,resizepart.8*,rfkill.8*,rtcwake.8*,setarch.8*,sulogin.8.gz,swaplabel.8*}
+    %{_mandir}/man8/{swapoff.8*,swapon.8*,switch_root.8*,umount.8*,wdctl.8.gz,wipefs.8*,zramctl.8*}
+    
+    
+files: |
+    %exclude %{compldir}/{mount,umount}
+    %{!?_licensedir:%global license %%doc}
+    %license Documentation/licenses/* AUTHORS
+    %config(noreplace) %{_sysconfdir}/pam.d/{login,remote,su,su-l,runuser,runuser-l}
+    %config(noreplace) %{_prefix}/lib/udev/rules.d/60-raw.rules
+    %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/adjtime
+    %attr(4755,root,root) %{_bindir}/mount
+    %attr(4755,root,root) %{_bindir}/umount
+    %attr(4755,root,root) %{_bindir}/su
+    %attr(755,root,root) %{_bindir}/login
+    %attr(2755,root,tty) %{_bindir}/write
+    %attr(2555,root,tty) %{_bindir}/wall
+    %ghost %attr(0644,root,root) %verify(not md5 size mtime) /var/log/lastlog
+    %ghost %verify(not md5 size mtime) %config(noreplace,missingok) /etc/mtab
+    %{_unitdir}/fstrim.*
+    %{_bindir}/{cal,chrt,col,colcrt,colrm,column,chmem,dmesg,eject,fallocate,fincore,findmnt,choom,uclampset}
+    %{_bindir}/{flock,getopt,hexdump,ionice,ipcmk,ipcrm,ipcs,isosize,kill,last,lastb,logger,hardlink}
+    %{_bindir}/{look,lsblk,lscpu,lsipc,lslocks,lslogins,lsmem,lsns,mcookie,mesg,more,mountpoint}
+    %{_bindir}/{namei,nsenter,prlimit,raw,rename,renice,rev,script,scriptreplay,setarch,setpriv}
+    %{_bindir}/{setsid,setterm,taskset,ul,unshare,utmpdump,uuidgen,uuidparse,wdctl,whereis,scriptlive,irqtop,lsirq}
+    %{_sbindir}/{addpart,agetty,blkdiscard,blkid,blkzone,blockdev,chcpu,ctrlaltdel,delpart,fdisk}
+    %{_sbindir}/{findfs,fsck,fsck.cramfs,fsck.minix,fsfreeze,fstrim,ldattach,losetup,mkfs,mkfs.cramfs}
+    %{_sbindir}/{mkfs.minix,mkswap,nologin,partx,pivot_root,readprofile,resizepart,rfkill,rtcwake}
+    %{_sbindir}/{runuser,sulogin,swaplabel,swapoff,swapon,switch_root,wipefs,zramctl}
+    %{_sbindir}/{clock,fdformat,hwclock,cfdisk,sfdisk}
+    %{compldir}/{addpart,blkdiscard,blkid,blkzone,blockdev,cal,chcpu,chmem,chrt,col}
+    %{compldir}/{colcrt,colrm,column,ctrlaltdel,delpart,dmesg,eject,fallocate,fdisk}
+    %{compldir}/{fincore,findfs,findmnt,flock,fsck,fsck.cramfs,fsck.minix,fsfreeze}
+    %{compldir}/{fstrim,getopt,hexdump,ionice,ipcmk,ipcrm,ipcs,isosize,last,ldattach}
+    %{compldir}/{logger,look,losetup,lsblk,lscpu,lsipc,lslocks,lslogins,lsmem,lsns}
+    %{compldir}/{mcookie,mesg,mkfs,mkfs.cramfs,mkfs.minix,mkswap,more,mountpoint}
+    %{compldir}/{namei,nsenter,partx,pivot_root,prlimit,raw,readprofile,rename,renice}
+    %{compldir}/{resizepart,rev,rfkill,rtcwake,runuser,script,scriptreplay,setarch}
+    %{compldir}/{setpriv,setsid,setterm,su,swaplabel,swapoff,swapon,taskset,ul,unshare}
+    %{compldir}/{utmpdump,uuidgen,uuidparse,wall,wdctl,whereis,wipefs,write,zramctl}
+    %{compldir}/{fdformat,hwclock,cfdisk,sfdisk,scriptlive,irqtop,lsirq,hardlink,uclampset}
+    
+    

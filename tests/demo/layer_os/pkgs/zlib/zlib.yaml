@@ -1,0 +1,56 @@
+name: zlib
+meta.summary: A lossless data-compression library
+version: 1.2.11
+release: 23
+meta.license: zlib and Boost
+meta.homepage: "http://www.zlib.net"
+source:
+    "0": http://www.zlib.net/zlib-%{version}.tar.xz
+patchset:
+    "0": zlib-1.2.5-minizip-fixuncrypt.patch
+    "1": 0001-Neon-Optimized-hash-chain-rebase.patch
+    "2": 0002-Porting-optimized-longest_match.patch
+    "3": 0003-arm64-specific-build-patch.patch
+    "4": 0004-zlib-Optimize-CRC32.patch
+    "5": zlib-1.2.11-SIMD.patch
+    "6": 0005-Accelerate-Adler32-using-arm64-SVE-instructions.patch
+    "7": fix-undefined-buffer-detected-by-oss-fuzz.patch
+    "8": backport-0001-CVE-2018-25032.patch
+    "9": backport-0002-CVE-2018-25032.patch
+    "10": backport-0001-CVE-2022-37434.patch
+    "11": backport-0002-CVE-2022-37434.patch
+meta.description: |
+    Zlib is a free, general-purpose, not covered by any patents, lossless data-compression
+    library for use on virtually any computer hardware and operating system. The zlib data
+    format is itself portable across platforms.
+buildRequires:
+    - "automake, autoconf, libtool"
+subpackage:
+    zlib-devel:
+        meta.summary: Header files and libraries for Zlib development
+        meta.description: |
+            This package contains the static library, the header files, the tests user case and other
+            development content.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "zlib-static"
+        obsoletes:
+            - "zlib-static"
+    zlib-help:
+        meta.summary: Help documentation related to zlib
+        meta.description: This package includes help documentation and manuals related to zlib.
+        buildArch: noarch
+    minizip:
+        meta.summary: Encapsulates the operations related to zip files
+        meta.description: Minizip is the upper library of zlib, which encapsulates the operations related to zip files.
+        requires:
+            - "%{name} = %{version}-%{release}"
+    minizip-devel:
+        meta.summary: The development-related content related to minizip
+        meta.description: This package contains the development-related content related to minizip.
+        requires:
+            - "minizip = %{version}-%{release}"
+            - "%{name}-devel = %{version}-%{release}"
+env.configureFlags: |
+    --enable-static=no

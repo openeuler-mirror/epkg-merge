@@ -1,0 +1,36 @@
+subpackage.libselinux-devel.files: |
+    %{_libdir}/libselinux.a
+    %{_libdir}/libselinux.so
+    %{_libdir}/pkgconfig/libselinux.pc
+    %{_includedir}/selinux/
+    
+    
+subpackage.python3-libselinux.files: |
+    %{python3_sitearch}/selinux/
+    %{python3_sitearch}/selinux-%{version}-*
+    %{python3_sitearch}/_selinux.*.so
+    
+    
+subpackage.libselinux-ruby.files: |
+    %{ruby_vendorarchdir}/selinux.so
+    
+    
+subpackage.libselinux-help.files: |
+    %{_mandir}/man3/*
+    %{_mandir}/man5/*
+    %{_mandir}/man8/*
+    %{_mandir}/ru/man5/*
+    %{_mandir}/ru/man8/*
+    
+    
+files: |
+    %license LICENSE
+    %{_libdir}/libselinux.so.*
+    %{_sbindir}/{selabel_lookup_best_match,selabel_partial_match,selinux_check_access}
+    %{_sbindir}/{avcstat,getenforce,getsebool,matchpathcon,sefcontext_compile,selinuxconlist}
+    %{_sbindir}/{selinuxdefcon,selinuxexeccon,selinuxenabled,setenforce,selabel_digest,selabel_lookup}
+    %{_sbindir}/{selabel_get_digests_all_partial_matches,validatetrans}
+    %dir %{_rundir}/setrans/
+    %{_tmpfilesdir}/libselinux.conf
+    
+    

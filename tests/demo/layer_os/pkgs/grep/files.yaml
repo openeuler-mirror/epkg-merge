@@ -1,0 +1,13 @@
+files: |
+    %{_datadir}/locale/*
+    %config(noreplace) %{_sysconfdir}/profile.d/color_grep.sh
+    %config(noreplace) %{_sysconfdir}/profile.d/colorgrep.csh
+    %doc NEWS README THANKS TODO
+    %license COPYING AUTHORS
+    %{_bindir}/*grep
+    %{_libexecdir}/grepconf.sh
+    %{_infodir}/grep.info.gz
+    %{_mandir}/man1/*grep.1.gz
+    
+    
+    

@@ -1,0 +1,27 @@
+name: libtirpc
+meta.summary: Transport-independent RPC library
+version: 1.3.2
+release: 2
+meta.license: SISSL and BSD
+meta.homepage: "http://git.linux-nfs.org/?p=steved/libtirpc.git;a=summary"
+source:
+    "0": http://downloads.sourceforge.net/libtirpc/%{name}-%{version}.tar.bz2
+patchset:
+    "0": 0001-update-libtirpc-to-enable-tcp-port-listening.patch
+    "1": CVE-2021-46828.patch
+meta.description: Libtirpc is a Transport-Independent RPC library for Linux
+buildRequires:
+    - "automake autoconf libtool pkgconfig krb5-devel"
+subpackage:
+    libtirpc-devel:
+        meta.summary: Development files for the %{name}
+        meta.description: The %{name}-devel package contains development files for %{name}.
+        requires:
+            - "%{name} = %{version}-%{release}"
+            - "pkgconfig man-db"
+    libtirpc-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

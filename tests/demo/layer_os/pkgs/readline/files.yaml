@@ -1,0 +1,26 @@
+subpackage.readline-devel.files: |
+    %{_includedir}/%{name}/*.h
+    %{_libdir}/libhistory.so
+    %{_libdir}/libreadline.so
+    %{_libdir}/pkgconfig/%{name}.pc
+    %{_docdir}/%{name}/*
+    %{_datadir}/%{name}
+    %{_libdir}/*.a
+    
+    
+subpackage.readline-help.files: |
+    %{_infodir}/history.info*
+    %{_infodir}/rluserman.info*
+    %{_infodir}/readline.info*
+    %exclude %{_infodir}/dir*
+    %{_mandir}/man3/*.3.gz
+    
+    
+    
+files: |
+    %doc
+    %license COPYING USAGE
+    %{_libdir}/libhistory.so.*
+    %{_libdir}/libreadline.so.*
+    
+    

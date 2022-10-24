@@ -1,0 +1,24 @@
+subpackage.libcap-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/*
+    %{_libdir}/*.so
+    %{_libdir}/pkgconfig/*.pc
+    %{_libdir}/*.a
+    
+    
+subpackage.libcap-help.files: |
+    %defattr(-,root,root)
+    %{_mandir}/man3/*.gz
+    %{_mandir}/man1/*.gz
+    %{_mandir}/man8/*.gz
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license License
+    %doc doc/capability.notes
+    %{_libdir}/*.so.*
+    %{_sbindir}/*
+    %{_libdir}/security/pam_cap.so
+    
+    

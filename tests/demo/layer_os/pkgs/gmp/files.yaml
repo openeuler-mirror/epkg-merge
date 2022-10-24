@@ -1,0 +1,21 @@
+subpackage.gmp-devel.files: |
+    %{_libdir}/libgmpxx.so
+    %{_libdir}/libgmp.so
+    %{_includedir}/*.h
+    %{_infodir}/gmp.info*
+    %{_libdir}/libgmpxx.a
+    %{_libdir}/libgmp.a
+    
+    
+subpackage.gmp-c++.files: |
+    %{_libdir}/libgmpxx.so.*
+    %{_libdir}/pkgconfig/gmpxx.pc
+    
+    
+files: |
+    %license COPYING COPYING.LESSERv3 COPYINGv2 COPYINGv3
+    %doc NEWS README
+    %{_libdir}/libgmp.so.*
+    %{_libdir}/pkgconfig/gmp.pc
+    
+    

@@ -1,0 +1,9 @@
+name: pseudo
+meta.summary: Pseudo gives fake root capabilities to a normal user
+version: df1d1321fb093283485c387e3c933d2d264e509c
+release: 1
+meta.license: LGPLv2+
+meta.description: The pseudo utility offers a way to run commands in a virtualized root environment
+buildRequires:
+    - "gcc"
+    - "make"

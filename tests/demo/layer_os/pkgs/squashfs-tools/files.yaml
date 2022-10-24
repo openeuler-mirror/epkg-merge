@@ -1,0 +1,10 @@
+files: |
+    %defattr(-,root,root)
+    %doc ACKNOWLEDGEMENTS README-4.5.1
+    %license COPYING
+    %{_sbindir}/mksquashfs
+    %{_sbindir}/unsquashfs
+    
+    
+    
+    

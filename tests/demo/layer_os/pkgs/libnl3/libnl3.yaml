@@ -1,0 +1,53 @@
+name: libnl3
+meta.summary: Providing APIs to netlink protocol based Linux kernel interfaces
+version: 3.5.0
+release: 6
+meta.license: LGPLv2
+meta.homepage: "http://www.infradead.org/~tgr/libnl/"
+source:
+    "0": https://github.com/thom311/libnl/releases/download/libnl3_5_0/libnl-3.5.0.tar.gz
+patchset:
+    "0": backport-lib-add-include-netlink-private-nl-auto-h-header.patch
+    "1": backport-lib-use-proper-int-type-for-id-attributes-in-nl_object_identical.patch
+    "2": backport-route-link-add-RTNL_LINK_REASM_OVERLAPS-stat.patch
+    "3": backport-route-link-Check-for-null-pointer-in-macvlan.patch
+    "4": backport-rtnl-link-fix-leaking-rtnl_link_af_ops-in-link_msg_parser.patch
+    "5": backport-rtnl-route-fix-NLE_NOMEM-handling-in-parse_multipath.patch
+    "6": solve-redefinition-of-struct-ipv6_mreq.patch
+    "7": add-a-test-test-add-route.patch
+    "8": add-some-tests-about-addr-class-rule-neigh-qdisc.patch
+meta.description: |
+    This package contains a collection of libraries providing
+    APIs to netlink based Linux kernel sockets interfaces.
+requires:
+    - "%{name} = %{version}-%{release}"
+buildRequires:
+    - "flex bison libtool autoconf automake swig"
+provides:
+    - "%{name}-cli"
+obsoletes:
+    - "%{name}-cli"
+subpackage:
+    libnl3-devel:
+        meta.summary: Libraries and headers for libnl3
+        meta.description: This package provides various libraries and headers for using libnl3
+        requires:
+            - "%{name} = %{version}-%{release} kernel-headers"
+    libnl3-help:
+        meta.summary: Document for libnl3
+        meta.description: This package contains libnl3 related documentations
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "%{name}-doc = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-doc < %{version}-%{release}"
+    python3-libnl3:
+        meta.summary: Python3 binding for libnl3
+        meta.description: Python3 bindings for libnl3
+        requires:
+            - "%{name} = %{version}-%{release}"
+        buildRequires:
+            - "python3-devel"
+env.configureFlags: |
+    --disable-static
