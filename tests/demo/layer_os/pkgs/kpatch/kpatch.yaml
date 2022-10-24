@@ -1,0 +1,84 @@
+name: kpatch
+meta.summary: A Linux dynamic kernel patching infrastructure
+version: 0.9.5
+release: 15
+epoch: 1
+meta.license: GPLv2
+meta.homepage: "https://github.com/dynup/kpatch"
+source:
+    "0": https://github.com/dynup/kpatch/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+    "1": os_hotpatch
+    "2": livepatch
+    "3": make_hotpatch
+patchset:
+    "0": 0001-kpatch-add-aarch64-support.patch
+    "1": 0002-create-diff-object-fix-symbol-changed-sections-error.patch
+    "2": 0003-create-diff-object-support-kpatch_line_macro_change_.patch
+    "3": 0004-create-diff-object-support-skip-check-func-profiling.patch
+    "4": 0005-create-diff-object-new-static-var-should-be-included.patch
+    "5": 0006-create-diff-object-fix-correlate-static-local-variab.patch
+    "6": 0007-fix-rodata.str-problem.patch
+    "7": 0008-livepatch-patch-hook-support-no-active-after-load.patch
+    "8": 0009-kpatch-build-enhance-for-out-of-tree-module.patch
+    "9": 0010-support-c-kernel-module.patch
+    "10": 0011-symbol-lookup-enhancement.patch
+    "11": 0012-Add-running-kernel-symbol-table-to-help-symbol-looku.patch
+    "12": 0013-livepatch-patch-hook-support-force-enable-disable.patch
+    "13": 0014-kpatch-build-ignore-debuginfo-in-patch.patch
+    "14": 0015-add-object-in-kpatch.patch
+    "15": 0016-create-diff-object-fix-.orc_unwind_ip-error.patch
+    "16": 0017-create-diff-object-add-jump-label-support.patch
+    "17": 0018-kpatch-build-add-compile-flag-fno-reorder-functions.patch
+    "18": 0019-Fix-relocation-not-resolved-when-new-functions-expor.patch
+    "19": 0020-support-remove-static-variables-using-KPATCH_IGNORE_.patch
+    "20": 0021-create-diff-object-fix-segment-fault-when-sec2-rela-.patch
+    "21": 0022-use-original-reloc-for-symbols-exported-from-modules.patch
+    "22": 0023-create-diff-object-create-dynamic-relocs-for-changed.patch
+    "23": 0024-kpatch-build-support-CROSS_COMPILE.patch
+    "24": 0025-create-diff-object-update-for-__already_done.patch
+    "25": 0026-kpatch-build-Add-missing-allocation-failure-checks.patch
+    "26": 0027-create-diff-object-add-support-for-.retpoline_sites-.patch
+    "27": 0028-Fix-sym-type-condition-in-locals_match.patch
+    "28": 0029-livepatch-patch-hook-disable-HAVE_SIMPLE_ENABLE-to-k.patch
+    "29": 0030-kpatch-build-add-KBUILD_MODPOST_WARN-1-to-avoid-modp.patch
+    "30": 0031-kpatch-build-update-find_parent_obj-to-avoid-error-t.patch
+    "31": 0032-create-diff-object-fix-segment-fault-when-using-KPAT.patch
+    "32": 0033-kpatch-macros-replace-__section-with-__kpatch_sectio.patch
+    "33": 0034-create-diff-object-ignore-changed-of-section-__patch.patch
+    "34": 0035-create-diff-object-fix-null-pointer-dereference-in-k.patch
+    "35": 0036-create-diff-object-ignore-.note.gnu.property-section.patch
+    "36": 0037-create-diff-object-skip-creating-.kpatch.arch-sectio.patch
+    "37": 0038-kpatch-build-do-not-copy-linux-scripts-when.patch
+    "38": 0039-create-diff-object-ignore-change-of-certain.patch
+    "39": 0040-create-diff-object-allow-__jump_table-section.patch
+    "40": 0041-livepatch-patch-hook-fix-kpatch-build-error-which-do.patch
+    "41": 0042-kpatch-build-fix-loading-error-in-aarch64.patch
+    "42": 0043-kpatch-build-Remove-duplicate-functions.patch
+    "43": 0044-lookup-skip-finding-local-symbols-for-object-with-no.patch
+    "44": 0045-backport-create-diff-object-add-support-for-.return_sites-sec.patch
+    "45": 0046-create-diff-object-ignore-entsize-change-of-.return_.patch
+meta.description: |
+    kpatch is a Linux dynamic kernel patching infrastructure which allows you to patch
+    a running kernel without rebooting or restarting any processes. It enables sysadmins
+    to apply critical security patches to the kernel immediately, without having to wait
+    for long-running tasks to complete, for users to log off, or for scheduled reboot
+    windows. It gives more control over uptime without sacrificing security or stability.
+requires:
+    - "bc make gcc patch bison flex openssl-devel"
+buildRequires:
+    - "gcc elfutils-libelf-devel kernel-devel git"
+recommends:
+    - "%{name}-help = %{version}-%{release}"
+subpackage:
+    kpatch-runtime:
+        meta.summary: Dynamic kernel patching
+        meta.description: Dynamic kernel patching
+        requires:
+            - "tar bash kmod"
+        buildArch: noarch
+    kpatch-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

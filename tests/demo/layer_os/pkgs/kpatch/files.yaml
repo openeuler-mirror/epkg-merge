@@ -1,0 +1,24 @@
+subpackage.kpatch-runtime.files: |
+    %defattr(-,root,root)
+    %{_bindir}/livepatch
+    %{_bindir}/os_hotpatch
+    
+    
+subpackage.kpatch-help.files: |
+    %{_mandir}/man1/*.1.gz
+    
+    
+files: |
+    %defattr(-,root,root)
+    %doc COPYING README.md
+    %{_bindir}/*
+    %{_prefix}/lib/systemd/system/*
+    %{_libexecdir}/kpatch
+    %{_prefix}/sbin/kpatch
+    %{_datadir}/%{name}/*
+    %{_sysconfdir}/init/*
+    /opt/patch_workspace/*
+    %exclude %{_bindir}/livepatch
+    %exclude %{_bindir}/os_hotpatch
+    
+    

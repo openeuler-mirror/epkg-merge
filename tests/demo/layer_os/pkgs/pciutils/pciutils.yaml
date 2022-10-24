@@ -1,0 +1,56 @@
+name: pciutils
+meta.summary: PCI bus related utilities
+version: 3.7.0
+release: 3
+meta.license: GPLv2+
+meta.homepage: "http://atrey.karlin.mff.cuni.cz/~mj/pciutils.shtml"
+source:
+    "0": https://mirrors.edge.kernel.org/pub/software/utils/pciutils/%{name}-%{version}.tar.gz
+patchset:
+    "0": 0000-pciutils-2.2.1-idpath.patch
+    "1": 0001-pciutils-dir-d.patch
+    "2": 0002-lspci-Adjust-PCI_EXP_DEV2_-to-PCI_EXP_DEVCTL2_-macro.patch
+    "3": 0003-lspci-Decode-10-Bit-Tag-Requester-Enable.patch
+    "4": 0004-lspci-Decode-VF-10-Bit-Tag-Requester.patch
+    "5": 0005-lspci-Update-tests-files-with-VF-10-Bit-Tag-Requeste.patch
+meta.description: |
+    The PCI Utilities are a collection of programs for inspecting and manipulating configuration
+    of PCI devices, all based on a common portable library libpci which offers access to the PCI
+    configuration space on a variety of operating systems.
+    
+    The utilities include:
+    lspci
+    displays detailed information about all PCI buses and devices in the system
+    setpci
+    allows reading from and writing to PCI device configuration registers. For example, you
+    can adjust the latency timers with it.
+requires:
+    - "hwdata"
+buildRequires:
+    - "gcc sed kmod-devel pkgconfig zlib-devel"
+provides:
+    - "%{name}-libs"
+    - "%{name}-libs-debuginfo"
+obsoletes:
+    - "%{name}-libs"
+    - "%{name}-libs-debuginfo"
+Exclusiveos:
+    - Linux
+subpackage:
+    pciutils-devel:
+        meta.summary: Library and Include Files of the PCI utilities
+        meta.description: |
+            This package contains the files that are necessary for software
+            development using the PCI utilities.
+        requires:
+            - "zlib-devel pkgconfig %{name} = %{version}-%{release}"
+        provides:
+            - "%{name}-devel-static"
+        obsoletes:
+            - "%{name}-devel-static"
+    pciutils-help:
+        meta.summary: Including man files for pciutils
+        meta.description: This contains man files for the using of pciutils.
+        requires:
+            - "man"
+    %{name}:

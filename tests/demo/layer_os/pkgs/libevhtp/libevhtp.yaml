@@ -1,0 +1,33 @@
+name: libevhtp
+meta.summary: Libevent based HTTP API.
+version: 1.2.18
+release: 5
+meta.license: BSD-3-Clause
+meta.homepage: "https://github.com"
+source:
+    "0": https://github.com/criticalstack/libevhtp/archive/1.2.18.tar.gz
+patchset:
+    "0": 0001-decrease-numbers-of-fd-for-shared-pipe-mode.patch
+    "1": 0002-evhtp-enable-dynamic-thread-pool.patch
+    "2": 0003-close-open-ssl.-we-do-NOT-use-it-in-lcrd.patch
+    "3": 0004-Use-shared-library-instead-static-one.patch
+    "4": 0005-libevhtp-add-securce-compile-options.patch
+meta.description: |
+    Libevent based HTTP API.Libevent's http interface was created as a JIT server, never meant
+    to be a full-fledged HTTP service. This library attempts to improve on that with the following
+    features: + design as a fully functional HTTP server + HTTP parser able to process data with a
+    low memory footprint + use of regular expressions for routing + out-of-the box HTTPS server
+    This package contains the runtime library.
+buildRequires:
+    - "git gcc-c++ cmake libevent-devel"
+rpmMacros:
+    - "%global debug_package %{nil}"
+
+subpackage:
+    libevhtp-devel:
+        meta.summary: Headers for developing programs that will use %{name}
+        meta.description: |
+            %{name}-devel contains the header files for developing
+            applications that want to make use of %{name}.
+        requires:
+            - "%{name} = %{version}-%{release}"

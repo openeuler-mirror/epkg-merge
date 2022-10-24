@@ -1,0 +1,43 @@
+name: busybox
+meta.summary: The Swiss Army Knife of Embedded Linux
+version: "%{VERSION}"
+release: "%{RELEASE}"
+epoch: 1
+meta.license: GPLv2
+meta.homepage: "http://www.busybox.net"
+source:
+    "0": http://www.busybox.net/downloads/%{name}-%{version}.tar.bz2
+    "1": busybox-static.config
+    "2": busybox-petitboot.config
+    "3": busybox-dynamic.config
+patchset:
+    "0": backport-CVE-2022-28391.patch
+    "1": backport-CVE-2022-30065.patch
+meta.description: |
+    BusyBox combines tiny versions of many common UNIX utilities into a
+    single small executable. It provides replacements for most of the
+    utilities you usually find in GNU fileutils, shellutils, etc. It provides
+    a fairly complete environment for any small or embedded system.
+buildRequires:
+    - "gcc glibc-static"
+    - "libselinux-devel >= 1.27.7-2"
+    - "libsepol-devel libselinux-static libsepol-static"
+provides:
+    - "bundled(md5-drepper2)"
+buildRoot:
+    - "%_topdir/BUILDROOT"
+rpmMacros:
+    - "%define VERSION 1.34.1 %if \"%{!?VERSION:1}\""
+    - "%define RELEASE 17 %if \"%{!?RELEASE:1}\""
+
+subpackage:
+    busybox-petitboot:
+        meta.summary: Configure the busybox version with petitboot
+        meta.description: |
+            The Petitboot bootloader provides a boot menu and boots the chosen boot
+            option using the Linux kernel's kexec functionality. And for use with the
+            Petitboot bootloader used on PlayStation 3, the version of the contained
+            in this package is minimal configured.
+    busybox-help:
+        meta.summary: Documentation for busybox
+        meta.description: This package contains help documentation for busybox

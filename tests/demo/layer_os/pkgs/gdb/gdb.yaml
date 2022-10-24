@@ -1,0 +1,186 @@
+name: gdb
+meta.summary: GNU Project debugger
+version: 11.1
+release: 4
+meta.license: GPLv3+ and GPLv3+ with exceptions and GPLv2+ and GPLv2+ with exceptions and GPL+ and LGPLv2+ and LGPLv3+ and BSD and Public Domain and GFDL-1.3
+meta.homepage: "http://gnu.org/software/gdb/"
+source:
+    "0": ftp://sourceware.org/pub/gdb/releases/gdb-%{version}.tar.xz
+    "1": gdb-gstack.man
+    "2": gdbinit
+patchset:
+    "0": gdb-6.3-rh-testversion-20041202.patch
+    "1": gdb-6.3-gstack-20050411.patch
+    "2": gdb-6.3-test-dtorfix-20050121.patch
+    "3": gdb-6.3-test-movedir-20050125.patch
+    "4": gdb-6.3-threaded-watchpoints2-20050225.patch
+    "5": gdb-6.3-inferior-notification-20050721.patch
+    "6": gdb-6.3-inheritancetest-20050726.patch
+    "7": gdb-6.5-bz185337-resolve-tls-without-debuginfo-v2.patch
+    "8": gdb-6.5-sharedlibrary-path.patch
+    "9": gdb-6.5-BEA-testsuite.patch
+    "10": gdb-6.5-last-address-space-byte-test.patch
+    "11": gdb-6.5-readline-long-line-crash-test.patch
+    "12": gdb-6.5-bz218379-ppc-solib-trampoline-test.patch
+    "13": gdb-6.5-bz109921-DW_AT_decl_file-test.patch
+    "14": gdb-6.3-bz140532-ppc-unwinding-test.patch
+    "15": gdb-6.3-bz202689-exec-from-pthread-test.patch
+    "16": gdb-6.6-bz230000-power6-disassembly-test.patch
+    "17": gdb-6.6-bz229517-gcore-without-terminal.patch
+    "18": gdb-6.6-testsuite-timeouts.patch
+    "19": gdb-6.6-bz237572-ppc-atomic-sequence-test.patch
+    "20": gdb-6.3-attach-see-vdso-test.patch
+    "21": gdb-6.5-bz243845-stale-testing-zombie-test.patch
+    "22": gdb-6.6-buildid-locate.patch
+    "23": gdb-6.6-buildid-locate-solib-missing-ids.patch
+    "24": gdb-6.6-buildid-locate-rpm.patch
+    "25": gdb-6.7-charsign-test.patch
+    "26": gdb-6.7-ppc-clobbered-registers-O2-test.patch
+    "27": gdb-6.7-testsuite-stable-results.patch
+    "28": gdb-6.5-ia64-libunwind-leak-test.patch
+    "29": gdb-6.5-missed-trap-on-step-test.patch
+    "30": gdb-6.5-gcore-buffer-limit-test.patch
+    "31": gdb-6.3-mapping-zero-inode-test.patch
+    "32": gdb-6.3-focus-cmd-prev-test.patch
+    "33": gdb-6.8-bz442765-threaded-exec-test.patch
+    "34": gdb-6.5-section-num-fixup-test.patch
+    "35": gdb-6.8-bz466901-backtrace-full-prelinked.patch
+    "36": gdb-simultaneous-step-resume-breakpoint-test.patch
+    "37": gdb-core-open-vdso-warning.patch
+    "38": gdb-ccache-workaround.patch
+    "39": gdb-lineno-makeup-test.patch
+    "40": gdb-ppc-power7-test.patch
+    "41": gdb-archer-next-over-throw-cxx-exec.patch
+    "42": gdb-bz601887-dwarf4-rh-test.patch
+    "43": gdb-6.6-buildid-locate-rpm-librpm-workaround.patch
+    "44": gdb-test-bt-cfi-without-die.patch
+    "45": gdb-bz634108-solib_address.patch
+    "46": gdb-test-pid0-core.patch
+    "47": gdb-test-dw2-aranges.patch
+    "48": gdb-test-expr-cumulative-archer.patch
+    "49": gdb-physname-pr11734-test.patch
+    "50": gdb-physname-pr12273-test.patch
+    "51": gdb-test-ivy-bridge.patch
+    "52": gdb-runtest-pie-override.patch
+    "53": gdb-glibc-strstr-workaround.patch
+    "54": gdb-rhel5.9-testcase-xlf-var-inside-mod.patch
+    "55": gdb-rhbz-818343-set-solib-absolute-prefix-testcase.patch
+    "56": gdb-rhbz947564-findvar-assertion-frame-failed-testcase.patch
+    "57": gdb-rhbz1007614-memleak-infpy_read_memory-test.patch
+    "58": gdb-6.6-buildid-locate-misleading-warning-missing-debuginfo-rhbz981154.patch
+    "59": gdb-fortran-frame-string.patch
+    "60": gdb-rhbz1156192-recursive-dlopen-test.patch
+    "61": gdb-rhbz1149205-catch-syscall-after-fork-test.patch
+    "62": gdb-rhbz1186476-internal-error-unqualified-name-re-set-test.patch
+    "63": gdb-rhbz1350436-type-printers-error.patch
+    "64": gdb-rhbz1084404-ppc64-s390x-wrong-prologue-skip-O2-g-3of3.patch
+    "65": gdb-fedora-libncursesw.patch
+    "66": gdb-opcodes-clflushopt-test.patch
+    "67": gdb-6.6-buildid-locate-rpm-scl.patch
+    "68": gdb-rhbz1261564-aarch64-hw-watchpoint-test.patch
+    "69": gdb-container-rh-pkg.patch
+    "70": gdb-rhbz1325795-framefilters-test.patch
+    "71": gdb-linux_perf-bundle.patch
+    "72": gdb-libexec-add-index.patch
+    "73": gdb-rhbz1398387-tab-crash-test.patch
+    "74": gdb-rhbz1553104-s390x-arch12-test.patch
+    "75": gdb-rhbz1976887-field-location-kind.patch
+    "76": gdb-test-for-rhbz1976887.patch
+    "77": gdb-rhbz2012976-paper-over-fortran-lex-problems.patch
+    "78": gdb-rhbz-853071-update-manpages.patch
+    "79": gdb-rhbz2022177-dprintf-1.patch
+    "80": gdb-rhbz2022177-dprintf-2.patch
+    "81": 0001-Make-c-exp.y-work-with-Bison-3.8.patch
+    "82": 0002-set-entry-point-when-text-segment-is-missing.patch
+meta.description: |
+    GDB, the GNU Project debugger, allows you to see what is going on inside
+    another program while it executes -- or what another program was doing
+    at the moment it crashed.
+    
+    This package is only a stub to install gcc-gdb-plugin for 'compile' commands.
+    See package 'gdb-headless'.
+requires:
+    - "gdb-headless = %{version}-%{release}"
+conflicts:
+    - "gdb-headless < 7.12-29"
+recommends:
+    - gcc-gdb-plugin
+    - dnf-command(debuginfo-install)
+rpmMacros:
+    - "%global gdb_src gdb-11.1"
+    - "%global gdb_build build-%{_target_platform}"
+    - "%global __python %{__python3}"
+    - "%undefine _debuginfo_subpackages"
+    - "%global librpmso librpm.so.9"
+
+subpackage:
+    gdb-headless:
+        meta.summary: The GNU Project debugger for C, C++, Fortran, Go and other languages
+        meta.description: |
+            GDB, the GNU Project debugger, allows you to see what is going on inside
+            another program while it executes -- or what another program was doing
+            at the moment it crashed.
+        buildRequires:
+            - "rpm-libs autoconf"
+            - "readline-devel >= 6.2-4"
+            - "gcc-c++ ncurses-devel texinfo gettext flex bison"
+            - "expat-devel xz-devel rpm-devel zlib-devel libselinux-devel"
+            - "python3-devel texinfo-tex"
+            - "perl-podlators libbabeltrace-devel guile-devel mpfr-devel"
+            - "libipt-devel %ifarch %{ix86} x86_64"
+        provides:
+            - "bundled(libiberty) = 20180828"
+            - "bundled(gnulib) = 20161115"
+            - "bundled(binutils) = 20180828"
+            - "bundled(md5-gcc) = 20180828"
+        conflicts:
+            - "elfutils < 0.149"
+        recommends:
+            - "default-yama-scope"
+            - "%{librpmso}()(64bit)"
+    gdb-gdbserver:
+        meta.summary: A standalone server for GDB (the GNU source-level debugger)
+        meta.description: |
+            GDB, the GNU Project debugger, allows you to see what is going on inside
+            another program while it executes -- or what another program was doing
+            at the moment it crashed.
+            
+            This package provides a program that allows you to run GDB on a different
+            machine than the one which is running the program being debugged.
+    gdb-help:
+        meta.summary: Documentation for GDB (the GNU Project debugger)
+        meta.license: GFDL
+        meta.description: |
+            GDB, the GNU Project debugger, allows you to see what is going on inside
+            another program while it executes -- or what another program was doing
+            at the moment it crashed.
+            
+            This package provides INFO, HTML and PDF user manual for GDB.
+        buildArch: noarch
+env.configureFlags: |
+    --with-system-gdbinit=%{_sysconfdir}/gdbinit
+    --with-gdb-datadir=%{_datadir}/gdb
+    --enable-gdb-build-warnings=,-Wno-unused
+    --enable-build-with-cxx
+    --enable-werror
+    --with-separate-debug-dir=/usr/lib/debug
+    --disable-sim
+    --disable-rpath
+    --without-stage1-ldflags
+    --disable-libmcheck
+    --with-babeltrace
+    --with-guile
+    --with-system-readline
+    --with-expat
+    --without-libexpat-prefix
+    --enable-tui
+    --with-python=%{__python3}
+    --with-rpm=%{librpmso}
+    --with-lzma
+    --without-libunwind
+    --enable-64-bit-bfd
+    --with-mpfr
+    --with-auto-load-dir='$debugdir:$datadir/auto-load'
+    --with-auto-load-safe-path='$debugdir:$datadir/auto-load'
+    --enable-targets=aarch64-linux-gnu %{_target_platform}
+    --with-system-zlib

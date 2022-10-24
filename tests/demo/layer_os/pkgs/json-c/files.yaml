@@ -1,0 +1,15 @@
+subpackage.json-c-devel.files: |
+    %{_includedir}/%{name}
+    %{_libdir}/cmake/%{name}
+    %{_libdir}/lib%{name}.so
+    %{_libdir}/pkgconfig/%{name}.pc
+    
+    
+subpackage.json-c-help.files: |
+    %doc %{_pkgdocdir}
+    
+    
+files: |
+    %{_libdir}/lib%{name}.so.%{so_ver}*
+    
+    

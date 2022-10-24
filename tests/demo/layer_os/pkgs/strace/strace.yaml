@@ -1,0 +1,31 @@
+name: strace
+meta.summary: Tracks and displays system calls associated with a running process
+version: 5.14
+release: 1
+meta.license: LGPL-2.1+ and GPL-2.0+
+meta.homepage: "https://strace.io"
+source:
+    "0": https://strace.io/files/%{version}/strace-%{version}.tar.xz %if 0%{?fedora} >= 12 || 0%{?centos} >= 6 || 0%{?rhel} >= 6 || 0%{?suse_version} >= 1200 || 0%{?openEuler} >= 1
+    "1": strace-%{version}.tar.gz %else %if 0%{?fedora} >= 12 || 0%{?centos} >= 6 || 0%{?rhel} >= 6 || 0%{?suse_version} >= 1200 || 0%{?openEuler} >= 1
+meta.description: |
+    The strace program intercepts and records the system calls called and
+    received by a running process.  Strace can print a record of each
+    system call, its arguments and its return value.  Strace is useful for
+    diagnosing problems and debugging, as well as for instructional
+    purposes.
+    
+    Install strace if you need a tool to track the system calls made and
+    received by a process.
+buildRequires:
+    - "xz %if 0%{?fedora} >= 12 || 0%{?centos} >= 6 || 0%{?rhel} >= 6 || 0%{?suse_version} >= 1200 || 0%{?openEuler} >= 1"
+    - "gcc gzip"
+    - "pkgconfig(bluez) %if 0%{?fedora} >= 18 || 0%{?centos} >= 6 || 0%{?rhel} >= 8 || 0%{?suse_version} >= 1200 || 0%{?openEuler} >= 1"
+rpmMacros:
+    - "%define buildrequires_stacktrace BuildRequires: elfutils-devel binutils-devel %if 0%{?fedora} >= 20 || 0%{?centos} >= 6 || 0%{?rhel} >= 6 || 0%{?openEuler} >= 1"
+    - "%define buildrequires_stacktrace BuildRequires: libdw-devel binutils-devel %if 0%{?suse_version} >= 1100"
+    - "%{?buildrequires_stacktrace}"
+    - "%{?!buildroot:BuildRoot: %_tmppath/buildroot-%name-%version-%release}"
+    - "%define maybe_use_defattr %{?suse_version:%%defattr(-,root,root)}"
+
+env.configureFlags: |
+    --enable-mpers=check

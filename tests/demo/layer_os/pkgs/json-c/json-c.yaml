@@ -1,0 +1,38 @@
+name: json-c
+meta.summary: JSON implementation in C
+version: 0.15
+release: 5
+meta.license: MIT
+meta.homepage: "https://github.com/%{name}/%{name}"
+source:
+    "0": "%{url}/archive/%{name}-%{version}-%{reldate}.tar.gz"
+meta.description: |
+    JSON-C implements a reference counting object model that allows you
+    to easily construct JSON objects in C, output them as JSON formatted
+    strings and parse JSON formatted strings back into the C representation
+    of JSON objects.  It aims to conform to RFC 7159.
+buildRequires:
+    - "cmake gcc ninja-build"
+rpmMacros:
+    - "%{!?_pkgdocdir:%global _pkgdocdir %{_docdir}/json-c-0.15}"
+    - "%global so_ver      5"
+    - "%global reldate     20200726"
+
+subpackage:
+    json-c-devel:
+        meta.summary: Development files for %{name}
+        meta.description: |
+            This package contains libraries and header files for
+            developing applications that use %{name}.
+        requires:
+            - "%{name}%{?_isa} == %{version}-%{release}"
+    json-c-help:
+        meta.summary: Reference manual for json-c
+        meta.description: This package contains the reference manual for %{name}.
+        buildRequires:
+            - "doxygen hardlink"
+        provides:
+            - "%{name}-doc = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-doc = %{version}-%{release}"
+        buildArch: noarch

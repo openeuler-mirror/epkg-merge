@@ -1,0 +1,21 @@
+subpackage.quota-devel.files: |
+    %doc doc/* ldap-scripts
+    %dir %{_includedir}/rpcsvc
+    %{_includedir}/rpcsvc/*
+    
+    
+    
+subpackage.quota-help.files: |
+    %{_mandir}/man*/*
+    
+    
+files: |
+    %license COPYING
+    %doc Changelog
+    %{_bindir}/*
+    %{_sbindir}/*
+    %{_unitdir}/*.service
+    %config(noreplace) %{_sysconfdir}/*
+    %exclude %{_docdir}/%{name}
+    
+    

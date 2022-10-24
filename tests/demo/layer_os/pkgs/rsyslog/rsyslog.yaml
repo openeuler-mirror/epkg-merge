@@ -1,0 +1,278 @@
+name: rsyslog
+meta.summary: The rocket-fast system for log processing
+version: 8.2110.0
+release: 11
+meta.license: (GPLv3+ and ASL 2.0)
+meta.homepage: "http://www.rsyslog.com/"
+source:
+    "0": http://www.rsyslog.com/files/download/rsyslog/%{name}-%{version}.tar.gz
+    "1": http://www.rsyslog.com/files/download/rsyslog/%{name}-doc-%{version}.tar.gz
+    "2": rsyslog.conf
+    "3": rsyslog.sysconfig
+    "4": rsyslog.log
+    "5": os_rotate_and_save_log.sh
+    "6": os_check_timezone_for_rsyslog.sh
+    "7": timezone.cron
+    "8": rsyslog.service
+    "9": timezone_update.sh
+patchset:
+    "0": rsyslog-8.24.0-ensure-parent-dir-exists-when-writting-log-file.patch
+    "1": bugfix-rsyslog-7.4.7-imjournal-add-monotonic-timestamp.patch
+    "2": bugfix-rsyslog-7.4.7-add-configuration-to-avoid-memory-leak.patch
+    "3": rsyslog-8.37.0-initialize-variables-and-check-return-value.patch
+    "4": print-main-queue-info-to-journal-when-queue-full.patch %if %{systemd_lived} == 1
+    "5": print-main-queue-info-to-journal-when-receive-USR1-signal.patch %if %{systemd_lived} == 1
+    "6": bugfix-CVE-2022-24903.patch
+    "7": backport-testbench-skip-omfwd_fast_imuxsock.sh-if-liblogging-stdlog-is-not-available.patch
+    "8": backport-Fixes-4395-by-correctly-checking-for-EPIPE.patch
+    "9": backport-rsyslogd-adjust-the-order-of-doHUP-and-processImInte.patch
+    "10": backport-gnutls-bugfix-Fix-error-handling-in-gtlsRecordRecv.patch
+    "11": backport-Fix-non-null-terminated-string-used-with-strlen.patch
+    "12": backport-tcpsrv-do-not-decrease-number-of-to-be-processed-fds.patch
+    "13": backport-imptcp-bugfix-worker-thread-starvation-on-extreme-tr.patch
+    "14": backport-Fix-memory-leak-when-globally-de-initialize-GnuTLS.patch
+    "15": backport-Fix-memory-leak-when-free-action-worker-data-table.patch
+meta.description: |
+    RSYSLOG is the rocket-fast system for log processing.It offers high-performance,
+    great security features and a modular design. While it started as a regular syslogd,
+    rsyslog has evolved into a kind of swiss army knife of logging, being able to
+    accept inputs from a wide variety of sources, transform them, and output to the
+    results to diverse destinations.
+    
+    RSYSLOG can deliver over one million messages per second to local destinations when
+    limited processing is applied. Even with remote destinations and more elaborate
+    processing the performance is usually considered “stunning”.
+requires:
+    - "logrotate >= 3.5.2 bash >= 2.0"
+buildRequires:
+    - "gcc autoconf automake bison dos2unix flex pkgconfig python3-docutils libtool"
+    - "libgcrypt-devel libuuid-devel zlib-devel krb5-devel libnet-devel gnutls-devel"
+    - "libfastjson-devel >= 0.99.8 libestr-devel >= 0.1.9"
+    - "mariadb-connector-c-devel net-snmp-devel qpid-proton-c-devel libcurl-devel"
+    - "systemd-devel >= 204-8 %if %{systemd_lived} == 1"
+provides:
+    - "syslog"
+obsoletes:
+    - "sysklogd < 1.5-11"
+rpmMacros:
+    - "%define rsyslog_statedir %{_sharedstatedir}/rsyslog"
+    - "%define rsyslog_pkidir %{_sysconfdir}/pki/rsyslog"
+    - "%define rsyslog_docdir %{_docdir}/rsyslog"
+    - "%define systemd_lived 1"
+    - "%{?systemd_requires}"
+
+subpackage:
+    rsyslog-hiredis:
+        meta.summary: Redis support for rsyslog
+        group: System Environment/Daemons
+        meta.description: This package provides support from redis.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "hiredis-devel"
+    rsyslog-kafka:
+        meta.summary: Provides the omkafka module
+        group: System Environment/Daemons
+        meta.description: This package provides support from kafka.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "librdkafka-devel"
+    rsyslog-mmnormalize:
+        meta.summary: Log normalization support for rsyslog
+        group: System Environment/Daemons
+        meta.description: This module provides the capability to normalize log messages via liblognorm.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "libestr-devel liblognorm-devel >= 1.0.2"
+    rsyslog-mmkubernetes:
+        meta.summary: Provides the mmkubernetes module
+        group: System Environment/Daemons
+        meta.description: This package provides support for kubernetes to add container metadata.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "libcurl-devel"
+    rsyslog-mongodb:
+        meta.summary: MongoDB support for rsyslog
+        group: System Environment/Daemons
+        meta.description: This package provides support from mongodb.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "mongo-c-driver-devel snappy-devel cyrus-sasl-devel"
+    rsyslog-omamqp1:
+        meta.summary: Provides the omamqp1 module
+        group: System Environment/Daemons
+        meta.description: |
+            The omamqp1 output module can be used to send log messages via an AMQP
+            1.0-compatible messaging bus.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "qpid-proton-c-devel"
+    rsyslog-pgsql:
+        meta.summary: PostgresSQL support for rsyslog
+        group: System Environment/Daemons
+        meta.description: |
+            The rsyslog-pgsql package contains a dynamic shared object that will add
+            PostgreSQL database support to rsyslog.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "postgresql-devel"
+    rsyslog-rabbitmq:
+        meta.summary: RabbitMQ support for rsyslog
+        group: System Environment/Daemons
+        meta.description: This package provides support from rabbitmq.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "librabbitmq-devel >= 0.2"
+    rsyslog-relp:
+        meta.summary: RELP protocol support for rsyslog
+        group: System Environment/Daemons
+        meta.description: |
+            The rsyslog-relp package contains the rsyslog plugins that provide
+            the ability to receive syslog messages via the reliable RELP
+            protocol.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "librelp-devel >= 1.0.3"
+    rsyslog-snmp:
+        meta.summary: SNMP protocol support for rsyslog
+        group: System Environment/Daemons
+        meta.description: |
+            The rsyslog-snmp package contains the rsyslog plugin that provides the
+            ability to send syslog messages as SNMPv1 and SNMPv2c traps.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "net-snmp-devel"
+    rsyslog-crypto:
+        meta.summary: Encryption support
+        meta.description: |
+            This package contains a module providing log file encryption and a
+            command line tool to process encrypted logs.
+        requires:
+            - "%name = %version-%release"
+    rsyslog-doc:
+        meta.summary: HTML documentation for rsyslog
+        meta.description: This subpackage contains documentation for rsyslog.
+        buildArch: noarch
+    rsyslog-elasticsearch:
+        meta.summary: ElasticSearch output module for rsyslog
+        meta.description: |
+            This module provides the capability for rsyslog to feed logs directly into
+            Elasticsearch.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "libcurl-devel"
+    rsyslog-mmjsonparse:
+        meta.summary: JSON enhanced logging support
+        meta.description: |
+            This module provides the capability to recognize and parse JSON enhanced
+            syslog messages.
+        requires:
+            - "%name = %version-%release"
+    rsyslog-mysql:
+        meta.summary: MySQL support for rsyslog
+        meta.description: |
+            The rsyslog-mysql package contains a dynamic shared object that will add
+            MySQL database support to rsyslog.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "mariadb-connector-c-devel"
+    rsyslog-mmsnmptrapd:
+        meta.summary: Message modification module for snmptrapd generated messages
+        meta.description: |
+            This message modification module takes messages generated from snmptrapd and
+            modifies them so that they look like they originated from the read originator.
+        requires:
+            - "%name = %version-%release"
+    rsyslog-mmaudit:
+        meta.summary: Message modification module supporting Linux audit format
+        meta.description: |
+            This module provides message modification supporting Linux audit format
+            in various settings.
+        requires:
+            - "%name = %version-%release"
+    rsyslog-gssapi:
+        meta.summary: GSSAPI authentication and encryption support for rsyslog
+        meta.description: |
+            The rsyslog-gssapi package contains the rsyslog plugins which support GSSAPI
+            authentication and secure connections. GSSAPI is commonly used for Kerberos
+            authentication.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "krb5-devel"
+    rsyslog-gnutls:
+        meta.summary: TLS protocol support for rsyslog via GnuTLS library
+        meta.description: |
+            The rsyslog-gnutls package contains the rsyslog plugins that provide the
+            ability to send and receive syslog messages via TCP or RELP using TLS
+            encryption via GnuTLS library. For details refer to rsyslog doc on imtcp
+            and omfwd modules.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "gnutls-devel"
+    rsyslog-udpspoof:
+        meta.summary: Provides the omudpspoof module
+        meta.description: |
+            This module is similar to the regular UDP forwarder, but permits to
+            spoof the sender address. Also, it enables to circle through a number
+            of source ports.
+        requires:
+            - "%name = %version-%release"
+        buildRequires:
+            - "libnet-devel"
+    rsyslog-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch
+env.configureFlags: |
+    --disable-static
+    --enable-testbench
+    --enable-elasticsearch
+    --enable-generate-man-pages
+    --enable-gnutls
+    --enable-gssapi-krb5
+    --enable-imdiag
+    --enable-imfile
+    --enable-impstats
+    --enable-imptcp
+    --enable-mail
+    --enable-mmanon
+    --enable-mmaudit
+    --enable-mmcount
+    --enable-mmkubernetes
+    --enable-mmjsonparse
+    --enable-mmnormalize
+    --enable-mmsnmptrapd
+    --enable-mysql
+    --enable-omamqp1
+    --enable-omhiredis
+    --enable-ommongodb
+    --enable-omprog
+    --enable-omrabbitmq
+    --enable-omstdout
+    --enable-omudpspoof
+    --enable-omuxsock
+    --enable-pgsql
+    --enable-pmaixforwardedfrom
+    --enable-pmcisconames
+    --enable-pmlastmsg
+    --enable-pmsnare
+    --enable-relp
+    --enable-snmp
+    --enable-unlimited-select
+    --enable-usertools
+    --enable-omkafka

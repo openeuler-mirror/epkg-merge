@@ -1,0 +1,64 @@
+subpackage.dhcp-devel.files: |
+    %defattr(-,root,root)
+    %doc doc/IANA-arp-parameters doc/api+protocol
+    %{_includedir}/dhcpctl
+    %{_includedir}/omapip
+    %{_libdir}/libdhcp*.a
+    %{_libdir}/libomapi.a
+    
+    
+    
+subpackage.dhcp-help.files: |
+    %defattr(644,root,root)
+    %doc doc/*
+    %{_mandir}/man1/omshell.1.gz
+    %{_mandir}/man5/dhcpd.conf.5.gz
+    %{_mandir}/man5/dhcpd.leases.5.gz
+    %{_mandir}/man8/dhcpd.8.gz
+    %{_mandir}/man5/dhcp-options.5.gz
+    %{_mandir}/man5/dhcp-eval.5.gz
+    %{_mandir}/man5/dhclient.conf.5.gz
+    %{_mandir}/man5/dhclient.leases.5.gz
+    %{_mandir}/man8/dhclient.8.gz
+    %{_mandir}/man8/dhclient-script.8.gz
+    %{_mandir}/man8/dhcrelay.8.gz
+    %{_mandir}/man3/dhcpctl.3.gz
+    %{_mandir}/man3/omapi.3.gz
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license LICENSE
+    %doc README RELNOTES doc/References.txt
+    %doc README.dhclient.d
+    %doc contrib/ldap/ contrib/dhcp-lease-list.pl
+    %{_datadir}/doc/dhcp-client/dhclient.conf.example
+    %{_datadir}/doc/dhcp-server/dhcpd.conf.example
+    %{_datadir}/doc/dhcp-client/dhclient6.conf.example
+    %{_datadir}/doc/dhcp-server/dhcpd6.conf.example
+    %{_datadir}/doc/dhcp-server/dhcpd.conf.example
+    %dir %{_sysconfdir}/openldap/schema
+    %config(noreplace) %{_sysconfdir}/openldap/schema/dhcp.schema
+    %attr(0750,root,root) %dir %{dhcpconfdir}
+    %dir %{_localstatedir}/lib/dhclient
+    %dir %{dhcpconfdir}/dhclient.d
+    %dir %{_sysconfdir}/NetworkManager
+    %dir %{_sysconfdir}/NetworkManager/dispatcher.d
+    %{_sysconfdir}/NetworkManager/dispatcher.d/11-dhclient
+    %attr(0644,root,root)   %{_unitdir}/dhcpd.service
+    %attr(0644,root,root)   %{_unitdir}/dhcpd6.service
+    %attr(0644,root,root) %{_unitdir}/dhcrelay.service
+    %attr(0755,dhcpd,dhcpd) %dir %{_localstatedir}/lib/dhcpd
+    %attr(0644,dhcpd,dhcpd) %verify(mode) %config(noreplace) %{_localstatedir}/lib/dhcpd/dhcpd.leases
+    %attr(0644,dhcpd,dhcpd) %verify(mode) %config(noreplace) %{_localstatedir}/lib/dhcpd/dhcpd6.leases
+    %config(noreplace) %{_sysconfdir}/sysconfig/dhcpd
+    %config(noreplace) %{dhcpconfdir}/dhcpd.conf
+    %config(noreplace) %{dhcpconfdir}/dhcpd6.conf
+    %{_sbindir}/dhcpd
+    %{_sbindir}/dhclient
+    %{_sbindir}/dhclient-script
+    %{_sbindir}/dhcrelay
+    %{_bindir}/omshell
+    %attr(0755,root,root) %{_libdir}/pm-utils/sleep.d/56dhclient
+    
+    

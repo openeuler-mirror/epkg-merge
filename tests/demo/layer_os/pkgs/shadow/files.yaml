@@ -1,0 +1,39 @@
+subpackage.shadow-subid-devel.files: |
+    %{_libdir}/libsubid.so.*
+    %{includesubiddir}/subid.h
+    %{_libdir}/libsubid.so
+    
+    
+subpackage.shadow-help.files: |
+    %{_mandir}/*/*
+    
+    
+files: |
+    %doc NEWS doc/HOWTO README
+    %{!?_licensedir:%global license %%doc}
+    %license gpl-2.0.txt shadow-bsd.txt
+    %attr(0644,root,root)   %config(noreplace) %{_sysconfdir}/login.defs
+    %attr(0644,root,root)   %config(noreplace) %{_sysconfdir}/default/useradd
+    %{_bindir}/sg
+    %attr(4755,root,root) %{_bindir}/chage
+    %attr(4755,root,root) %{_bindir}/gpasswd
+    %{_bindir}/lastlog
+    %attr(4755,root,root) %{_bindir}/newgrp
+    %attr(4755,root,root) %{_bindir}/newgidmap
+    %attr(4755,root,root) %{_bindir}/newuidmap
+    %{_sbindir}/adduser
+    %attr(0755,root,root)   %{_sbindir}/user*
+    %attr(0755,root,root)   %{_sbindir}/group*
+    %{_sbindir}/grpck
+    %{_sbindir}/pwck
+    %{_sbindir}/*conv
+    %{_sbindir}/chpasswd
+    %{_sbindir}/chgpasswd
+    %{_sbindir}/newusers
+    %{_sbindir}/vipw
+    %{_sbindir}/vigr
+    %{_sysconfdir}/pam.d/chpasswd
+    %{_sysconfdir}/pam.d/groupmems
+    %{_sysconfdir}/pam.d/newusers
+    
+    

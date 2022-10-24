@@ -1,0 +1,69 @@
+name: quota
+meta.summary: Linux Diskquota system as part of the Linux kernel
+version: 4.06
+release: 4
+epoch: 1
+meta.license: BSD and GPLv2 and GPLv2+ and LGPLv2+
+meta.homepage: "http://sourceforge.net/projects/linuxquota/"
+source:
+    "0": http://downloads.sourceforge.net/linuxquota/%{name}-%{version}.tar.gz
+    "1": quota_nld.service
+    "2": quota_nld.sysconfig
+    "3": rpc-rquotad.service
+    "4": rpc-rquotad.sysconfig
+patchset:
+    "0": 0000-Limit-number-of-comparison-characters-to-4.patch
+    "1": 0001-Limit-maximum-of-RPC-port.patch
+    "2": 0002-quotaio_xfs-Warn-when-large-kernel-timestamps-cannot.patch
+meta.description: |
+    Tools and patches for the Linux Diskquota system as part of the Linux kernel
+    It also include quota_nld daemon,
+requires:
+    - "rpcbind"
+requiresPreUn:
+    - "systemd"
+requiresPost:
+    - "systemd"
+requiresPostUn:
+    - "systemd"
+buildRequires:
+    - "autoconf, automake, coreutils, rpcgen, systemd, gcc"
+    - "e2fsprogs-devel, gettext-devel, openldap-devel"
+    - "pkgconfig(dbus-1), pkgconfig(libnl-3.0) >= 3.1, pkgconfig(libnl-genl-3.0), pkgconfig(libtirpc)"
+provides:
+    - "%{name}-doc = %{epoch}:%{version}-%{release}"
+    - "%{name}-nld = %{epoch}:%{version}-%{release}"
+    - "%{name}-nls = %{epoch}:%{version}-%{release}"
+    - "%{name}-rpc = %{epoch}:%{version}-%{release}"
+    - "%{name}-warnquota = %{epoch}:%{version}-%{release}"
+obsoletes:
+    - "%{name}-doc"
+    - "%{name}-nld"
+    - "%{name}-nls"
+    - "%{name}-rpc"
+    - "%{name}-warnquota"
+filesInput: "%{name}.lang"
+subpackage:
+    quota-devel:
+        meta.summary: Including header files for the developing of quota RPC
+        meta.license: GPLv2
+        meta.description: This contains  header files for the developing of quota RPC.
+        requires:
+            - "quota  = %{epoch}:%{version}-%{release}"
+    quota-help:
+        meta.summary: Including man files for quota
+        meta.description: This contains man files for the using of quota.
+        requires:
+            - "man"
+env.configureFlags: |
+    --enable-bsd-behaviour
+    --enable-ext2direct=yes
+    --enable-ldapmail=yes
+    --disable-libwrap
+    --enable-netlink=yes
+    --enable-nls
+    --disable-rpath
+    --enable-rpc=yes
+    --enable-rpcsetquota=yes
+    --disable-silent-rules
+    --disable-xfs-roothack

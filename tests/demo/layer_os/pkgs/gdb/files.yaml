@@ -1,0 +1,38 @@
+subpackage.gdb-headless.files: |
+    %{_prefix}/libexec/gdb
+    %config(noreplace) %{_sysconfdir}/gdbinit
+    %{_sysconfdir}/gdbinit.d
+    %{_bindir}/gdb-add-index
+    %{_datadir}/gdb
+    
+    
+subpackage.gdb-gdbserver.files: |
+    %{_bindir}/gdbserver
+    %ifnarch riscv64
+    %{_libdir}/libinproctrace.so
+    %endif
+    
+    
+subpackage.gdb-help.files: |
+    %{_mandir}/*/gcore.1*
+    %{_mandir}/*/gstack.1*
+    %{_mandir}/*/pstack.1*
+    %{_mandir}/*/gdb.1*
+    %{_mandir}/*/gdbinit.5*
+    %{_mandir}/*/gdb-add-index.1*
+    %{_mandir}/*/gdbserver.1*
+    %doc %{gdb_build}/gdb/doc/{gdb,annotate}.{html,pdf}
+    %{_infodir}/annotate.info*
+    %{_infodir}/gdb.info*
+    
+    
+files: |
+    %license COPYING3 COPYING COPYING.LIB COPYING3.LIB
+    %doc README NEWS
+    %{_bindir}/gdb
+    %{_bindir}/gcore
+    %{_bindir}/gstack
+    %{_bindir}/pstack
+    %{_includedir}/gdb
+    
+    

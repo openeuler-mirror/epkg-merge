@@ -1,0 +1,55 @@
+name: iSulad
+meta.summary: Lightweight Container Runtime Daemon
+version: "%{_version}"
+release: "%{_release}"
+meta.license: Mulan PSL v2
+meta.homepage: "https://gitee.com/openeuler/iSulad"
+source:
+    "0": https://gitee.com/openeuler/iSulad/repository/archive/v%{version}.tar.gz
+patchset:
+    "0": 0001-use-epoll-instead-of-select-for-wait_exit_fifo.patch
+meta.description: |
+    This is a umbrella project for gRPC-services based Lightweight Container
+    Runtime Daemon, written by C.
+requires:
+    - "systemd-units %if 0%{?is_systemd}"
+    - "sqlite %if 0%{?is_embedded}"
+    - "clibcni >= %{clibcniver} lcr >= %{lcrver}"
+    - "grpc protobuf lxc"
+    - "libcurl"
+    - "http-parser libseccomp"
+    - "libcap libselinux libwebsockets libarchive device-mapper"
+    - "systemd"
+    - "lib-shim-v2 %if 0%{?enable_shimv2}"
+requiresPreUn:
+    - "chkconfig %else %if 0%{?is_systemd}"
+    - "initscripts %else %if 0%{?is_systemd}"
+requiresPost:
+    - "chkconfig %else %if 0%{?is_systemd}"
+buildRequires:
+    - "pkgconfig(systemd) %if 0%{?is_systemd}"
+    - "sqlite-devel %if 0%{?is_embedded}"
+    - "lcr-devel >= %{lcrver} clibcni-devel >= %{clibcniver}"
+    - "cmake gcc-c++ yajl-devel lxc lxc-devel"
+    - "grpc grpc-plugins grpc-devel protobuf-devel"
+    - "libcurl libcurl-devel libarchive-devel device-mapper-devel"
+    - "http-parser-devel"
+    - "libseccomp-devel libcap-devel libselinux-devel libwebsockets libwebsockets-devel"
+    - "systemd-devel git"
+    - "lib-shim-v2 lib-shim-v2-devel %if 0%{?enable_shimv2}"
+provides:
+    - "libhttpclient.so()(64bit) %ifarch x86_64 aarch64"
+    - "libisula.so()(64bit) %ifarch x86_64 aarch64"
+    - "libisulad_img.so()(64bit) %ifarch x86_64 aarch64"
+    - "libisulad_tools.so()(64bit) %ifarch x86_64 aarch64"
+buildRoot:
+    - "{_tmppath}/iSulad-%{version}"
+rpmMacros:
+    - "%global _version 2.0.17"
+    - "%global _release 2"
+    - "%global is_systemd 1"
+    - "%global enable_shimv2 1"
+    - "%global is_embedded 1"
+    - "%define lcrver 2.0.8"
+    - "%define clibcniver 2.0.7"
+

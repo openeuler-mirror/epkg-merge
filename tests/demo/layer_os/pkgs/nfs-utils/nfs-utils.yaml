@@ -1,0 +1,99 @@
+name: nfs-utils
+meta.summary: The Linux NFS userland utility package
+version: 2.5.4
+release: 8
+epoch: 2
+meta.license: MIT and GPLv2 and GPLv2+ and BSD
+meta.homepage: "http://sourceforge.net/projects/nfs/"
+source:
+    "0": https://www.kernel.org/pub/linux/utils/nfs-utils/%{version}/%{name}-%{version}.tar.xz
+patchset:
+    "0": 0000-systemd-idmapd-require-rpc-pipefs.patch
+    "1": 0001-correct-the-statd-path-in-man.patch
+    "2": 0002-nfs-utils-set-use-gss-proxy-1-to-enable-gss-proxy-by.patch
+    "3": 0003-idmapd-Fix-error-status-when-nfs-idmapd-exits.patch
+    "4": 0004-fix-coredump-in-bl_add_disk.patch
+    "5": 0005-Fix-format-overflow-warning.patch
+    "6": 0006-nfs-blkmaped-Fix-the-error-status-when-nfs_blkmapd-s.patch
+meta.description: |
+    This is he nfs-utils tools package.
+    It contains the showmount,mount.nfs,umount.nfs and libnfsidmap
+requires:
+    - "rpcbind, sed, gawk, grep, kmod, keyutils, quota"
+    - "libevent libblkid libcap libmount"
+    - "libtirpc >= 0.2.3-1 gssproxy => 0.7.0-3"
+    - "openldap"
+requiresPre:
+    - "shadow-utils >= 4.0.3-25"
+    - "util-linux"
+    - "coreutils"
+    - "glibc"
+requiresPreUn:
+    - "coreutils"
+    - "systemd"
+requiresPost:
+    - "systemd"
+requiresPostUn:
+    - "systemd"
+    - "glibc"
+buildRequires:
+    - "libevent-devel,libcap-devel, libtirpc-devel libblkid-devel"
+    - "krb5-libs >= 1.4 autoconf >= 2.57 openldap-devel >= 2.2"
+    - "automake, libtool, gcc, device-mapper-devel"
+    - "krb5-devel, libmount-devel"
+    - "sqlite-devel, python3-devel"
+    - "systemd, pkgconfig, rpcgen"
+provides:
+    - "exportfs    = %{epoch}:%{version}-%{release}"
+    - "nfsstat     = %{epoch}:%{version}-%{release}"
+    - "showmount   = %{epoch}:%{version}-%{release}"
+    - "rpcdebug    = %{epoch}:%{version}-%{release}"
+    - "rpc.idmapd  = %{epoch}:%{version}-%{release}"
+    - "rpc.mountd  = %{epoch}:%{version}-%{release}"
+    - "rpc.nfsd    = %{epoch}:%{version}-%{release}"
+    - "rpc.statd   = %{epoch}:%{version}-%{release}"
+    - "rpc.gssd    = %{epoch}:%{version}-%{release}"
+    - "mount.nfs   = %{epoch}:%{version}-%{release}"
+    - "mount.nfs4  = %{epoch}:%{version}-%{release}"
+    - "umount.nfs  = %{epoch}:%{version}-%{release}"
+    - "umount.nfs4 = %{epoch}:%{version}-%{release}"
+    - "sm-notify   = %{epoch}:%{version}-%{release}"
+    - "start-statd = %{epoch}:%{version}-%{release}"
+    - "libnfsidmap = %{epoch}:%{version}-%{release}"
+    - "libnfsidmap%{?_isa} = %{epoch}:%{version}-%{release}"
+obsoletes:
+    - "libnfsidmap"
+recommends:
+    - "%{name}-help = %{epoch}:%{version}-%{release}"
+rpmMacros:
+    - "%global rpc_uid         29"
+    - "%global nfsnobody_uid   65534"
+    - "%global _statdpath /var/lib/nfs/statd"
+
+subpackage:
+    nfs-utils-devel:
+        meta.summary: Including header files and library for the developing of libnfsidmap library
+        meta.description: |
+            This contains dynamic libraries and header files for the developing of
+            the libnfsidmap library.
+        requires:
+            - "nfs-utils%{?_isa} = %{epoch}:%{version}-%{release}"
+            - "pkgconfig"
+        provides:
+            - "libnfsidmap-devel = %{epoch}:%{version}-%{release}"
+            - "libnfsidmap-devel%{?_isa} = %{epoch}:%{version}-%{release}"
+        obsoletes:
+            - "libnfsidmap-devel"
+    nfs-utils-help:
+        meta.summary: Including man files for nfs-utils
+        meta.description: This contains man files for the using of nfs-utils.
+        requires:
+            - "man"
+env.configureFlags: |
+    --enable-mountconfig
+    --enable-ipv6
+    --with-statdpath=%{_statdpath}
+    --enable-libmount-mount
+    --with-systemd
+    --without-tcp-wrappers
+    --with-pluginpath=%{_libdir}/libnfsidmap

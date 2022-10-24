@@ -1,0 +1,55 @@
+name: pam
+meta.summary: Pluggable Authentication Modules for Linux
+version: 1.5.2
+release: 2
+meta.license: BSD and GPLv2+
+meta.homepage: "http://www.linux-pam.org/"
+source:
+    "0": https://github.com/linux-pam/linux-pam/releases/download/v%{version}/Linux-PAM-%{version}.tar.xz
+    "1": https://github.com/linux-pam/linux-pam/releases/download/v%{version}/Linux-PAM-%{version}.tar.xz.asc
+    "2": other.pamd
+    "3": system-auth.pamd
+    "4": password-auth.pamd
+    "5": config-util.pamd
+    "6": pamtmp.conf
+    "7": postlogin.pamd
+    "8": https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+patchset:
+    "0": bugfix-pam-1.1.8-faillock-systemtime.patch
+    "1": openEuler-change-ndbm-to-gdbm.patch
+    "2": 0001-bugfix-cannot-open-database-file.patch
+    "3": add-sm3-crypt-support.patch
+meta.description: |
+    PAM (Pluggable Authentication Modules) is a system of libraries that
+    handle the authentication tasks of applications (services) on the system.
+requires:
+    - "cracklib libpwquality coreutils glibc audit-libs libselinux libxcrypt-sm3"
+buildRequires:
+    - "autoconf automake libtool bison flex sed cracklib-devel gdbm-devel"
+    - "perl-interpreter pkgconfig gettext-devel libtirpc-devel libnsl2-devel"
+    - "audit-libs-devel libselinux-devel"
+provides:
+    - "%{name}-sm3 = %{version}-%{release}"
+filesInput: Linux-PAM.lang
+
+rpmMacros:
+    - "%define _pamlibdir %{_libdir}"
+    - "%define _moduledir %{_libdir}/security"
+    - "%define _secconfdir %{_sysconfdir}/security"
+    - "%define _pamconfdir %{_sysconfdir}/pam.d"
+
+subpackage:
+    pam-devel:
+        meta.summary: Development files for Linux-PAM
+        meta.description: "%{summary}."
+        requires:
+            - "pam = %{version}-%{release}"
+    pam-help:
+        meta.summary: Man pages for Linux-PAM
+        meta.description: "%{summary}."
+        buildArch: noarch
+env.configureFlags: |
+    --disable-rpath
+    --disable-static
+    --disable-prelude
+    --enable-db=ndbm

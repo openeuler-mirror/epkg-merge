@@ -1,0 +1,39 @@
+name: http-parser
+meta.summary: HTTP request/response parser for C
+version: 2.9.4
+release: 2
+meta.license: MIT
+meta.homepage: "https://github.com/nodejs/%{name}"
+source:
+    "0": https://github.com/nodejs/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
+patchset:
+    "0": backport-url-treat-empty-port-as-default.patch
+meta.description: |
+    http-parser parses the HTTP request headers and body. As such, it acts as
+    a barrier in the policy to guarantee that the entire content has been received
+    before any other filters are invoked.The parser filter forces the server
+    to do "store-and-forward" routing instead of the default "cut-through" routing,
+    where the request is only parsed on-demand. This filter can be used as a simple test
+    to ensure that the message is XML, for example.
+    
+    Features:
+    
+    * No dependencies
+    * Handles persistent streams (keep-alive)
+    * Decodes chunked encoding
+    * Upgrade support
+    * Defends against buffer overflow attacks
+buildRequires:
+    - "gcc meson"
+subpackage:
+    http-parser-devel:
+        meta.summary: Development headers and static libraries
+        meta.description: Development headers and static libraries for http-parser.
+        requires:
+            - "%{name} = %{version}-%{release}"
+    http-parser-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

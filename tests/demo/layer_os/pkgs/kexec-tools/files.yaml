@@ -1,0 +1,44 @@
+subpackage.kexec-tools-help.files: |
+    %doc early-kdump-howto.txt
+    %doc kdump-in-cluster-environment.txt
+    %doc live-image-kdump-howto.txt
+    %{_mandir}/man8/kdumpctl.8.gz
+    %{_mandir}/man8/kexec.8.gz
+    %{_mandir}/man8/mkdumprd.8.gz
+    %{_mandir}/man8/vmcore-dmesg.8.gz
+    %{_mandir}/man5/*
+    %ifarch %{ix86} x86_64 aarch64
+    %{_mandir}/man8/makedumpfile.8.gz
+    %endif
+    
+    
+files: |
+    %doc News
+    %doc TODO
+    %license COPYING
+    %config(noreplace,missingok) %{_sysconfdir}/sysconfig/kdump
+    %config(noreplace,missingok) %verify(not mtime) %{_sysconfdir}/kdump.conf
+    %config %{_udevrulesdir}
+    %{_udevrulesdir}/../kdump-udev-throttler
+    %dir %{_localstatedir}/crash
+    /usr/sbin/kexec
+    /usr/sbin/mkdumprd
+    /usr/sbin/vmcore-dmesg
+    %{_bindir}/*
+    %{_datadir}/kdump
+    %{_prefix}/lib/kdump
+    %{dracutlibdir}/modules.d/*
+    %{_unitdir}/kdump.service
+    %{_prefix}/lib/systemd/system-generators/kdump-dep-generator.sh
+    %ifarch %{ix86} x86_64 aarch64
+    %{_libdir}/eppic_makedumpfile.so
+    /usr/share/makedumpfile/
+    %endif
+    %ifarch %{ix86} x86_64 aarch64
+    %{_sysconfdir}/makedumpfile.conf.sample
+    %endif
+    %ifarch %{ix86} x86_64 aarch64
+    /usr/sbin/makedumpfile
+    %endif
+    
+    

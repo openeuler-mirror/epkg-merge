@@ -1,0 +1,34 @@
+subpackage.libcurl.files: |
+    %defattr(-,root,root)
+    %{_libdir}/libcurl.so.4
+    %{_libdir}/libcurl.so.4.[0-9].[0-9]
+    
+    
+subpackage.libcurl-devel.files: |
+    %defattr(-,root,root)
+    %doc docs/examples/*.c docs/examples/Makefile.example docs/INTERNALS.md
+    %doc docs/CONTRIBUTE.md docs/libcurl/ABI.md
+    %{_bindir}/curl-config*
+    %{_includedir}/curl
+    %{_libdir}/*.so
+    %{_libdir}/pkgconfig/*.pc
+    %{_datadir}/aclocal/libcurl.m4
+    
+    
+subpackage.curl-help.files: |
+    %defattr(-,root,root)
+    %doc CHANGES README*
+    %doc docs/BUGS.md docs/FAQ docs/FEATURES.md
+    %doc docs/TheArtOfHttpScripting.md docs/TODO
+    %{_mandir}/man1/curl.1*
+    %{_mandir}/man1/curl-config.1*
+    %{_mandir}/man3/*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license COPYING
+    %{_bindir}/curl
+    %{_datadir}/zsh
+    
+    

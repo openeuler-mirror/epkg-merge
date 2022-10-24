@@ -1,0 +1,15 @@
+subpackage.gzip-help.files: |
+    %doc NEWS TODO THANKS
+    %{_infodir}/*info*
+    %{_mandir}/man1/*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %doc AUTHORS ChangeLog README
+    %license COPYING
+    %{_bindir}/*
+    %{profiledir}/*
+    %exclude %{_infodir}/dir
+    
+    

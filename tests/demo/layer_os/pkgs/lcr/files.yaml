@@ -1,0 +1,12 @@
+subpackage.lcr-devel.files: |
+    %defattr(-,root,root,-)
+    %{_includedir}/lcr/lcrcontainer.h
+    %{_includedir}/%{_inner_name}/*.h
+    
+    
+files: |
+    %defattr(-,root,root,-)
+    %{_libdir}/*
+    %{_libdir}/pkgconfig/lcr.pc
+    
+    

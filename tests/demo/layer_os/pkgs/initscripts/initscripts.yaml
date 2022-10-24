@@ -1,0 +1,137 @@
+name: initscripts
+meta.summary: Basic support for legacy System V init scripts
+version: 10.12
+release: 3
+meta.license: GPLv2
+meta.homepage: "https://github.com/fedora-sysv/initscripts"
+source:
+    "0": https://github.com/fedora-sysv/initscripts/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
+patchset:
+    "0": backport-run-ifdown-on-all-interfaces.patch
+    "1": bugfix-initscripts-add-udev-wait-dependency-for-network.patch
+    "2": bugfix-mod-network-function-when-NM-unmanage-devices.patch
+    "3": bugfix-initscripts-set-PERSISTENT_DHCLIENT-default-to-yes.patch
+    "4": bugfix-network-need-chkconfig-on.patch
+    "5": bugfix-restart-network-warning.patch
+    "6": new-network-fork-to-start-dhcp.patch
+    "7": exec-udevadm-settle-when-network-start.patch
+    "8": remove-rename_device_lock-when-process-does-not-exis.patch
+meta.description: |
+    This package provides basic support for legacy System V init scripts, and some
+    other legacy tools & utilities.
+requires:
+    - "findutils"
+    - "grep"
+    - "procps-ng"
+    - "setup"
+    - "systemd"
+    - "util-linux"
+    - "chkconfig"
+    - "initscripts-service"
+requiresPre:
+    - "shadow-utils"
+requiresPost:
+    - "coreutils"
+buildRequires:
+    - "filesystem          >= 3"
+    - "gcc"
+    - "gettext"
+    - "glib2-devel"
+    - "pkgconfig"
+    - "popt-devel"
+    - "setup"
+    - "systemd"
+obsoletes:
+    - "%{name}            < 9.82-2"
+rpmMacros:
+    - "%global _hardened_build 1"
+    - "%global shared_requirements \\{os.linesep}Requires:         bash                       \\{os.linesep}Requires:         filesystem          >= 3   \\{os.linesep}Requires:         coreutils                  \\{os.linesep}Requires:         gawk                       \\{os.linesep}"
+    - "%{?systemd_requires}"
+
+subpackage:
+    initscripts-service:
+        meta.summary: Support for service command
+        meta.description: This package provides service command.
+        requires:
+            - "systemd"
+        provides:
+            - "/sbin/service"
+        buildArch: noarch
+    network-scripts:
+        meta.summary: Legacy scripts for manipulating of network devices
+        meta.description: |
+            This package contains the legacy scripts for activating & deactivating of most
+            network interfaces. It also provides a legacy version of 'network' service.
+            
+            The 'network' service is enabled by default after installation of this package,
+            and if the network-scripts are installed alongside NetworkManager, then the
+            ifup/ifdown commands from network-scripts take precedence over the ones provided
+            by NetworkManager.
+            
+            If user has both network-scripts & NetworkManager installed, and wishes to
+            use ifup/ifdown from NetworkManager primarily, then they has to run command:
+            $ update-alternatives --config ifup
+            
+            Please note that running the command above will also disable the 'network'
+            service.
+        requires:
+            - "%{name}%{?_isa} = %{version}-%{release}"
+            - "bc"
+            - "dbus"
+            - "gawk"
+            - "grep"
+            - "hostname"
+            - "iproute"
+            - "ipcalc"
+            - "kmod"
+            - "procps-ng"
+            - "sed"
+            - "systemd"
+        requiresPreUn:
+            - "chkconfig"
+        requiresPost:
+            - "chkconfig"
+            - "%{_sbindir}/update-alternatives"
+        requiresPostUn:
+            - "%{_sbindir}/update-alternatives"
+        provides:
+            - "deprecated()"
+        obsoletes:
+            - "%{name}            < 9.82-2"
+    netconsole-service:
+        meta.summary: Service for initializing of network console logging
+        meta.description: |
+            This packages provides a 'netconsole' service for loading of netconsole kernel
+            module with the configured parameters. The netconsole kernel module itself then
+            allows logging of kernel messages over the network.
+        requires:
+            - "%{name} = %{version}-%{release}"
+            - "glibc-common"
+            - "iproute"
+            - "iputils"
+            - "kmod"
+            - "sed"
+            - "util-linux"
+        obsoletes:
+            - "%{name}            < 9.82-2"
+        buildArch: noarch
+    readonly-root:
+        meta.summary: Service for configuring read-only root support
+        meta.description: |
+            This package provides script & configuration file for setting up read-only root
+            support. Additional configuration is required after installation.
+            
+            Please note that readonly-root package is considered deprecated with limited support.
+            Please use systemd-volatile-root functionality instead, if possible.
+        requires:
+            - "%{name} = %{version}-%{release}"
+            - "cpio"
+            - "findutils"
+            - "hostname"
+            - "iproute"
+            - "ipcalc"
+            - "util-linux"
+        obsoletes:
+            - "%{name}            < 9.82-2"
+        buildArch: noarch
+        filesInput: "%{name}.lang"

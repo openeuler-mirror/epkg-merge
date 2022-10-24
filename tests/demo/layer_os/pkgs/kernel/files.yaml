@@ -1,0 +1,116 @@
+subpackage.kernel%{?package64kb}-headers.files: |
+    %defattr (-, root, root)
+    /usr/include/*
+    
+    
+subpackage.kernel%{?package64kb}-devel.files: |
+    %defattr (-, root, root)
+    %doc
+    /lib/modules/%{KernelVer}/source
+    /lib/modules/%{KernelVer}/build
+    /usr/src/kernels/%{KernelVer}
+    
+    
+subpackage.kernel%{?package64kb}-tools.files: |
+    %{_bindir}/cpupower
+    %ifarch %{ix86} x86_64
+    %{_bindir}/centrino-decode
+    %{_bindir}/powernow-k8-decode
+    %endif
+    %{_unitdir}/cpupower.service
+    %{_datadir}/bash-completion/completions/cpupower
+    %{_mandir}/man[1-8]/cpupower*
+    %config(noreplace) %{_sysconfdir}/sysconfig/cpupower
+    %ifarch %{ix86} x86_64
+    %{_bindir}/x86_energy_perf_policy
+    %{_mandir}/man8/x86_energy_perf_policy*
+    %{_bindir}/turbostat
+    %{_mandir}/man8/turbostat*
+    %endif
+    %{_bindir}/tmon
+    %{_bindir}/iio_event_monitor
+    %{_bindir}/iio_generic_buffer
+    %{_bindir}/lsiio
+    %{_bindir}/lsgpio
+    %{_bindir}/gpio-hammer
+    %{_bindir}/gpio-event-mon
+    %{_bindir}/gpio-watch
+    %{_mandir}/man1/kvm_stat*
+    %{_bindir}/kvm_stat
+    %{_libdir}/libcpupower.so.0
+    %{_libdir}/libcpupower.so.0.0.1
+    %license linux-%{KernelVer}/COPYING
+    
+    
+subpackage.kernel%{?package64kb}-tools-devel.files: |
+    %{_libdir}/libcpupower.so
+    %{_includedir}/cpufreq.h
+    %{_includedir}/cpuidle.h
+    
+    
+subpackage.perf %if %{with_perf}.files: |
+    %{_bindir}/perf
+    %{_libdir}/libperf-jvmti.so
+    %dir %{_libdir}/traceevent
+    %{_libdir}/traceevent/plugins/
+    %{_libexecdir}/perf-core
+    %{_datadir}/perf-core/
+    %{_mandir}/man[1-8]/perf*
+    %{_sysconfdir}/bash_completion.d/perf
+    %doc linux-%{KernelVer}/tools/perf/Documentation/examples.txt
+    %dir %{_datadir}/doc/perf-tip
+    %{_datadir}/doc/perf-tip/*
+    %license linux-%{KernelVer}/COPYING
+    
+    
+subpackage.python2-perf %if %{with_perf} %if 0%{?with_python2}.files: |
+    %license linux-%{KernelVer}/COPYING
+    %{python2_sitearch}/*
+    
+subpackage.python3-perf %if %{with_perf}.files: |
+    %license linux-%{KernelVer}/COPYING
+    %{python3_sitearch}/*
+    
+subpackage.bpftool.files: |
+    %{_sbindir}/bpftool
+    %{_sysconfdir}/bash_completion.d/bpftool
+    %{_mandir}/man8/bpftool-cgroup.8.gz
+    %{_mandir}/man8/bpftool-map.8.gz
+    %{_mandir}/man8/bpftool-prog.8.gz
+    %{_mandir}/man8/bpftool-perf.8.gz
+    %{_mandir}/man8/bpftool.8.gz
+    %{_mandir}/man8/bpftool-btf.8.gz
+    %{_mandir}/man8/bpftool-feature.8.gz
+    %{_mandir}/man8/bpftool-gen.8.gz
+    %{_mandir}/man8/bpftool-iter.8.gz
+    %{_mandir}/man8/bpftool-link.8.gz
+    %{_mandir}/man8/bpftool-net.8.gz
+    %{_mandir}/man8/bpftool-struct_ops.8.gz
+    %{_mandir}/man7/bpf-helpers.7.gz
+    %license linux-%{KernelVer}/COPYING
+    
+    
+subpackage.kernel%{?package64kb}-source.files rpmWhen %if 0%{?with_source}: |
+    %defattr(-,root,root)
+    /usr/src/linux-%{KernelVer}/*
+    /usr/src/linux-%{KernelVer}/.config
+    /usr/src/linux-%{KernelVer}/.scmversion
+    
+files: |
+    %doc
+    /boot/config-*
+    %ifarch aarch64
+    /boot/dtb-*
+    %endif
+    /boot/symvers-*
+    /boot/System.map-*
+    /boot/vmlinuz-*
+    %ghost /boot/initramfs-%{KernelVer}.img
+    /boot/.vmlinuz-*.hmac
+    /etc/ld.so.conf.d/*
+    /lib/modules/%{KernelVer}/
+    %exclude /lib/modules/%{KernelVer}/source
+    %exclude /lib/modules/%{KernelVer}/build
+    %{_sbindir}/mkgrub-menu*.sh
+    
+    

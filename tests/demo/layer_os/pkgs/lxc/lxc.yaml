@@ -1,0 +1,86 @@
+name: lxc
+meta.summary: Linux Containers userspace tools
+version: 4.0.3
+release: "%{_release}"
+meta.license: LGPLv2+ and GPLv2 and GPLv3
+meta.homepage: "https://github.com/lxc/lxc"
+source:
+    "0": https://linuxcontainers.org/downloads/lxc/lxc-4.0.3.tar.gz
+patchset:
+    "0": 0001-refactor-patch-code-of-utils-commands-and-so-on.patch
+    "1": 0002-refactor-patch-code-of-isulad-for-conf-exec-attach.patch
+    "2": 0003-refactor-patch-code-of-isulad-for-selinux-attach.patch
+    "3": 0004-refactor-patch-code-of-lxccontianer-and-so-on.patch
+    "4": 0005-refactor-patch-code-of-attach-and-seccomp.patch
+    "5": 0006-refactor-patch-about-namespace-log-terminal.patch
+    "6": 0007-refactor-patches-on-terminal.c-start.c-and-so-on.patch
+    "7": 0008-refactor-patch-code-of-json.patch
+    "8": 0009-fix-HOME-env-of-container-unset-error.patch
+    "9": 0010-check-yajl-only-when-have-isulad.patch
+    "10": 0011-drop-security_context_t.patch
+    "11": 0012-only-set-user-or-image-set-non-empty-HOME.patch
+    "12": 0013-return-fail-if-no-args-or-no-rootfs-path-found.patch
+    "13": 0014-fix-tools-using-option-give-error-message.patch
+    "14": 0015-fix-do-mask-pathes-after-parent-mounted.patch
+    "15": 0016-skip-kill-cgroup-processes-if-no-hierarchies.patch
+meta.description: |
+    Containers are insulated areas inside a system, which have their own namespace
+    for filesystem, network, PID, IPC, CPU and memory allocation and which can be
+    created using the Control Group and Namespace features included in the Linux
+    kernel.
+    
+    This package provides the lxc-* tools and libraries for running lxc
+    applications, which can be used to start a single daemon in a container, or to
+    boot an entire "containerized" system, and to manage and debug your containers.
+requires:
+    - "lxc-libs = 4.0.3-%{release}"
+buildRequires:
+    - "systemd-units git libtool graphviz docbook2X doxygen chrpath"
+    - "pkgconfig(libseccomp)"
+    - "libcap libcap-devel libselinux-devel yajl yajl-devel"
+    - "pkgconfig(bash-completion)"
+rpmMacros:
+    - "%global _release 2022101701"
+    - "%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/lxc-4.0.3}"
+
+subpackage:
+    lxc-libs:
+        meta.summary: Runtime library files for %{name}
+        meta.description: |
+            Linux Resource Containers provide process and resource isolation without the
+            overhead of full virtualization.
+            
+            The %{name}-libs package contains libraries for running %{name} applications.
+        requires:
+            - "rsync libcap libseccomp libselinux"
+        requiresPreUn:
+            - "systemd"
+        requiresPost:
+            - "systemd"
+            - "/sbin/ldconfig"
+        requiresPostUn:
+            - "systemd"
+            - "/sbin/ldconfig"
+    lxc-devel:
+        meta.summary: Development files for lxc
+        meta.description: |
+            The lxc-devel package contains header files ,library and templates needed for
+            development of the Linux containers.
+        requires:
+            - "lxc = 4.0.3-%{release}"
+            - "pkgconfig"
+    lxc-help:
+        meta.summary: Documentation and templates for lxc
+        meta.description: This package contains documentation for lxc for creating containers.
+        buildArch: noarch
+env.configureFlags: |
+    --disable-silent-rules
+    --enable-doc
+    --enable-api-docs
+    --disable-rpath
+    --disable-static
+    --disable-apparmor
+    --enable-selinux
+    --enable-seccomp
+    --with-init-script=systemd
+    --disable-werror

@@ -1,0 +1,37 @@
+subpackage.xz-devel.files: |
+    %dir %{_includedir}/lzma
+    %doc %_pkgdocdir/examples*
+    %{_includedir}/lzma/*.h
+    %{_includedir}/lzma.h
+    
+    %{_libdir}/pkgconfig/liblzma.pc
+    %{_libdir}/liblzma.a
+    %{_libdir}/*.so
+    
+    
+subpackage.xz-lzma-compat.files: |
+    %{_bindir}/*lz*
+    
+    
+subpackage.xz-libs.files: |
+    %{_libdir}/lib*.so.5*
+    
+    
+subpackage.xz-help.files: |
+    %{_mandir}/man1/*lz*
+    %{_mandir}/man1/*xz*
+    %{_mandir}/de/man1/*lz*
+    %{_mandir}/de/man1/*xz*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %doc %{_pkgdocdir}
+    %license %{_pkgdocdir}/COPYING*
+    %{_bindir}/*xz*
+    %{profiledir}/*
+    
+    %exclude %_pkgdocdir/examples*
+    %exclude %{_libdir}/*.la
+    
+    

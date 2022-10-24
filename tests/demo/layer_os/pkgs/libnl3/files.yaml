@@ -1,0 +1,23 @@
+subpackage.libnl3-devel.files: |
+    %{_includedir}/libnl3/netlink/
+    %{_libdir}/*.so
+    %{_libdir}/pkgconfig/*.pc
+    
+    
+subpackage.libnl3-help.files: |
+    %{_mandir}/man8/*
+    
+    
+subpackage.python3-libnl3.files: |
+    %{python3_sitearch}/netlink
+    %{python3_sitearch}/netlink-*.egg-info
+    
+    
+files: |
+    %doc COPYING
+    %{_libdir}/libnl-*.so.*
+    %config(noreplace) %{_sysconfdir}/*
+    %{_libdir}/libnl/
+    %{_bindir}/*
+    
+    

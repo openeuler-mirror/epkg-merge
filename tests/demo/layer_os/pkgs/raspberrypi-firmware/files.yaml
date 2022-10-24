@@ -1,0 +1,8 @@
+files: |
+    %dir %{_lib_path}
+    %dir %{_license_path}
+    %{_lib_path}/*
+    /boot/*
+    %license %{_license_path}
+    
+    

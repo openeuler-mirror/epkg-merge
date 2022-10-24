@@ -1,0 +1,235 @@
+name: lvm2
+meta.summary: Tools for logical volume management
+version: 2.03.16
+release: 1
+epoch: 8
+meta.license: GPLv2+ and LGPLv2.1 and BSD
+meta.homepage: "http://sourceware.org/lvm2"
+source:
+    "0": https://sourceware.org/pub/lvm2/releases/LVM2.2.03.16.tgz
+patchset:
+    "0": 0001-lvm2-set-default-preferred_names.patch
+    "1": 0002-lvm2-default-allow-changes-with-duplicate-pvs.patch
+    "2": 0003-bugfix-lvm2-add-SSD.patch
+    "3": 0004-bugfix-add-timeout-when-fail-to-wait-udev.patch
+    "4": 0005-bugfix-fix-the-code-maybe-lead-to-buffer-over-bound-access.patch
+    "5": 0006-enhancement-modify-default-log-level-to-error-level.patch
+    "6": 0007-enhancement-add-dfx-log.patch
+    "7": 0008-enhancement-syslog-more-when-use-libdevmapper-so.patch
+    "8": 0009-enhancement-log-it-when-disk-slow.patch
+    "9": 0010-bugfix-lvm2-fix-the-reuse-of-va_list.patch
+    "10": 0011-13-dm-disk.rules-check-DM_NAME-before-create-symlink.patch
+    "11": 0012-lvm-code-reduce-cyclomatic-complexity.patch
+    "12": 0013-_vg_read_raw_area-fix-segfault-caused-by-using-null-.patch
+meta.description: lvm2 refers to the userspace toolset that provide logical volume management facilities on linux.
+requires:
+    - "bash >= %{bash_version}"
+    - "module-init-tools"
+    - "device-mapper-persistent-data >= %{persistent_data_version}"
+    - "device-mapper-event = %{?epoch}:%{device_mapper_version}-%{release}"
+requiresPreUn:
+    - "systemd-units >= %{systemd_version}"
+requiresPost:
+    - "systemd-units >= %{systemd_version}, systemd-sysv"
+requiresPostUn:
+    - "systemd-units >= %{systemd_version}"
+buildRequires:
+    - "gcc"
+    - "gcc-c++"
+    - "libselinux-devel >= %{libselinux_version}, libsepol-devel"
+    - "libblkid-devel >= %{util_linux_version}"
+    - "ncurses-devel"
+    - "readline-devel"
+    - "libaio-devel"
+    - "module-init-tools"
+    - "pkgconfig"
+    - "systemd-devel"
+    - "systemd-units"
+    - "python3-devel"
+    - "python3-setuptools"
+    - "python3-dbus"
+    - "python3-pyudev"
+    - "device-mapper-persistent-data >= %{persistent_data_version}"
+    - "device-mapper-event"
+    - "corosynclib-devel >= %{corosync_version} %if %{use_cluster}"
+    - "dlm-devel >= %{dlm_version} %if %{use_cluster} || %{use_lockd_dlm}"
+    - "sanlock-devel >= %{sanlock_version} %if %{use_lockd_sanlock}"
+provides:
+    - "%{name}-libs"
+obsoletes:
+    - "%{name}-libs"
+conflicts:
+    - "dracut < %{dracut_version}"
+recommends:
+    - "%{name}-help = %{epoch}:%{version}-%{release}"
+package:
+    - Version:   %{device_mapper_version}
+    - License:   LGPLv2
+    - URL:       http://sources.redhat.com/dm
+    - Requires:  util-linux >= %{util_linux_version}
+    - Requires:  systemd >= %{systemd_version}
+    - Provides:  device-mapper-libs = %{?epoch}:%{device_mapper_version}-%{release}
+    - Obsoletes: device-mapper-libs
+rpmMacros:
+    - "%global use_cluster 1"
+    - "%global use_cmirror 1"
+    - "%global use_lockd_sanlock 1"
+    - "%global use_lockd_dlm 1"
+    - "%global use_cluster 0 %ifnarch i686"
+    - "%global use_cmirror 0 %ifnarch i686"
+    - "%global use_lockd_dlm 0 %ifnarch i686"
+    - "%global use_lockd_sanlock 0 %ifnarch x86_64 aarch64"
+    - "%global configure_cluster --with-cluster=internal --with-clvmd=corosync %if %{use_cluster}"
+    - "%global configure_cmirror --enable-cmirrord %if %{use_cluster} %if %{use_cmirror}"
+    - "%global configure_cluster --with-cluster=internal --with-clvmd=none %else %if %{use_cluster}"
+    - "%global configure_lockd_dlm --enable-lvmlockd-dlm %if %{use_lockd_dlm}"
+    - "%global configure_lockd_sanlock --enable-lvmlockd-sanlock %if %{use_lockd_sanlock}"
+    - "%global libselinux_version 1.30.19-4"
+    - "%global persistent_data_version 0.7.0-0.1.rc6"
+    - "%global sanlock_version 3.3.0-2"
+    - "%global device_mapper_version 1.02.182"
+    - "%global systemd_version 189-3"
+    - "%global dracut_version 002-18"
+    - "%global util_linux_version 2.24"
+    - "%global bash_version 4.0"
+    - "%global corosync_version 1.99.9-1"
+    - "%global resource_agents_version 3.9.5-12"
+    - "%global dlm_version 4.0.6-2"
+    - "%{?python_provide:%python_provide python3-lvm}"
+
+subpackage:
+    lvm2-devel:
+        meta.summary: lvm2 devel files
+        meta.license: LGPLv2
+        meta.description: This package contains all include files, libraries files needed to develop programs that use lvm2.
+        requires:
+            - "%{name} = %{?epoch}:%{version}-%{release}"
+            - "pkgconfig"
+            - "device-mapper = %{?epoch}:%{device_mapper_version}-%{release}"
+        provides:
+            - "device-mapper-devel = %{?epoch}:%{device_mapper_version}-%{release}"
+            - "device-mapper-event-devel = %{?epoch}:%{device_mapper_version}-%{release}"
+        obsoletes:
+            - "device-mapper-devel"
+            - "device-mapper-event-devel"
+    lvm2-help:
+        meta.summary: Including man files for lvm2
+        meta.description: This contains man files for the using of lvm2.
+        requires:
+            - "man"
+        buildArch: noarch
+    python3-lvm-deprecated:
+        meta.summary: Python 3 api to lvm
+        meta.license: LGPLv2
+        meta.description: Support python 3 to use lvm.
+        requires:
+            - "%{name}-libs = %{?epoch}:%{version}-%{release}"
+        provides:
+            - "python3-lvm = %{?epoch}:%{version}-%{release}"
+            - "%{name}-python3-libs = %{?epoch}:%{version}-%{release}"
+        obsoletes:
+            - "%{name}-python3-libs < %{?epoch}:%{version}-%{release}"
+    lvm2-dbusd:
+        meta.summary: LVM2 D-Bus daemon
+        meta.license: GPLv2
+        meta.description: dbusd is a service which provides a D-Bus API to the logical volume manager.
+        requires:
+            - "lvm2 >= %{?epoch}:%{version}-%{release}"
+            - "dbus"
+            - "python3-dbus"
+            - "python3-pyudev"
+            - "python3-gobject-base"
+        requiresPreUn:
+            - "systemd-units >= %{systemd_version}"
+        requiresPost:
+            - "systemd-units >= %{systemd_version}"
+        requiresPostUn:
+            - "systemd-units >= %{systemd_version}"
+    lvm2-test:
+        meta.summary: Testsuite for lvm2
+        meta.license: LGPLv2 and GPLv2 and BSD-2-Clause
+        meta.description: An extensive functional testsuite for LVM2.
+        provides:
+            - "%{name}-testsuite"
+        obsoletes:
+            - "%{name}-testsuite"
+    device-mapper-event:
+        meta.summary: Handle device-mapper events
+        version: "%{device_mapper_version}"
+        meta.description: |
+            It contains tthe event monitoring daemon for device-mapper devices.  Library plugins
+            can register and carryout actions triggered when particular events occur.
+        requires:
+            - "device-mapper = %{?epoch}:%{device_mapper_version}-%{release}"
+            - "systemd-units"
+        provides:
+            - "device-mapper-event-libs = %{?epoch}:%{device_mapper_version}-%{release}"
+        obsoletes:
+            - "device-mapper-event-libs"
+    lvm2-lockd rpmWhen %if %{use_lockd_dlm} || %{use_lockd_sanlock}:
+        meta.summary: LVM locking daemon 
+        meta.description: LVM commands use lvmlockd to coordinate access to shared storage.
+        requires:
+            - "lvm2 = %{?epoch}:%{version}-%{release} "
+            - "sanlock-lib >= %{sanlock_version}  %if %{use_lockd_sanlock}"
+            - "dlm-lib >= %{dlm_version}  %if %{use_lockd_dlm}"
+        requiresPreUn:
+            - "systemd-units >= %{systemd_version} "
+        requiresPost:
+            - "systemd-units >= %{systemd_version} "
+        requiresPostUn:
+            - "systemd-units >= %{systemd_version} "
+    lvm2-cluster rpmWhen %if %{use_cluster}:
+        meta.summary: cluster LVM daemon tools 
+        meta.license: GPLv2 
+        meta.description: cluster distributes LVM metadata updates  around  a  cluster.
+        requires:
+            - "lvm2 = %{?epoch}:%{version}-%{release} "
+            - "corosync >= %{corosync_version} "
+            - "dlm >= %{dlm_version} "
+            - "resource-agents >= %{resource_agents_version} "
+        requiresPreUn:
+            - "device-mapper >= %{?epoch}:%{device_mapper_version} "
+            - "lvm2 >= 2.02 "
+        provides:
+            - "cluster-standalone "
+        obsoletes:
+            - "cluster-standalone "
+    cmirror rpmWhen %if %{use_cluster} && %{use_cmirror}:
+        meta.summary: cluster mirror log daemon 
+        meta.license: GPLv2 
+        meta.description: cmirror tracks mirror log information in a cluster.
+        requires:
+            - "corosync >= %{corosync_version} "
+            - "device-mapper = %{?epoch}:%{device_mapper_version}-%{release} "
+            - "resource-agents >= %{resource_agents_version} "
+        provides:
+            - "cmirror-standalone "
+        obsoletes:
+            - "cmirror-standalone "
+env.configureFlags: |
+    --with-default-dm-run-dir=/run
+    --with-default-run-dir=/run/lvm
+    --with-default-pid-dir=/run
+    --with-default-locking-dir=/run/lock/lvm
+    --with-usrlibdir=%{_libdir}
+    --enable-fsadm
+    --enable-write_install
+    --with-user=
+    --with-group=
+    --with-device-uid=0
+    --with-device-gid=6
+    --with-device-mode=0660
+    --enable-pkgconfig
+    --enable-applib
+    --enable-cmdlib
+    --enable-dmeventd
+    --enable-blkid_wiping
+    --with-udevdir=%{_prefix}/lib/udev/rules.d
+    --enable-udev_sync
+    --with-thin=internal
+    --with-thin=internal
+    --enable-lvmpolld
+    --enable-dbus-service
+    --enable-notify-dbus
+    --enable-dmfilemapd

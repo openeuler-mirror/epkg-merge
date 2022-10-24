@@ -1,0 +1,28 @@
+name: libfastjson
+meta.summary: JSON-C - A JSON implementation in C
+version: 0.99.9
+release: 2
+meta.license: MIT
+meta.homepage: "https://github.com/rsyslog/libfastjson"
+source:
+    "0": http://download.rsyslog.com/%{name}/%{name}-%{version}.tar.gz
+meta.description: |
+    libfastjson is a fork from json-c, and is currently
+    under development. The aim of this is not to provide
+    a slightly modified clone of json-c. It's aim is to
+    provide: a small library with essential json handling
+    functions, sufficiently good json support (not 100%
+    standards compliant), be very fast in processing.
+buildRequires:
+    - "autoconf automake libtool"
+obsoletes:
+    - "%{name} < %{version}-%{release}"
+subpackage:
+    libfastjson-devel:
+        meta.summary: Development files for libfastjson
+        meta.description: provide development files for libfastjson
+        requires:
+            - "libfastjson = %{version}-%{release}"
+env.configureFlags: |
+    --enable-shared
+    --disable-static

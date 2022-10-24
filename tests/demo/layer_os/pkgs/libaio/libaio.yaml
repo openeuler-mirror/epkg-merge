@@ -1,0 +1,30 @@
+name: libaio
+meta.summary: Linux-native asynchronous I/O access library
+version: 0.3.112
+release: 5
+meta.license: LGPLv2+
+meta.homepage: "https://pagure.io/libaio"
+source:
+    "0": https://releases.pagure.org/libaio/libaio-%{version}.tar.gz
+patchset:
+    "0": 0000-libaio-install-to-destdir-slash-usr.patch
+    "1": 0001-libaio-arm64-ilp32.patch
+    "2": 0002-libaio-makefile-cflags.patch %ifarch aarch64 aarch64_ilp32 x86_64
+    "3": 0003-libaio-fix-for-x32.patch
+    "4": 0004-libaio-makefile-add-D_FORTIFY_SOURCE-flag.patch
+    "5": 0005-Fix-compile-error-that-exec-checking-need-super-priv.patch
+meta.description: |
+    The Linux-native asynchronous I/O facility ("async I/O", or "aio") has a
+    richer API and capability set than the simple POSIX async I/O facility.
+    This library, libaio, provides the Linux-native API for async I/O.
+    The POSIX async I/O facility requires this library in order to provide
+    kernel-accelerated async I/O capabilities, as do applications which
+    require the Linux-native async I/O API.
+buildRequires:
+    - "gcc"
+subpackage:
+    libaio-devel:
+        meta.summary: Files for libaio development
+        meta.description: Files for libaio development
+        requires:
+            - "%{name}%{?_isa} = %{version}-%{release}"

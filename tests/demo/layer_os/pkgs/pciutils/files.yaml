@@ -1,0 +1,24 @@
+subpackage.pciutils-devel.files: |
+    %defattr(0644, root, root, 0755)
+    %{_libdir}/pkgconfig/libpci.pc
+    %{_libdir}/libpci.so
+    %{_includedir}/pci
+    %{_libdir}/libpci.a
+    
+    
+subpackage.pciutils-help.files: |
+    %{_mandir}/man5/*
+    %{_mandir}/man7/*
+    %{_mandir}/man8/*
+    
+    
+subpackage.%{name}.files: |
+    
+files: |
+    %doc README ChangeLog pciutils.lsm COPYING
+    /sbin/lspci
+    /sbin/setpci
+    /sbin/update-pciids
+    /%{_lib}/libpci.so.*
+    
+    

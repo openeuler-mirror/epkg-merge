@@ -1,0 +1,34 @@
+subpackage.binutils-devel.files: |
+    %{_prefix}/include/*
+    %{_libdir}/lib*.a
+    %{_libdir}/libbfd.so
+    %{_libdir}/libopcodes.so
+    
+    
+subpackage.binutils-help.files: |
+    %{_mandir}/man1/*
+    %{_infodir}/as.info.gz
+    %{_infodir}/binutils.info.gz
+    %{_infodir}/gprof.info.gz
+    %{_infodir}/ld.info.gz
+    %{_infodir}/[^b]*info*
+    %{_infodir}/binutils*info*
+    %{_infodir}/bfd*info*
+    
+    
+files: |
+    %doc README
+    %license COPYING3 COPYING COPYING3.LIB COPYING.LIB
+    %{_bindir}/[!l]*
+    %{_bindir}/ld.*
+    %ghost %{_bindir}/ld
+    %{_libdir}/lib*.so
+    %{_libdir}/libctf*
+    %{_libdir}/bfd-plugins/libdep.so
+    %exclude %{_libdir}/libctf.a
+    %exclude %{_libdir}/libctf-nobfd.a
+    %exclude %{_libdir}/libbfd.so
+    %exclude %{_libdir}/libopcodes.so
+    %config(noreplace) /etc/ld.so.conf.d/*
+    
+    

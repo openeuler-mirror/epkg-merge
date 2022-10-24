@@ -1,0 +1,11 @@
+subpackage.less-help.files: |
+    %doc README NEWS INSTALL
+    %{_mandir}/man1/*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license LICENSE COPYING
+    %{_bindir}/less*
+    
+    

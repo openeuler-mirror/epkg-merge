@@ -1,0 +1,14 @@
+subpackage.tzdata-java.files: |
+    %{_datadir}/javazi
+    %{_datadir}/javazi-1.8
+    
+    
+files: |
+    %{_datadir}/zoneinfo
+    %doc README
+    %doc theory.html
+    %doc tz-link.html
+    %doc tz-art.html
+    %license LICENSE
+    
+    

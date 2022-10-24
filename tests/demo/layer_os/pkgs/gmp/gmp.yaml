@@ -1,0 +1,33 @@
+name: gmp
+meta.summary: A GNU multiple precision arithmetic library
+version: 6.2.1
+release: 3
+epoch: 1
+meta.license: LGPLv3 and GPLv2
+meta.homepage: "https://gmplib.org"
+source:
+    "0": https://gmplib.org/download/gmp/gmp-%{version}.tar.bz2
+patchset:
+    "0": 0001-CVE-2021-43618.patch
+meta.description: |
+    GMP is a portable library written in C for arbitrary precision arithmetic
+    on integers, rational numbers, and floating-point numbers. It aims to provide
+    the fastest possible arithmetic for all applications that need higher
+    precision than is directly supported by the basic C types.
+buildRequires:
+    - "autoconf automake libtool gcc gcc-c++ perl-Carp"
+subpackage:
+    gmp-devel:
+        meta.summary: Development library package for GMP.
+        meta.description: Devel package include header files, documentation and libraries for GMP
+        requires:
+            - "%{name}%{?_isa} = %{epoch}:%{version}-%{release}"
+            - "%{name}-c++%{?_isa} = %{epoch}:%{version}-%{release}"
+            - "%{name}-devel = %{epoch}:%{version}-%{release}"
+    gmp-c++:
+        meta.summary: C++ development library package for GMP.
+        meta.description: GMP dependent library for C++ applications.
+        requires:
+            - "%{name}%{?_isa} = %{epoch}:%{version}-%{release}"
+env.configureFlags: |
+    --enable-cxx

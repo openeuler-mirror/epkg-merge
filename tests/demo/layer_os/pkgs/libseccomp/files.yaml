@@ -1,0 +1,20 @@
+subpackage.libseccomp-devel.files: |
+    %{_bindir}/scmp_sys_resolver
+    %{_includedir}/seccomp.h
+    %{_includedir}/seccomp-syscalls.h
+    %{_libdir}/%{name}.a
+    %{_libdir}/%{name}.so
+    %{_libdir}/pkgconfig/%{name}.pc
+    
+    
+subpackage.libseccomp-help.files: |
+    %doc CHANGELOG CONTRIBUTING.md README.md
+    %{_mandir}/man*/*
+    
+    
+files: |
+    %doc CREDITS
+    %license LICENSE
+    %{_libdir}/%{name}.so.*
+    
+    

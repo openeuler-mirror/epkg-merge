@@ -1,0 +1,162 @@
+name: util-linux
+meta.summary: A random collection of Linux utilities
+version: 2.37.2
+release: 5
+meta.license: GPLv2 and GPLv2+ and LGPLv2+ and BSD with advertising and Public Domain
+meta.homepage: "https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git"
+source:
+    "0": https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v%{upstream_major}/%{name}-%{version}.tar.xz
+    "1": util-linux-login.pamd
+    "2": util-linux-remote.pamd
+    "3": util-linux-chsh-chfn.pamd
+    "4": util-linux-60-raw.rules
+    "5": adjtime
+    "6": util-linux-su.pamd
+    "7": util-linux-su-l.pamd
+    "8": util-linux-runuser.pamd
+    "9": util-linux-runuser-l.pamd
+patchset:
+    "0": 2.36-login-lastlog-create.patch
+    "1": Add-check-to-resolve-uname26-version-test-failed.patch
+    "2": SKIPPED-no-root-permissions-test.patch
+    "3": backport-su-bash-completion-offer-usernames-rather-than-files.patch
+    "4": backport-Fix-memory-leaks-in-the-chcpu.patch
+    "5": backport-logger-fix-prio-prefix-doesn-t-use-priority-default.patch
+    "6": backport-vipw-flush-stdout-before-getting-answer.patch
+    "7": backport-login-Restore-tty-size-after-calling-vhangup.patch
+    "8": backport-Forward-value-of-sector_size-instead-of-its-address.patch
+    "9": backport-libfdisk-dereference-of-possibly-NULL-gcc-analyzer.patch
+    "10": backport-libfdisk-check-calloc-return-gcc-analyzer.patch
+    "11": backport-mcookie-fix-infinite-loop-when-use-f.patch
+    "12": backport-sfdisk-write-empty-label-also-when-only-ignored-part.patch
+meta.description: |
+    The util-linux package contains a random collection of files that
+    implements some low-level basic linux utilities.
+requires:
+    - "pam >= 1.1.3-7, /etc/pam.d/system-auth audit-libs >= 1.0.6"
+    - "libblkid = %{version}-%{release} libmount = %{version}-%{release} libsmartcols = %{version}-%{release}"
+    - "libfdisk = %{version}-%{release} libuuid = %{version}-%{release}"
+requiresPost:
+    - "coreutils"
+buildRequires:
+    - "audit-libs-devel >= 1.0.6 gettext-devel libselinux-devel ncurses-devel pam-devel zlib-devel popt-devel"
+    - "libutempter-devel systemd-devel systemd libuser-devel libcap-ng-devel python3-devel gcc"
+provides:
+    - "eject = 2.1.6 rfkill = 0.5"
+    - "util-linux-ng = %{version}-%{release} hardlink = 1:1.3-9"
+    - "/bin/dmesg /bin/kill /bin/more /bin/mount /bin/umount /sbin/blkid"
+    - "/sbin/blockdev /sbin/findfs /sbin/fsck /sbin/nologin"
+obsoletes:
+    - "eject <= 2.1.5 rfkill <= 0.5 util-linux-ng < 2.19 hardlink <= 1:1.3-9"
+conflicts:
+    - "initscripts < 9.79-4 bash-completion < 1:2.1-1 coreutils < 8.20 sysvinit-tools < 2.88-14"
+    - "e2fsprogs < 1.41.8-5 filesystem < 3"
+rpmMacros:
+    - "%define compldir %{_datadir}/bash-completion/completions/"
+    - "%global upstream_major 2.37"
+
+subpackage:
+    libfdisk:
+        meta.summary: Library for fdisk-like programs.
+        meta.license: LGPLv2+
+        meta.description: This package contains the library for fdisk-like programs.
+    libsmartcols:
+        meta.summary: Library for column based text sort engine.
+        meta.license: LGPLv2+
+        meta.description: This package contains the library for column based text sort engine.
+    libmount:
+        meta.summary: Library for device mounting
+        meta.license: LGPLv2+
+        meta.description: This package is the library for device mounting.
+        requires:
+            - "libblkid = %{version}-%{release}"
+            - "libuuid = %{version}-%{release}"
+        conflicts:
+            - "filesystem < 3"
+    libblkid:
+        meta.summary: Library for block device id.
+        meta.license: LGPLv2+
+        meta.description: This package is le library for block device id.
+        requires:
+            - "libuuid = %{version}-%{release}"
+        requiresPost:
+            - "coreutils"
+        conflicts:
+            - "filesystem < 3"
+    uuidd:
+        meta.summary: UUID generation daemon
+        meta.license: GPLv2
+        meta.description: |
+            The uuidd daemon is used by the UUID library to generate universally
+            unique identifiers (UUIDs), especially time-based UUIDs, in a secure
+            and guaranteed-unique fashion, even in the face of large numbers of
+            threads running on different CPUs trying to grab UUIDs.
+        requires:
+            - "libuuid = %{version}-%{release}"
+            - "systemd"
+        requiresPre:
+            - "shadow"
+        requiresPreUn:
+            - "systemd-units"
+        requiresPost:
+            - "systemd-units"
+        filesInput: "%{name}.files"
+    libuuid:
+        meta.summary: Universally unique ID library
+        meta.license: BSD
+        meta.description: This package is the universally unique ID library.
+        conflicts:
+            - "filesystem < 3"
+    util-linux-user:
+        meta.summary: libuser based util-linux utilities
+        meta.license: GPLv2
+        meta.description: chfn and chsh utilities with dependence on libuser
+        requires:
+            - "util-linux = %{version}-%{release}"
+    python3-libmount:
+        meta.summary: Python Package for the libmount library pack
+        meta.license: LGPLv2+
+        meta.description: |
+            This package provides python support for users to use the libmount library
+            to work with mount tables and mount filesystems.
+        requires:
+            - "libmount = %{version}-%{release}"
+    util-linux-devel:
+        meta.summary: Development package for ${name}
+        meta.license: LGPLv2+ and BSD
+        meta.description: |
+            This package contains some library and other necessary files for the
+            development of %{name}.
+        requires:
+            - "%{name} = %{version}-%{release} pkgconfig"
+        provides:
+            - "libfdisk-devel libsmartcols-devel libmount-devel libblkid-devel libuuid-devel"
+        obsoletes:
+            - "libfdisk-devel libsmartcols-devel libmount-devel libblkid-devel libuuid-devel"
+    util-linux-help:
+        meta.summary: Help package for ${name}
+        meta.description: This package contains some doc and man help files for %{name}.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "hardlink-help = 1:1.3-9"
+        obsoletes:
+            - "hardlink-help <= 1:1.3-9"
+        buildArch: noarch
+env.configureFlags: |
+    --with-systemdsystemunitdir=%{_unitdir}
+    --disable-silent-rules
+    --disable-bfs
+    --disable-pg
+    --enable-chfn-chsh
+    --enable-usrdir-path
+    --enable-write
+    --enable-raw
+    --enable-hardlink
+    --with-python=3
+    --with-systemd
+    --with-udev
+    --with-selinux
+    --with-audit
+    --with-utempter
+    --disable-makeinstall-chown

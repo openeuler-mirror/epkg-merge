@@ -1,0 +1,15 @@
+subpackage.libevhtp-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/*.h
+    %{_includedir}/evhtp/*.h
+    %{_includedir}/evhtp/sys/*.h
+    /usr/lib/%{name}.so
+    /usr/lib/pkgconfig/evhtp.pc
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license LICENSE
+    /usr/lib/%{name}.so.*
+    
+    

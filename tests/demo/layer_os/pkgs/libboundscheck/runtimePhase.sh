@@ -1,0 +1,10 @@
+#!/usr/bash
+
+post() {
+
+}
+
+postun() {
+
+}
+

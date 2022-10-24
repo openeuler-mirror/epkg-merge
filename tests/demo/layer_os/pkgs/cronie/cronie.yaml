@@ -1,0 +1,42 @@
+name: cronie
+meta.summary: Standard UNIX daemon crond
+version: 1.6.1
+release: 1
+meta.license: GPLv2+ and ISC
+meta.homepage: "https://github.com/cronie-crond/cronie"
+source:
+    "0": https://github.com/cronie-crond/cronie/releases/download/cronie-%{version}/cronie-%{version}.tar.gz
+patchset:
+    "0": bugfix-cronie-systemd-alias.patch
+meta.description: |
+    Cronie contains the standard UNIX daemon crond that runs specified programs
+    at scheduled times and related tools. It is based on the original cron and
+    has security and configuration enhancements like the ability to use pam and SELinux.
+requires:
+    - "libselinux pam crontabs"
+requiresPreUn:
+    - "systemd"
+requiresPost:
+    - "systemd coreutils sed"
+requiresPostUn:
+    - "systemd"
+buildRequires:
+    - "automake"
+    - "gcc systemd libselinux-devel pam-devel audit-libs-devel"
+provides:
+    - "dailyjobs anacron %{name}-anacron %{name}-noanacron"
+obsoletes:
+    - "%{name}-anacron %{name}-noanacron"
+subpackage:
+    cronie-help:
+        meta.summary: Man pages and other related documents for cronie
+        meta.description: Man pages and other related documents for cronie.
+        buildArch: noarch
+env.configureFlags: |
+    --with-pam
+    --with-selinux
+    --with-audit
+    --with-inotify
+    --enable-anacron
+    --enable-pie
+    --enable-relro

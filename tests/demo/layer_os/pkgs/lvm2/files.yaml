@@ -1,0 +1,126 @@
+subpackage.lvm2-devel.files: |
+    %defattr(444,root,root,-)
+    %{_libdir}/liblvm2cmd.so
+    %{_libdir}/libdevmapper-event-lvm2.so
+    %{_libdir}/libdevmapper.so
+    %{_libdir}/libdevmapper-event.so
+    %{_includedir}/lvm2cmd.h
+    %{_includedir}/libdevmapper.h
+    %{_includedir}/libdevmapper-event.h
+    %{_libdir}/pkgconfig/devmapper.pc
+    %{_libdir}/pkgconfig/devmapper-event.pc
+    
+    
+subpackage.lvm2-help.files: |
+    %{_mandir}/man5/*
+    %{_mandir}/man7/*
+    %{_mandir}/man8/*
+    
+    
+subpackage.lvm2-lockd.files: |
+    %defattr(444,root,root,-)
+    %%attr(555, -, -) %{_sbindir}/lvmlockd
+    %%attr(555, -, -) %{_sbindir}/lvmlockctl
+    %{_unitdir}/lvmlockd.service
+    %{_unitdir}/lvmlocks.service
+    
+subpackage.lvm2-cluster.files: |
+    %defattr(555,root,root,-)
+    %{_sbindir}/clvmd
+    %{_prefix}/lib/systemd/lvm2-cluster-activation
+    %defattr(444,root,root,-)
+    %{_unitdir}/lvm2-clvmd.service
+    %{_unitdir}/lvm2-cluster-activation.service
+    
+subpackage.cmirror %if %{use_cluster} && %{use_cmirror}.files: |
+    %defattr(555,root,root,-)
+    %{_sbindir}/cmirrord
+    %{_unitdir}/lvm2-cmirrord.service
+    
+subpackage.lvm2-dbusd.files: |
+    %defattr(555,root,root,-)
+    %{_sbindir}/lvmdbusd
+    %defattr(444,root,root,-)
+    %{_sysconfdir}/dbus-1/system.d/com.redhat.lvmdbus1.conf
+    %{_datadir}/dbus-1/system-services/com.redhat.lvmdbus1.service
+    %{_unitdir}/lvm2-lvmdbusd.service
+    %{python3_sitelib}/lvmdbusd/*
+    
+    
+subpackage.lvm2-test.files: |
+    %license COPYING COPYING.LIB COPYING.BSD
+    %{_datadir}/lvm2-testsuite/
+    %{_libexecdir}/lvm2-testsuite/
+    %{_bindir}/lvm2-testsuite
+    
+    
+    
+subpackage.device-mapper-event.files: |
+    %license COPYING.LIB
+    %defattr(555,root,root,-)
+    %{_sbindir}/dmeventd
+    %{_libdir}/libdevmapper-event.so.*
+    %defattr(444,root,root,-)
+    %{_unitdir}/dm-event.socket
+    %{_unitdir}/dm-event.service
+    
+    
+files: |
+    
+    %defattr(555,root,root,-)
+    %{_sbindir}/fsadm
+    %{_sbindir}/lvm
+    %{_sbindir}/lvmconfig
+    %{_sbindir}/lvmdump
+    %{_sbindir}/lvmpolld
+    %{_libdir}/liblvm2cmd.so.*
+    %{_libdir}/libdevmapper-event-lvm2.so.*
+    
+    %defattr(444,root,root,-)
+    %{_sbindir}/lvchange
+    %{_sbindir}/lvconvert
+    %{_sbindir}/lvcreate
+    %{_sbindir}/lvdisplay
+    %{_sbindir}/lvextend
+    %{_sbindir}/lvmdiskscan
+    %{_sbindir}/lvmsadc
+    %{_sbindir}/lvmsar
+    %{_sbindir}/lvreduce
+    %{_sbindir}/lvremove
+    %{_sbindir}/lvrename
+    %{_sbindir}/lvresize
+    %{_sbindir}/lvs
+    %{_sbindir}/lvscan
+    %{_sbindir}/pv*
+    %{_sbindir}/vg*
+    %{_sbindir}/lvmdevices
+    %{_sbindir}/lvm_import_vdo
+    
+    %{_prefix}/lib/udev/rules.d/69-dm-lvm.rules
+    %{_prefix}/lib/udev/rules.d/11-dm-lvm.rules
+    
+    %dir %{_sysconfdir}/lvm
+    %ghost %{_sysconfdir}/lvm/cache/.cache
+    %attr(644, -, -) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/lvm.conf
+    %attr(644, -, -) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/lvm/lvmlocal.conf
+    %dir %{_sysconfdir}/lvm/profile
+    %{_sysconfdir}/lvm/profile/*
+    %dir %{_sysconfdir}/lvm/backup
+    %dir %{_sysconfdir}/lvm/cache
+    %dir %{_sysconfdir}/lvm/archive
+    %ghost %dir /run/lock/lvm
+    %ghost %dir /run/lvm
+    %dir %{_libdir}/device-mapper
+    %{_libdir}/device-mapper/*
+    %{_libdir}/libdevmapper-event-lvm2mirror.so
+    %{_libdir}/libdevmapper-event-lvm2snapshot.so
+    %{_libdir}/libdevmapper-event-lvm2raid.so
+    %{_libdir}/libdevmapper-event-lvm2thin.so
+    %{_libdir}/libdevmapper-event-lvm2vdo.so
+    %{_tmpfilesdir}/%{name}.conf
+    %{_unitdir}/blk-availability.service
+    %{_unitdir}/lvm2-monitor.service
+    %{_unitdir}/lvm2-lvmpolld.socket
+    %{_unitdir}/lvm2-lvmpolld.service
+    
+    

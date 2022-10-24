@@ -1,0 +1,58 @@
+name: iproute
+meta.summary: Linux network configuration utilities
+version: 5.15.0
+release: 5
+meta.license: GPLv2+ and Public Domain
+meta.homepage: "https://kernel.org/pub/linux/utils/net/iproute2/"
+source:
+    "0": https://mirrors.edge.kernel.org/pub/linux/utils/net/iproute2/iproute2-%{version}.tar.xz
+patchset:
+    "0": bugfix-iproute2-3.10.0-fix-maddr-show.patch
+    "1": bugfix-iproute2-change-proc-to-ipnetnsproc-which-is-private.patch
+    "2": backport-devlink-fix-devlink-health-dump-command-without-arg.patch
+    "3": backport-ip-Fix-size_columns-for-very-large-values.patch
+    "4": backport-ip-Fix-size_columns-invocation-that-passes-a-32-bit-.patch
+    "5": backport-l2tp-fix-typo-in-AF_INET6-checksum-JSON-print.patch
+    "6": backport-libnetlink-fix-socket-leak-in-rtnl_open_byproto.patch
+    "7": backport-lnstat-fix-buffer-overflow-in-header-output.patch
+    "8": backport-lnstat-fix-strdup-leak-in-w-argument-parsing.patch
+    "9": backport-q_cake-allow-changing-to-diffserv3.patch
+    "10": backport-tc-em_u32-fix-offset-parsing.patch
+    "11": backport-tc-flower-Fix-buffer-overflow-on-large-labels.patch
+    "12": backport-tc_util-Fix-parsing-action-control-with-space-and-sl.patch
+    "13": backport-tipc-fix-keylen-check.patch
+    "14": backport-bridge-Fix-memory-leak-when-doing-fdb-get.patch
+    "15": backport-ip-address-Fix-memory-leak-when-specifying-device.patch
+    "16": backport-ip-neigh-Fix-memory-leak-when-doing-get.patch
+    "17": backport-mptcp-Fix-memory-leak-when-doing-endpoint-show.patch
+    "18": backport-mptcp-Fix-memory-leak-when-getting-limits.patch
+meta.description: |
+    Iproute2 is a collection of user-space utilities to set up networking
+    under Linux from the command-line. It can inspect and configure,
+    among other things: interface paramters, IP addresses, routing,
+    tunnels, bridges, packet transformations (IPsec, etc.), and Quality
+    of Service.
+requires:
+    - "libbpf psmisc"
+buildRequires:
+    - "gcc bison elfutils-libelf-devel flex iptables-devel"
+    - "libmnl-devel libselinux-devel pkgconfig libbpf-devel"
+provides:
+    - "/sbin/ip iproute-tc tc"
+obsoletes:
+    - "iproute-tc"
+subpackage:
+    iproute-devel:
+        meta.summary: Header files for iprout2
+        meta.license: GPLv2+
+        meta.description: Header files for iprout2
+        provides:
+            - "iproute-static = %{version}-%{release}"
+        obsoletes:
+            - "iproute-static < %{version}-%{release}"
+    iproute-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

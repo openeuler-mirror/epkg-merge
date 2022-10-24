@@ -1,0 +1,39 @@
+name: bzip2
+meta.summary: A high-quality data compressor
+version: 1.0.8
+release: 5
+meta.license: BSD
+meta.homepage: "https://www.sourceware.org/bzip2/"
+source:
+    "0": https://sourceware.org/pub/bzip2/%{name}-%{version}.tar.gz
+    "1": bzip2.pc
+patchset:
+    "0": 0001-add-compile-option.patch
+    "1": 0002-CVE-2019-12900.patch
+meta.description: |
+    bzip2 is a freely available, patent free, high-quality data compressor.
+    It typically compresses files to within 10% to 15% of the best available
+    techniques (the PPM family of statistical compressors), whilst being
+    around twice as fast at compression and six times faster at decompression.
+buildRequires:
+    - "gcc"
+provides:
+    - "bzip2-libs"
+obsoletes:
+    - "bzip2-libs"
+subpackage:
+    bzip2-devel:
+        meta.summary: header files for bzip2
+        meta.description: header files for bzip2
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "bzip2-static"
+        obsoletes:
+            - "bzip2-static"
+    bzip2-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

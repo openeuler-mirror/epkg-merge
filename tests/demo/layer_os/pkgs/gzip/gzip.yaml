@@ -1,0 +1,37 @@
+name: gzip
+meta.summary: A data compression utility
+version: 1.12
+release: 3
+meta.license: GPLv3
+meta.homepage: "https://www.gnu.org/software/gzip"
+source:
+    "0": https://ftp.gnu.org/gnu/gzip/gzip-%{version}.tar.xz
+    "1": colorzgrep.csh
+    "2": colorzgrep.sh
+patchset:
+    "0": backport-gzip-detect-invalid-input.patch
+    "1": backport-gzip-test-invalid-input-bug.patch
+    "2": fix-verbose-disable.patch
+    "3": performance-neoncrc32-and-prfm.patch
+meta.description: |
+    gzip is a single-file/stream lossless data compression
+    utility, where the resulting compressed file generally
+    has the suffix .gz.
+requires:
+    - "coreutils"
+buildRequires:
+    - "gcc texinfo less autoconf automake"
+provides:
+    - "/bin/gunzip"
+    - "/bin/gzip"
+    - "/bin/zcat"
+    - "bundled(gnulib)"
+conflicts:
+    - "filesystem < 3"
+subpackage:
+    gzip-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch

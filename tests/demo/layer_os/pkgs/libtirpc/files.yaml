@@ -1,0 +1,23 @@
+subpackage.libtirpc-devel.files: |
+    %defattr(-,root,root)
+    %{!?_licensedir:%global license %%doc}
+    /%{_lib}/*.a
+    /%{_lib}/*.so
+    %{_libdir}/pkgconfig/*.pc
+    %{_includedir}/tirpc/*
+    
+    
+subpackage.libtirpc-help.files: |
+    %defattr(-,root,root)
+    %doc ChangeLog NEWS README
+    %{_mandir}/*/*
+    
+    
+files: |
+    %doc AUTHORS
+    %license COPYING
+    /%{_lib}/*.so.*
+    %config(noreplace)%{_sysconfdir}/netconfig
+    %config(noreplace)%{_sysconfdir}/bindresvport.blacklist
+    
+    

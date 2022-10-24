@@ -1,0 +1,90 @@
+subpackage.python3-policycoreutils.files rpmWhen %if %{with sandbox}: |
+    %{python3_sitelib}/__pycache__
+    %{python3_sitelib}/sepolgen
+    %dir %{python3_sitelib}/sepolicy
+    %{python3_sitelib}/sepolicy/templates
+    %dir %{python3_sitelib}/sepolicy/help
+    %{python3_sitelib}/sepolicy/help/*
+    %{python3_sitelib}/sepolicy/__init__.py*
+    %{python3_sitelib}/sepolicy/__pycache__
+    %{python3_sitelib}/sepolicy/manpage.py*
+    %{python3_sitelib}/sepolicy/network.py*
+    %{python3_sitelib}/sepolicy/transition.py*
+    %{python3_sitelib}/sepolicy/sedbus.py*
+    %{python3_sitelib}/sepolicy*.egg-info
+    %{python3_sitelib}/sepolicy/booleans.py*
+    %{python3_sitelib}/sepolicy/communicate.py*
+    %{python3_sitelib}/sepolicy/generate.py*
+    %{python3_sitelib}/sepolicy/interface.py*
+    %{python3_sitelib}/seobject.py*
+    
+    
+subpackage.policycoreutils-python-utils.files rpmWhen %if %{with sandbox}: |
+    %{_bindir}/audit2allow
+    %{_bindir}/audit2why
+    %{_sbindir}/semanage
+    %{_bindir}/chcat
+    %if %{with sandbox}
+    %{_bindir}/sandbox
+    %endif
+    %{_sysconfdir}/dbus-1/system.d/org.selinux.conf
+    %{_datadir}/bash-completion/completions/semanage
+    
+    
+subpackage.policycoreutils-dbus.files rpmWhen %if %{with sandbox}: |
+    %{_datadir}/system-config-selinux/selinux_server.py
+    %{_datadir}/polkit-1/actions/org.selinux.policy
+    %{_sysconfdir}/dbus-1/system.d/org.selinux.conf
+    %{_datadir}/dbus-1/system-services/org.selinux.service
+    %dir %{_datadir}/system-config-selinux/__pycache__
+    %{_datadir}/system-config-selinux/__pycache__/selinux_server.*
+    
+    
+subpackage.policycoreutils-devel.files rpmWhen %if %{with sandbox}: |
+    %{_bindir}/sepolicy
+    %{_bindir}/sepolgen
+    %{_bindir}/sepolgen-*
+    %{_usr}/share/bash-completion/completions/sepolicy
+    %dir  /var/lib/sepolgen
+    /var/lib/sepolgen/perm_map
+    
+    
+subpackage.policycoreutils-sandbox.files: |
+    %config(noreplace) %{_sysconfdir}/sysconfig/sandbox
+    %{_datadir}/sandbox/{start,sandboxX.sh}
+    %caps(cap_setpcap,cap_setuid,cap_fowner,cap_dac_override,cap_sys_admin,cap_sys_nice=pe) %{_sbindir}/seunshare
+    
+subpackage.policycoreutils-help.files rpmWhen %if %{with sandbox}: |
+    %{_mandir}/*
+    
+    
+files: |
+    %license policycoreutils/COPYING
+    %doc %{_usr}/share/doc/%{name}
+    %config(noreplace) %{_sysconfdir}/sestatus.conf
+    %config(noreplace) %{_sysconfdir}/pam.d/newrole
+    %config(noreplace) %{_sysconfdir}/selinux/restorecond.conf
+    %config(noreplace) %{_sysconfdir}/selinux/restorecond_user.conf
+    %{_sbindir}/*
+    %exclude %{_sbindir}/{seunshare,semanage}
+    %{_bindir}/secon
+    %{_bindir}/semodule_expand
+    %{_bindir}/semodule_link
+    %{_bindir}/semodule_package
+    %{_bindir}/semodule_unpackage
+    %{_bindir}/sestatus
+    %{_libexecdir}/selinux/hll
+    %dir %{_datadir}/bash-completion
+    %{_datadir}/bash-completion/completions/setsebool
+    %{_unitdir}/restorecond.service
+    %{_userunitdir}/restorecond_user.service
+    %{_sysconfdir}/xdg/autostart/restorecond.desktop
+    %{_datadir}/dbus-1/services/org.selinux.Restorecond.service
+    %attr(0755,root,root) %caps(cap_dac_read_search,cap_setpcap,cap_audit_write,cap_sys_admin,cap_fowner,cap_chown,cap_dac_override=pe) %{_bindir}/newrole
+    %{_libexecdir}/selinux/selinux-autorelabel
+    %{_unitdir}/selinux-autorelabel-mark.service
+    %{_unitdir}/selinux-autorelabel.service
+    %{_unitdir}/selinux-autorelabel.target
+    %{_systemdgeneratordir}/selinux-autorelabel-generator.sh
+    
+    

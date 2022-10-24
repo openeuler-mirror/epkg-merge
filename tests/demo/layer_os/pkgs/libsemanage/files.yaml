@@ -1,0 +1,32 @@
+subpackage.libsemanage-devel.files: |
+    %{_libdir}/libsemanage.a
+    %{_libdir}/libsemanage.so
+    %{_libdir}/pkgconfig/libsemanage.pc
+    %dir %{_includedir}/semanage
+    %{_includedir}/semanage/*.h
+    
+    
+subpackage.python3-libsemanage.files: |
+    %{python3_sitearch}/*.so
+    %{python3_sitearch}/semanage.py*
+    %{python3_sitearch}/__pycache__/semanage*
+    %{_libexecdir}/selinux/semanage_migrate_store
+    
+    
+subpackage.libsemanage-help.files: |
+    %{_mandir}/man3/*
+    %{_mandir}/man5/*
+    %{_mandir}/ru/man5/*
+    
+    
+    
+files: |
+    %license COPYING
+    %dir %{_sysconfdir}/selinux
+    %config(noreplace) %{_sysconfdir}/selinux/semanage.conf
+    %{_libdir}/libsemanage.so.*
+    %dir %{_libexecdir}/selinux
+    %dir %{_sharedstatedir}/selinux
+    %dir %{_sharedstatedir}/selinux/tmp
+    
+    

@@ -1,0 +1,16 @@
+subpackage.ethtool-help.files: |
+    %defattr(-,root,root)
+    %doc ChangeLog* NEWS README
+    %{_mandir}/man8/%{name}.8*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %doc AUTHORS
+    %license COPYING LICENSE
+    %{_sbindir}/%{name}
+    %dir %{_datadir}/bash-completion/
+    %dir %{_datadir}/bash-completion/completions/
+    %{_datadir}/bash-completion/completions/ethtool
+    
+    
