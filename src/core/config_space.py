@@ -83,7 +83,7 @@ class ConfigSpace(dict):
         key_info = transform_key_default(key, value, fspath)
         for k, v in key_info.items():
             if ":" in k:
-                self[k] = v
+                self[k] = v["value"]
                 continue
             self.setdefault(f"{k}:values", []).append(v)
         return list(key_info.keys())

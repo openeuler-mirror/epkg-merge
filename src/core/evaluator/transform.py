@@ -118,7 +118,7 @@ def transform_key_with_use_configure(key_dict: dict) -> dict:
         res[real_key] = value
 
         config_space_key = prefix + ".use." + use_config_flag + ":default"
-        res[config_space_key] = flag
+        res[config_space_key] = {"value": flag}
 
     return res
 
