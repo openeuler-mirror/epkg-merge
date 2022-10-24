@@ -1,0 +1,80 @@
+buildRequires:
+- acl gcc automake libacl-devel libselinux-devel popt-devel
+files: |
+  %defattr(-,root,root)
+  %license COPYING
+  %dir %{_sysconfdir}/cron.daily
+  %config(noreplace) %{_sysconfdir}/cron.daily/logrotate
+  %config(noreplace) %{_sysconfdir}/logrotate.conf
+  %dir %{_sysconfdir}/logrotate.d
+  %config(noreplace) %{_sysconfdir}/logrotate.d/*tmp
+  %{_sbindir}/logrotate
+  %dir %{_localstatedir}/lib/logrotate
+  %ghost %verify(not size md5 mtime) %attr(0644, root, root) %{_localstatedir}/lib/logrotate/logrotate.status
+meta.description: |
+  The logrotate utility is designed to simplify the administration of
+  log files on a system which generates a lot of log files.  Logrotate
+  allows for the automatic rotation compression, removal and mailing of
+  log files.logrotate  Logrotate can be set to handle a log file daily, weekly,
+  monthly or when the log file gets to a certain size.
+meta.homepage: https://github.com/logrotate/logrotate
+meta.license: GPLv2+
+meta.summary: simplify the administration of log files
+name: logrotate
+patchset:
+  '0': 0001-logrotate-3.20.1-lock-state-msg.patch
+phase.build: |+
+  mkdir build && cd build
+  %configure --with-state-file-path=%{_localstatedir}/lib/logrotate/logrotate.status \
+
+  %make_build V=1
+
+phase.check: |+
+  %make_build -C build check
+
+phase.install: |+
+  %make_install -C build
+
+  mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d
+  mkdir -p %{buildroot}%{_sysconfdir}/cron.daily
+  mkdir -p %{buildroot}%{_localstatedir}/lib/logrotate
+
+  install -p -m 644 examples/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.conf
+  install -p -m 644 examples/*tmp %{buildroot}%{_sysconfdir}/logrotate.d/
+  install -p -m 755 examples/logrotate.cron %{buildroot}%{_sysconfdir}/cron.daily/logrotate
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 1
+requires:
+- coreutils
+rpmMacros:
+- '%global _configure ../configure'
+runtimePhase.post: |2+
+
+runtimePhase.postun: |2+
+
+runtimePhase.pre: |+
+  if [ ! -d %{_localstatedir}/lib/logrotate/ -a -f %{_localstatedir}/lib/logrotate.status ]; then
+  mkdir -p %{_localstatedir}/lib/logrotate
+  cp -a %{_localstatedir}/lib/logrotate.status %{_localstatedir}/lib/logrotate
+  fi
+
+runtimePhase.preun: |2+
+
+source:
+  '0': https://github.com/logrotate/logrotate/releases/download/%{version}/logrotate-%{version}.tar.xz
+subpackage:
+  logrotate-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc ChangeLog.md
+      %{_mandir}/man8/logrotate.8*
+      %{_mandir}/man5/logrotate.conf.5*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 3.20.1

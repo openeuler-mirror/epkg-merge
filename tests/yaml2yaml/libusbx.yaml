@@ -1,0 +1,60 @@
+buildRequires:
+- systemd-devel doxygen libtool
+files: |
+  %doc AUTHORS README ChangeLog
+  %license COPYING
+  %{_libdir}/*.so.*
+  %exclude %{_libdir}/*.la
+meta.description: |
+  libusb is a library for USB device access from Linux, macOS, Windows, OpenBSD/NetBSD and Haiku userspace. It is written in C (Haiku backend in C++) and licensed under the GNU Lesser General Public License version 2.1 or, at your option, any later version (see COPYING).
+
+  libusb is abstracted internally in such a way that it can hopefully be ported to other operating systems. Please see the PORTING file for more information.
+meta.homepage: http://libusb.info
+meta.license: LGPLv2+
+meta.summary: Library for accessing USB devices
+name: libusbx
+phase.build: |+
+  mkdir -p m4
+  autoreconf -ivf
+  %configure --disable-static \
+  --enable-examples-build \
+
+  %make_build
+  make docs -C doc
+
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -n %{source}-%{version} -p1
+
+release: 2
+rpmMacros:
+- '%global source  libusb'
+source:
+  '0': https://github.com/libusb/libusb/releases/download/v1.0.24/libusb-1.0.24.tar.bz2
+subpackage:
+  libusbx-devel:
+    files: |
+      %doc examples/*.c
+      %{_includedir}/libusb-1.0
+      %{_libdir}/*.so
+      %{_libdir}/pkgconfig/libusb-1.0.pc
+    meta.description: The %{name}-devel package contains libraries and header files.
+    meta.summary: '%{name} libs and docs files for development'
+    obsoletes:
+    - libusb1-devel <= 1.0.9
+    - libusb1-devel-doc <= 1.0.22-1
+    - libusbx-devel-doc
+    provides:
+    - libusb1-devel = %{version}-%{release}
+    - libusb1-devel-doc = %{version}-%{release}
+    - libusbx-devel-doc
+    requires:
+    - '%{name}%{?_isa} = %{version}-%{release}'
+version: 1.0.24

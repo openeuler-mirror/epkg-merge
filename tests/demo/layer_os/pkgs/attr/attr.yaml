@@ -45,7 +45,7 @@ subpackage:
         meta.description: This contains man files for the using of attr
         requires:
             - "man"
-    %{name}:
+    "%{name}":
         filesInput: "%{name}.lang"
 env.configureFlags: |
     --disable-silent-rules

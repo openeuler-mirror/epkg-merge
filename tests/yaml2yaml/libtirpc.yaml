@@ -1,0 +1,65 @@
+buildRequires:
+- automake autoconf libtool pkgconfig krb5-devel
+files: |
+  %doc AUTHORS
+  %license COPYING
+  /%{_lib}/*.so.*
+  %config(noreplace)%{_sysconfdir}/netconfig
+  %config(noreplace)%{_sysconfdir}/bindresvport.blacklist
+meta.description: Libtirpc is a Transport-Independent RPC library for Linux
+meta.homepage: http://git.linux-nfs.org/?p=steved/libtirpc.git;a=summary
+meta.license: SISSL and BSD
+meta.summary: Transport-independent RPC library
+name: libtirpc
+patchset:
+  '0': 0001-update-libtirpc-to-enable-tcp-port-listening.patch
+  '1': CVE-2021-46828.patch
+phase.build: |+
+  sh autogen.sh
+  autoreconf -fisv
+  %configure
+  %make_build
+
+phase.install: |+
+  %make_install libdir=/%{_lib} pkgconfigdir=%{_libdir}/pkgconfig
+  %delete_la
+
+  mv %{buildroot}%{_mandir}/man3 %{buildroot}%{_mandir}/man3t
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 2
+source:
+  '0': http://downloads.sourceforge.net/libtirpc/%{name}-%{version}.tar.bz2
+subpackage:
+  libtirpc-devel:
+    files: |
+      %defattr(-,root,root)
+      %{!?_licensedir:%global license None
+      /%{_lib}/*.a
+      /%{_lib}/*.so
+      %{_libdir}/pkgconfig/*.pc
+      %{_includedir}/tirpc/*
+    meta.description: The %{name}-devel package contains development files for %{name}.
+    meta.summary: Development files for the %{name}
+    requires:
+    - '%{name} = %{version}-%{release}'
+    - pkgconfig man-db
+    runtimePhase.post: |2+
+
+    runtimePhase.postun: |2+
+
+  libtirpc-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc ChangeLog NEWS README
+      %{_mandir}/*/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 1.3.2

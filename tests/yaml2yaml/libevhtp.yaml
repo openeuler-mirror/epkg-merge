@@ -1,0 +1,63 @@
+buildRequires:
+- git gcc-c++ cmake libevent-devel
+files: |
+  %defattr(-,root,root)
+  %license LICENSE
+  /usr/lib/%{name}.so.*
+meta.description: |
+  Libevent based HTTP API.Libevent's http interface was created as a JIT server, never meant
+  to be a full-fledged HTTP service. This library attempts to improve on that with the following
+  features: + design as a fully functional HTTP server + HTTP parser able to process data with a
+  low memory footprint + use of regular expressions for routing + out-of-the box HTTPS server
+  This package contains the runtime library.
+meta.homepage: https://github.com
+meta.license: BSD-3-Clause
+meta.summary: Libevent based HTTP API.
+name: libevhtp
+patchset:
+  '0': 0001-decrease-numbers-of-fd-for-shared-pipe-mode.patch
+  '1': 0002-evhtp-enable-dynamic-thread-pool.patch
+  '2': 0003-close-open-ssl.-we-do-NOT-use-it-in-lcrd.patch
+  '3': 0004-Use-shared-library-instead-static-one.patch
+  '4': 0005-libevhtp-add-securce-compile-options.patch
+phase.build: |+
+  mkdir -p build
+  cd build
+  %cmake -DEVHTP_BUILD_SHARED=ON -DEVHTP_DISABLE_SSL=ON -DLIB_INSTALL_DIR=lib ..
+  %make_build
+
+phase.install: |+
+  rm -rf %{buildroot}
+  cd build
+  %make_install
+
+  %delete_la_and_a
+  find %{buildroot} -name '*.cmake' -exec rm -f {} ';'
+  find %{buildroot} -name '*.so.*' -exec strip {} ';'
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 5
+rpmMacros:
+- '%global debug_package %{nil}'
+source:
+  '0': https://github.com/criticalstack/libevhtp/archive/1.2.18.tar.gz
+subpackage:
+  libevhtp-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/*.h
+      %{_includedir}/evhtp/*.h
+      %{_includedir}/evhtp/sys/*.h
+      /usr/lib/%{name}.so
+      /usr/lib/pkgconfig/evhtp.pc
+    meta.description: |
+      %{name}-devel contains the header files for developing
+      applications that want to make use of %{name}.
+    meta.summary: Headers for developing programs that will use %{name}
+    requires:
+    - '%{name} = %{version}-%{release}'
+version: 1.2.18

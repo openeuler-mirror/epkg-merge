@@ -1,0 +1,190 @@
+buildRequires:
+- systemd-units git libtool graphviz docbook2X doxygen chrpath
+- pkgconfig(libseccomp)
+- libcap libcap-devel libselinux-devel yajl yajl-devel
+- pkgconfig(bash-completion)
+files: |
+  %defattr(-,root,root)
+  %{_bindir}/%{name}-*
+  %{_datadir}/%{name}/%{name}.functions
+  %dir %{_datadir}/bash-completion
+  %dir %{_datadir}/bash-completion/completions
+  %{_datadir}/bash-completion/completions/lxc
+meta.description: |
+  Containers are insulated areas inside a system, which have their own namespace
+  for filesystem, network, PID, IPC, CPU and memory allocation and which can be
+  created using the Control Group and Namespace features included in the Linux
+  kernel.
+
+  This package provides the lxc-* tools and libraries for running lxc
+  applications, which can be used to start a single daemon in a container, or to
+  boot an entire "containerized" system, and to manage and debug your containers.
+meta.homepage: https://github.com/lxc/lxc
+meta.license: LGPLv2+ and GPLv2 and GPLv3
+meta.summary: Linux Containers userspace tools
+name: lxc
+patchset:
+  '0': 0001-refactor-patch-code-of-utils-commands-and-so-on.patch
+  '1': 0002-refactor-patch-code-of-isulad-for-conf-exec-attach.patch
+  '10': 0011-drop-security_context_t.patch
+  '11': 0012-only-set-user-or-image-set-non-empty-HOME.patch
+  '12': 0013-return-fail-if-no-args-or-no-rootfs-path-found.patch
+  '13': 0014-fix-tools-using-option-give-error-message.patch
+  '14': 0015-fix-do-mask-pathes-after-parent-mounted.patch
+  '15': 0016-skip-kill-cgroup-processes-if-no-hierarchies.patch
+  '2': 0003-refactor-patch-code-of-isulad-for-selinux-attach.patch
+  '3': 0004-refactor-patch-code-of-lxccontianer-and-so-on.patch
+  '4': 0005-refactor-patch-code-of-attach-and-seccomp.patch
+  '5': 0006-refactor-patch-about-namespace-log-terminal.patch
+  '6': 0007-refactor-patches-on-terminal.c-start.c-and-so-on.patch
+  '7': 0008-refactor-patch-code-of-json.patch
+  '8': 0009-fix-HOME-env-of-container-unset-error.patch
+  '9': 0010-check-yajl-only-when-have-isulad.patch
+phase.build: |+
+  %configure --disable-silent-rules \
+  --enable-doc \
+  --enable-api-docs \
+  --disable-rpath \
+  --disable-static \
+  --disable-apparmor \
+  --enable-selinux \
+  --enable-seccomp \
+  --with-init-script=systemd \
+  --disable-werror \
+   --docdir=%{_pkgdocdir}
+
+  %{make_build}
+
+phase.check: |+
+  make check
+
+phase.install: |
+  %{make_install}
+  mkdir -p %{buildroot}%{_sharedstatedir}/%{name}
+  mkdir -p %{buildroot}%{_datadir}/%{name}/__pycache__
+  touch %{buildroot}%{_datadir}/%{name}/__pycache__/%{name}
+
+  for file in $(find %{buildroot}/usr/bin/lxc-* -type f -exec file {} ';' | grep "\<ELF\>" | grep -vE "*\.static" | awk -F ':' '{print $1}')
+  do
+  chrpath -d ${file}
+  done
+
+  for file in $(find %{buildroot}/usr/sbin/* -type f -exec file {} ';' | grep "\<ELF\>" | grep -vE "*\.static" | awk -F ':' '{print $1}')
+  do
+  chrpath -d ${file}
+  done
+
+  for file in $(find %{buildroot}/usr/libexec/lxc/lxc-* -type f -exec file {} ';' | grep "\<ELF\>" | grep -vE "*\.static" | awk -F ':' '{print $1}')
+  do
+  chrpath -d ${file}
+  done
+
+  chrpath -d %{buildroot}/usr/lib64/liblxc.so
+  chmod +x %{buildroot}/usr/lib64/liblxc.so
+  mkdir -p %{buildroot}%{_pkgdocdir}/api
+  cp -a AUTHORS README %{buildroot}%{_pkgdocdir}
+  cp -a doc/api/html/* %{buildroot}%{_pkgdocdir}/api/
+
+  mkdir -p %{buildroot}%{_localstatedir}/cache/%{name}
+
+  if [ ! -d %{buildroot}%{_sysconfdir}/sysconfig ]
+  then
+  mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
+  touch %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+  fi
+
+  rm -rf %{buildroot}%{_libdir}/liblxc.la
+  rm -rf %{buildroot}%{_sbindir}/init.%{name}.static
+  rm -rf %{buildroot}%{_sysconfdir}/default/%{name}
+phase.prep: |+
+  %autosetup -n lxc-4.0.3 -Sgit -p1
+
+release: '%{_release}'
+requires:
+- lxc-libs = 4.0.3-%{release}
+rpmMacros:
+- '%global _release 2022101701'
+- '%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/lxc-4.0.3}'
+runtimePhase.post: |2+
+
+runtimePhase.postun: |2+
+
+runtimePhase.preun: |2+
+
+source:
+  '0': https://linuxcontainers.org/downloads/lxc/lxc-4.0.3.tar.gz
+subpackage:
+  lxc-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/%{name}/*
+      %{_libdir}/pkgconfig/%{name}.pc
+      %dir %{_datadir}/%{name}
+      %{_datadir}/%{name}/hooks
+      %{_datadir}/%{name}/lxc-patch.py*
+      %{_datadir}/%{name}/selinux
+      %dir %{_datadir}/%{name}/templates
+      %{_datadir}/%{name}/templates/lxc-*
+      %dir %{_datadir}/%{name}/config
+      %{_datadir}/%{name}/config/*
+      %dir %{_datadir}/%{name}/__pycache__
+      %{_datadir}/%{name}/__pycache__/*
+    meta.description: |
+      The lxc-devel package contains header files ,library and templates needed for
+      development of the Linux containers.
+    meta.summary: Development files for lxc
+    requires:
+    - lxc = 4.0.3-%{release}
+    - pkgconfig
+  lxc-help:
+    buildArch: noarch
+    files: |
+      %dir %{_pkgdocdir}
+      %{_pkgdocdir}/*
+      %{_mandir}/man1/%{name}*
+      %{_mandir}/*/man1/%{name}*
+      %{_mandir}/man5/%{name}*
+      %{_mandir}/man7/%{name}*
+      %{_mandir}/*/man5/%{name}*
+      %{_mandir}/*/man7/%{name}*
+    meta.description: This package contains documentation for lxc for creating containers.
+    meta.summary: Documentation and templates for lxc
+  lxc-libs:
+    files: |
+      %defattr(-,root,root)
+      %{_libdir}/liblxc.so
+      %{_libdir}/liblxc.so.*
+      %{_libdir}/%{name}
+      %{_libexecdir}/%{name}
+      %{_sbindir}/init.%{name}
+      %{_sharedstatedir}/%{name}
+      %dir %{_sysconfdir}/%{name}
+      %config(noreplace) %{_sysconfdir}/%{name}/default.conf
+      %config(noreplace) %{_sysconfdir}/lxc/*
+      %config(noreplace) %{_sysconfdir}/sysconfig/*
+
+      %dir %{_pkgdocdir}
+      %{_pkgdocdir}/AUTHORS
+      %{_pkgdocdir}/README
+      %license COPYING
+      %{_unitdir}/%{name}.service
+      %{_unitdir}/%{name}@.service
+      %{_unitdir}/%{name}-net.service
+      %dir %{_localstatedir}/cache/%{name}
+    meta.description: |
+      Linux Resource Containers provide process and resource isolation without the
+      overhead of full virtualization.
+
+      The %{name}-libs package contains libraries for running %{name} applications.
+    meta.summary: Runtime library files for %{name}
+    requires:
+    - rsync libcap libseccomp libselinux
+    requiresPost:
+    - systemd
+    - /sbin/ldconfig
+    requiresPostUn:
+    - systemd
+    - /sbin/ldconfig
+    requiresPreUn:
+    - systemd
+version: 4.0.3

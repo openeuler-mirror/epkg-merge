@@ -1,0 +1,37 @@
+buildRequires:
+- libselinux-devel gettext ncurses-devel autoconf automake gcc
+files: |
+  %{_sbindir}/fuser
+  %{_bindir}/*
+  %{_mandir}/man1/*
+  %license COPYING
+  %doc AUTHORS ChangeLog README
+filesInput: '%{name}.lang'
+meta.description: |
+  This PSmisc package is a set of some small useful utilities that use the proc
+  filesystem. We're not about changing the world, but providing the system
+  administrator with some help in common tasks.
+meta.homepage: https://gitlab.com/psmisc/psmisc
+meta.license: GPLv2+
+meta.summary: Utilities for managing processes on your system
+name: psmisc
+patchset:
+  '0': backport-patch-fix-checking-truncated-process-names.patch
+phase.build: |+
+  %configure --prefix=%{_prefix} --enable-selinux \
+
+  %make_build
+
+phase.install: |+
+  %make_install
+  mkdir -p $RPM_BUILD_ROOT%{_sbindir}
+  mv $RPM_BUILD_ROOT%{_bindir}/fuser $RPM_BUILD_ROOT%{_sbindir}
+  %find_lang %name --all-name --with-man
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 2
+source:
+  '0': https://sourceforge.net/projects/%{name}/files/%{name}/%{name}-%{version}.tar.xz
+version: 23.4

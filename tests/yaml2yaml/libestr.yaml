@@ -1,0 +1,49 @@
+buildRequires:
+- gcc
+files: |
+  %license COPYING
+  %doc README AUTHORS ChangeLog
+  %{_libdir}/lib*.so.*
+meta.description: |
+  libestr is a library for some string essentials. This package compiles the string handling essentials library
+  used by the Rsyslog daemon.
+meta.homepage: http://libestr.adiscon.com/
+meta.license: LGPLv2+
+meta.summary: String handling essentials library
+name: libestr
+phase.build: |+
+  %configure --disable-static \
+  --with-pic \
+
+
+  %make_build
+
+phase.install: |+
+  %make_install
+  rm -f %{buildroot}/%{_libdir}/*.{a,la}
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 1
+runtimePhase.post: |+
+  /sbin/ldconfig
+
+runtimePhase.postun: |+
+  /sbin/ldconfig
+
+source:
+  '0': http://libestr.adiscon.com/files/download/libestr-%{version}.tar.gz
+subpackage:
+  libestr-devel:
+    files: |
+      %{_includedir}/libestr.h
+      %{_libdir}/*.so
+      %{_libdir}/pkgconfig/libestr.pc
+    meta.description: |
+      The %{name}-devel package contains libraries and header files for
+      developing applications that use %{name}.
+    meta.summary: Development files for %{name}
+    requires:
+    - '%{name} = %{version}-%{release}'
+version: 0.1.11

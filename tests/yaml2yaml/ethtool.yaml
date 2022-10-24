@@ -1,0 +1,57 @@
+buildRequires:
+- gcc
+- libmnl-devel
+conflicts:
+- filesystem < 3
+epoch: 2
+files: |
+  %defattr(-,root,root)
+  %doc AUTHORS
+  %license COPYING LICENSE
+  %{_sbindir}/%{name}
+  %dir %{_datadir}/bash-completion/
+  %dir %{_datadir}/bash-completion/completions/
+  %{_datadir}/bash-completion/completions/ethtool
+meta.description: |
+  Ethtool is the standard Linux utility for controlling network drivers and
+  hardware, particularly for wired Ethernet devices. It can be used to:
+
+  - Get identification and diagnostic information
+  - Get extended device statistics
+  - Control speed, duplex, autonegotiation and flow control for Ethernet devices
+  - Control checksum offload and other hardware offload features
+  - Control DMA ring sizes and interrupt moderation
+  - Control receive queue selection for multiqueue devices
+  - Upgrade firmware in flash memory
+meta.homepage: https://www.kernel.org/pub/software/network/ethtool
+meta.license: GPLv2
+meta.summary: Settings tool for Ethernet NICs
+name: ethtool
+phase.build: |+
+  %configure
+  %make_build
+
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 1
+source:
+  '0': https://www.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.xz
+subpackage:
+  ethtool-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc ChangeLog* NEWS README
+      %{_mandir}/man8/%{name}.8*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 5.19

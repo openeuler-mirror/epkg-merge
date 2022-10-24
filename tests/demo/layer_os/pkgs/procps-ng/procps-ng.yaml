@@ -38,7 +38,7 @@ subpackage:
         requires:
             - "%{name} = %{version}-%{release}"
         buildArch: noarch
-        filesInput: %{name}.lang
+        filesInput: "%{name}.lang"
  
     procps-ng-help:
         meta.summary: Documents for %{name}

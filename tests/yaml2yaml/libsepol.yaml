@@ -1,0 +1,67 @@
+buildRequires:
+- gcc flex
+files: |
+  %defattr(-,root,root)
+  %license COPYING
+  %{_libdir}/libsepol.so.*
+meta.description: |
+  libsepol provides an API for the manipulation of SELinux binary
+  policies. It is used by checkpolicy (the policy compiler) and similar
+  tools, as well as by programs like load_policy that need to perform
+  specific transformations on binary policies such as customizing
+  policy boolean settings.
+meta.homepage: https://github.com/SELinuxProject/selinux/wiki/Releases
+meta.license: LGPLv2+
+meta.summary: SELinux binary policy manipulation library
+name: libsepol
+phase.build: |+
+  make clean
+  make %{?_smp_mflags} CFLAGS="%{optflags}" LDFLAGS="%{?__global_ldflags}"
+
+phase.install: |+
+  rm -rf %{buildroot}
+  make DESTDIR="%{buildroot}" LIBDIR="%{_libdir}" SHLIBDIR="%{_libdir}" install
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p2
+
+release: 2
+runtimePhase.post: |+
+  -p /sbin/ldconfig
+
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+runtimePhase.pre: |2+
+
+runtimePhase.preun: |2+
+
+source:
+  '0': https://github.com/SELinuxProject/selinux/releases/download/%{version}/%{name}-%{version}.tar.gz
+subpackage:
+  libsepol-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/*
+      %{_libdir}/*.so
+      %{_libdir}/pkgconfig/libsepol.pc
+      %{_libdir}/*.a
+      %exclude %{_bindir}/chkcon
+    meta.description: Header files and libraries for %{name}
+    meta.summary: Header files and libraries for %{name}
+    provides:
+    - '%{name}-static = %{version}-%{release}'
+    requires:
+    - '%{name} = %{version}-%{release}'
+  libsepol-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %{_mandir}/man8/*
+      %{_mandir}/ru/man8/*
+      %{_mandir}/man3/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 3.3

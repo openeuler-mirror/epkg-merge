@@ -1,0 +1,306 @@
+conflicts:
+- gdb-headless < 7.12-29
+files: |
+  %license COPYING3 COPYING COPYING.LIB COPYING3.LIB
+  %doc README NEWS
+  %{_bindir}/gdb
+  %{_bindir}/gcore
+  %{_bindir}/gstack
+  %{_bindir}/pstack
+  %{_includedir}/gdb
+meta.description: |
+  GDB, the GNU Project debugger, allows you to see what is going on inside
+  another program while it executes -- or what another program was doing
+  at the moment it crashed.
+
+  This package is only a stub to install gcc-gdb-plugin for 'compile' commands.
+  See package 'gdb-headless'.
+meta.homepage: http://gnu.org/software/gdb/
+meta.license: GPLv3+ and GPLv3+ with exceptions and GPLv2+ and GPLv2+ with exceptions
+  and GPL+ and LGPLv2+ and LGPLv3+ and BSD and Public Domain and GFDL-1.3
+meta.summary: GNU Project debugger
+name: gdb
+patchset:
+  '0': gdb-6.3-rh-testversion-20041202.patch
+  '1': gdb-6.3-gstack-20050411.patch
+  '10': gdb-6.5-last-address-space-byte-test.patch
+  '11': gdb-6.5-readline-long-line-crash-test.patch
+  '12': gdb-6.5-bz218379-ppc-solib-trampoline-test.patch
+  '13': gdb-6.5-bz109921-DW_AT_decl_file-test.patch
+  '14': gdb-6.3-bz140532-ppc-unwinding-test.patch
+  '15': gdb-6.3-bz202689-exec-from-pthread-test.patch
+  '16': gdb-6.6-bz230000-power6-disassembly-test.patch
+  '17': gdb-6.6-bz229517-gcore-without-terminal.patch
+  '18': gdb-6.6-testsuite-timeouts.patch
+  '19': gdb-6.6-bz237572-ppc-atomic-sequence-test.patch
+  '2': gdb-6.3-test-dtorfix-20050121.patch
+  '20': gdb-6.3-attach-see-vdso-test.patch
+  '21': gdb-6.5-bz243845-stale-testing-zombie-test.patch
+  '22': gdb-6.6-buildid-locate.patch
+  '23': gdb-6.6-buildid-locate-solib-missing-ids.patch
+  '24': gdb-6.6-buildid-locate-rpm.patch
+  '25': gdb-6.7-charsign-test.patch
+  '26': gdb-6.7-ppc-clobbered-registers-O2-test.patch
+  '27': gdb-6.7-testsuite-stable-results.patch
+  '28': gdb-6.5-ia64-libunwind-leak-test.patch
+  '29': gdb-6.5-missed-trap-on-step-test.patch
+  '3': gdb-6.3-test-movedir-20050125.patch
+  '30': gdb-6.5-gcore-buffer-limit-test.patch
+  '31': gdb-6.3-mapping-zero-inode-test.patch
+  '32': gdb-6.3-focus-cmd-prev-test.patch
+  '33': gdb-6.8-bz442765-threaded-exec-test.patch
+  '34': gdb-6.5-section-num-fixup-test.patch
+  '35': gdb-6.8-bz466901-backtrace-full-prelinked.patch
+  '36': gdb-simultaneous-step-resume-breakpoint-test.patch
+  '37': gdb-core-open-vdso-warning.patch
+  '38': gdb-ccache-workaround.patch
+  '39': gdb-lineno-makeup-test.patch
+  '4': gdb-6.3-threaded-watchpoints2-20050225.patch
+  '40': gdb-ppc-power7-test.patch
+  '41': gdb-archer-next-over-throw-cxx-exec.patch
+  '42': gdb-bz601887-dwarf4-rh-test.patch
+  '43': gdb-6.6-buildid-locate-rpm-librpm-workaround.patch
+  '44': gdb-test-bt-cfi-without-die.patch
+  '45': gdb-bz634108-solib_address.patch
+  '46': gdb-test-pid0-core.patch
+  '47': gdb-test-dw2-aranges.patch
+  '48': gdb-test-expr-cumulative-archer.patch
+  '49': gdb-physname-pr11734-test.patch
+  '5': gdb-6.3-inferior-notification-20050721.patch
+  '50': gdb-physname-pr12273-test.patch
+  '51': gdb-test-ivy-bridge.patch
+  '52': gdb-runtest-pie-override.patch
+  '53': gdb-glibc-strstr-workaround.patch
+  '54': gdb-rhel5.9-testcase-xlf-var-inside-mod.patch
+  '55': gdb-rhbz-818343-set-solib-absolute-prefix-testcase.patch
+  '56': gdb-rhbz947564-findvar-assertion-frame-failed-testcase.patch
+  '57': gdb-rhbz1007614-memleak-infpy_read_memory-test.patch
+  '58': gdb-6.6-buildid-locate-misleading-warning-missing-debuginfo-rhbz981154.patch
+  '59': gdb-fortran-frame-string.patch
+  '6': gdb-6.3-inheritancetest-20050726.patch
+  '60': gdb-rhbz1156192-recursive-dlopen-test.patch
+  '61': gdb-rhbz1149205-catch-syscall-after-fork-test.patch
+  '62': gdb-rhbz1186476-internal-error-unqualified-name-re-set-test.patch
+  '63': gdb-rhbz1350436-type-printers-error.patch
+  '64': gdb-rhbz1084404-ppc64-s390x-wrong-prologue-skip-O2-g-3of3.patch
+  '65': gdb-fedora-libncursesw.patch
+  '66': gdb-opcodes-clflushopt-test.patch
+  '67': gdb-6.6-buildid-locate-rpm-scl.patch
+  '68': gdb-rhbz1261564-aarch64-hw-watchpoint-test.patch
+  '69': gdb-container-rh-pkg.patch
+  '7': gdb-6.5-bz185337-resolve-tls-without-debuginfo-v2.patch
+  '70': gdb-rhbz1325795-framefilters-test.patch
+  '71': gdb-linux_perf-bundle.patch
+  '72': gdb-libexec-add-index.patch
+  '73': gdb-rhbz1398387-tab-crash-test.patch
+  '74': gdb-rhbz1553104-s390x-arch12-test.patch
+  '75': gdb-rhbz1976887-field-location-kind.patch
+  '76': gdb-test-for-rhbz1976887.patch
+  '77': gdb-rhbz2012976-paper-over-fortran-lex-problems.patch
+  '78': gdb-rhbz-853071-update-manpages.patch
+  '79': gdb-rhbz2022177-dprintf-1.patch
+  '8': gdb-6.5-sharedlibrary-path.patch
+  '80': gdb-rhbz2022177-dprintf-2.patch
+  '81': 0001-Make-c-exp.y-work-with-Bison-3.8.patch
+  '82': 0002-set-entry-point-when-text-segment-is-missing.patch
+  '9': gdb-6.5-BEA-testsuite.patch
+phase.build: "rm -rf %{buildroot}\ntest -e %{_libdir}/%{librpmso}\n\nmkdir %{gdb_build}\n\
+  cd %{gdb_build}\n\nexport CFLAGS=\"$RPM_OPT_FLAGS -DDNF_DEBUGINFO_INSTALL -fPIC\"\
+  \nexport LDFLAGS=\"%{?__global_ldflags}\"\nexport CXXFLAGS=\"$CFLAGS\"\n\n../configure\t\
+  \t\t\t\t\t\t\\\n\t--prefix=%{_prefix}\t\t\t\t\t\\\n\t--libdir=%{_libdir}\t\t\t\t\
+  \t\\\n\t--sysconfdir=%{_sysconfdir}\t\t\t\t\\\n\t--mandir=%{_mandir}\t\t\t\t\t\\\
+  \n\t--infodir=%{_infodir}\t\t\t\t\t\\\n\t--with-system-gdbinit=%{_sysconfdir}/gdbinit\
+  \ \\\n--with-gdb-datadir=%{_datadir}/gdb \\\n--enable-gdb-build-warnings=,-Wno-unused\
+  \ \\\n--enable-build-with-cxx \\\n--enable-werror \\\n--with-separate-debug-dir=/usr/lib/debug\
+  \ \\\n--disable-sim \\\n--disable-rpath \\\n--without-stage1-ldflags \\\n--disable-libmcheck\
+  \ \\\n--with-babeltrace \\\n--with-guile \\\n--with-system-readline \\\n--with-expat\
+  \ \\\n--without-libexpat-prefix \\\n--enable-tui \\\n--with-python=%{__python3}\
+  \ \\\n--with-rpm=%{librpmso} \\\n--with-lzma \\\n--without-libunwind \\\n--enable-64-bit-bfd\
+  \ \\\n--with-mpfr \\\n--with-auto-load-dir='$debugdir:$datadir/auto-load' \\\n--with-auto-load-safe-path='$debugdir:$datadir/auto-load'\
+  \ \\\n--enable-targets=aarch64-linux-gnu %{_target_platform} \\\n--with-system-zlib\t\
+  \t\t\t\t\\\n%ifnarch riscv64\n--enable-inprocess-agent\t\t\t\t\\\n%endif\n%ifarch\
+  \ %{ix86} x86_64\n--with-intel-pt\t\t\t\t\t\t\\\n%else\n--without-intel-pt\t\t\t\
+  \t\t\\\n%endif\n\nmake %{?_smp_mflags} CFLAGS=\"$CFLAGS\" LDFLAGS=\"$LDFLAGS\" V=1\
+  \ maybe-configure-gdb\nperl -i.relocatable -pe 's/^(D\\[\".*_RELOCATABLE\"\\]=\"\
+  \ )1(\")$/${1}0$2/' gdb/config.status\n\nmake %{?_smp_mflags} CFLAGS=\"$CFLAGS\"\
+  \ LDFLAGS=\"$LDFLAGS\" V=1\n\n! grep '_RELOCATABLE.*1' gdb/config.h\n\ncd ..\n\n\
+  cd %{gdb_build}\nmake %{?_smp_mflags} \\\n     -C gdb/doc {gdb,annotate}{.info,/index.html,.pdf}\
+  \ MAKEHTMLFLAGS=--no-split MAKEINFOFLAGS=--no-split V=1\n\ncp $RPM_BUILD_DIR/%{gdb_src}/gdb/NEWS\
+  \ $RPM_BUILD_DIR/%{gdb_src}\n\n"
+phase.check: |2+
+
+phase.install: |+
+  cd %{gdb_build}
+  rm -rf $RPM_BUILD_ROOT
+
+  make %{?_smp_mflags} install DESTDIR=$RPM_BUILD_ROOT
+
+  mkdir -p $RPM_BUILD_ROOT%{_prefix}/libexec
+  mv -f $RPM_BUILD_ROOT%{_bindir}/gdb $RPM_BUILD_ROOT%{_prefix}/libexec/gdb
+  ln -s -r $RPM_BUILD_ROOT%{_prefix}/libexec/gdb  $RPM_BUILD_ROOT%{_bindir}/gdb
+
+  mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/gdbinit.d
+  touch -r %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/gdbinit.d
+  sed 's#None#%{_sysconfdir}#g' <%{SOURCE2} >$RPM_BUILD_ROOT%{_sysconfdir}/gdbinit
+  touch -r %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/gdbinit
+
+  for i in `find $RPM_BUILD_ROOT%{_datadir}/gdb/python/gdb -name "*.py"`
+  do
+  touch -r $RPM_BUILD_DIR/%{gdb_src}/gdb/ChangeLog $i
+  done
+
+  %if 0%{?_enable_debug_packages:1}
+  mkdir -p $RPM_BUILD_ROOT/usr/lib/debug%{_bindir}
+  cp -p ./gdb/gdb-gdb.py $RPM_BUILD_ROOT/usr/lib/debug%{_bindir}/
+  for pyo in "" "-O";do
+  %{__python3} $pyo -c 'import compileall, re, sys; sys.exit (not compileall.compile_dir("'"$RPM_BUILD_ROOT/usr/lib/debug%{_bindir}"'", 1, "'"/usr/lib/debug%{_bindir}"'"))'
+  done
+  %endif # 0%{?_enable_debug_packages:1}
+
+  for i in $(echo bin lib $(basename %{_libdir}) sbin|tr ' ' '\n'|sort -u);do
+  mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdb/auto-load/%{_prefix}/$i
+  ln -s $(echo %{_prefix}|sed 's#^/*##')/$i \
+          $RPM_BUILD_ROOT%{_datadir}/gdb/auto-load/$i
+  done
+  for i in `find $RPM_BUILD_ROOT%{_datadir}/gdb -name "*.py"`; do
+  touch -r $RPM_BUILD_DIR/%{gdb_src}/gdb/ChangeLog $i
+  done
+
+  rm -rf $RPM_BUILD_ROOT%{_datadir}/locale/
+  rm -f $RPM_BUILD_ROOT%{_infodir}/bfd*
+  rm -f $RPM_BUILD_ROOT%{_infodir}/standard*
+  rm -f $RPM_BUILD_ROOT%{_infodir}/configure*
+  rm -rf $RPM_BUILD_ROOT%{_includedir}/*.h
+  rm -rf $RPM_BUILD_ROOT/%{_libdir}/lib{bfd*,opcodes*,iberty*,ctf*}
+
+  cp -p %{SOURCE2} $RPM_BUILD_ROOT%{_mandir}/man1/gstack.1
+  ln -s gstack.1 $RPM_BUILD_ROOT%{_mandir}/man1/pstack.1
+  ln -s gstack $RPM_BUILD_ROOT%{_bindir}/pstack
+
+  (cd $RPM_BUILD_ROOT%{_datadir}/gdb/syscalls
+  rm -f mips*.xml
+  rm -f sparc*.xml
+  %ifnarch x86_64
+  rm -f amd64-linux.xml
+  %endif
+  %ifnarch %{ix86} x86_64
+  rm -f i386-linux.xml
+  %endif
+  )
+
+  rm -f $RPM_BUILD_ROOT%{_infodir}/gdbint*
+  rm -f $RPM_BUILD_ROOT%{_infodir}/stabs*
+  rm -f $RPM_BUILD_ROOT%{_infodir}/dir
+  rm -f $RPM_BUILD_ROOT%{_datadir}/gdb/system-gdbinit/elinos.py
+  rm -f $RPM_BUILD_ROOT%{_datadir}/gdb/system-gdbinit/wrs-linux.py
+  rmdir $RPM_BUILD_ROOT%{_datadir}/gdb/system-gdbinit
+  rm -f $RPM_BUILD_ROOT%{_datadir}/gdb/python/gdb/FrameWrapper.py
+  rm -f $RPM_BUILD_ROOT%{_datadir}/gdb/python/gdb/backtrace.py
+  rm -f $RPM_BUILD_ROOT%{_datadir}/gdb/python/gdb/command/backtrace.py
+
+phase.prep: |+
+  %autosetup -n %{gdb_src} -p1
+
+  (cd gdb;rm -fv $(perl -pe 's/\\\n/ /' <Makefile.in|sed -n 's/^YYFILES = //p'))
+
+  find -name "*.info*"|xargs rm -f
+
+  find -name "*.orig" | xargs rm -f
+
+  cat > gdb/version.in << _FOO
+  openEuler %{version}-%{release}
+  _FOO
+
+  rm -f libdecnumber/gstdint.h
+  rm -f bfd/doc/*.info
+  rm -f bfd/doc/*.info-*
+  rm -f gdb/doc/*.info
+  rm -f gdb/doc/*.info-*
+  mv -f readline/readline/doc readline-doc
+  rm -rf readline/readline/*
+  mv -f readline-doc readline/readline/doc
+  rm -rf zlib texinfo
+
+recommends:
+- gcc-gdb-plugin
+- dnf-command(debuginfo-install)
+release: 4
+requires:
+- gdb-headless = %{version}-%{release}
+rpmMacros:
+- '%global gdb_src gdb-11.1'
+- '%global gdb_build build-%{_target_platform}'
+- '%global __python %{__python3}'
+- '%undefine _debuginfo_subpackages'
+- '%global librpmso librpm.so.9'
+source:
+  '0': ftp://sourceware.org/pub/gdb/releases/gdb-%{version}.tar.xz
+  '1': gdb-gstack.man
+  '2': gdbinit
+subpackage:
+  gdb-gdbserver:
+    files: |
+      %{_bindir}/gdbserver
+      %ifnarch riscv64
+      %{_libdir}/libinproctrace.so
+      %endif
+    meta.description: |
+      GDB, the GNU Project debugger, allows you to see what is going on inside
+      another program while it executes -- or what another program was doing
+      at the moment it crashed.
+
+      This package provides a program that allows you to run GDB on a different
+      machine than the one which is running the program being debugged.
+    meta.summary: A standalone server for GDB (the GNU source-level debugger)
+  gdb-headless:
+    buildRequires:
+    - rpm-libs autoconf
+    - readline-devel >= 6.2-4
+    - gcc-c++ ncurses-devel texinfo gettext flex bison
+    - expat-devel xz-devel rpm-devel zlib-devel libselinux-devel
+    - python3-devel texinfo-tex
+    - perl-podlators libbabeltrace-devel guile-devel mpfr-devel
+    - libipt-devel %ifarch %{ix86} x86_64
+    conflicts:
+    - elfutils < 0.149
+    files: |
+      %{_prefix}/libexec/gdb
+      %config(noreplace) %{_sysconfdir}/gdbinit
+      %{_sysconfdir}/gdbinit.d
+      %{_bindir}/gdb-add-index
+      %{_datadir}/gdb
+    meta.description: |
+      GDB, the GNU Project debugger, allows you to see what is going on inside
+      another program while it executes -- or what another program was doing
+      at the moment it crashed.
+    meta.summary: The GNU Project debugger for C, C++, Fortran, Go and other languages
+    provides:
+    - bundled(libiberty) = 20180828
+    - bundled(gnulib) = 20161115
+    - bundled(binutils) = 20180828
+    - bundled(md5-gcc) = 20180828
+    recommends:
+    - default-yama-scope
+    - '%{librpmso}()(64bit)'
+  gdb-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/*/gcore.1*
+      %{_mandir}/*/gstack.1*
+      %{_mandir}/*/pstack.1*
+      %{_mandir}/*/gdb.1*
+      %{_mandir}/*/gdbinit.5*
+      %{_mandir}/*/gdb-add-index.1*
+      %{_mandir}/*/gdbserver.1*
+      %doc %{gdb_build}/gdb/doc/{gdb,annotate}.{html,pdf}
+      %{_infodir}/annotate.info*
+      %{_infodir}/gdb.info*
+    meta.description: |
+      GDB, the GNU Project debugger, allows you to see what is going on inside
+      another program while it executes -- or what another program was doing
+      at the moment it crashed.
+
+      This package provides INFO, HTML and PDF user manual for GDB.
+    meta.license: GFDL
+    meta.summary: Documentation for GDB (the GNU Project debugger)
+version: 11.1

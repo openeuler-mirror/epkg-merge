@@ -1,0 +1,75 @@
+buildRequires:
+- gcc gcc-c++ ncurses-devel
+files: |
+  %doc
+  %license COPYING USAGE
+  %{_libdir}/libhistory.so.*
+  %{_libdir}/libreadline.so.*
+meta.description: |
+  The GNU Readline library provides a set of functions for use by
+  applications that allow users to edit command lines as they are
+  typed in. Both Emacs and vi editing modes are available.The Readline
+  library includes additional functions to maintain a list of
+  previously-entered command lines, to recall and perhaps reedit those
+  lines, and perform csh-like history expansion on previous commands.
+meta.homepage: http://tiswww.case.edu/php/chet/readline/rltop.html
+meta.license: GPLv3+
+meta.summary: Readline library for editing typed command lines
+name: readline
+patchset:
+  '0': readline-8.0-shlib.patch
+phase.build: |+
+  export CPPFLAGS="-I%{_includedir}/ncurses"
+  %configure --with-curses \
+
+  %make_build
+
+phase.install: |+
+  %make_install
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 1
+source:
+  '0': http://git.savannah.gnu.org/cgit/readline.git/snapshot/%{name}-%{version}.tar.gz
+subpackage:
+  readline-devel:
+    files: |
+      %{_includedir}/%{name}/*.h
+      %{_libdir}/libhistory.so
+      %{_libdir}/libreadline.so
+      %{_libdir}/pkgconfig/%{name}.pc
+      %{_docdir}/%{name}/*
+      %{_datadir}/%{name}
+      %{_libdir}/*.a
+    meta.description: |
+      The GNU Readline library provides a set of functions for use by
+      applications that allow users to edit command lines as they are
+      typed in.
+
+      This package contains Development header files for the readline
+      library.
+    meta.summary: Development Header files for readline library
+    obsoletes:
+    - '%{name}-static'
+    provides:
+    - '%{name}-static'
+    requires:
+    - '%{name} = %{version}-%{release}'
+    - ncurses-devel
+  readline-help:
+    buildArch: noarch
+    files: |
+      %{_infodir}/history.info*
+      %{_infodir}/rluserman.info*
+      %{_infodir}/readline.info*
+      %exclude %{_infodir}/dir*
+      %{_mandir}/man3/*.3.gz
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 8.1

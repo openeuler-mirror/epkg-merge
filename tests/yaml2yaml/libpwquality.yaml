@@ -1,0 +1,96 @@
+buildRequires:
+- gcc cracklib-devel gettext pam-devel
+- python3-devel
+files: |
+  %license COPYING
+  %doc README NEWS AUTHORS
+  %{_bindir}/pwmake
+  %{_bindir}/pwscore
+  %{_moduledir}/pam_pwquality.so
+  %{_libdir}/libpwquality.so.*
+  %config(noreplace) %{_secconfdir}/pwquality.conf
+  %{_secconfdir}/pwquality.conf.d
+filesInput: libpwquality.lang
+meta.description: |
+  The libpwquality library purpose is to provide common functions for password quality checking and also scoring them based on their apparent randomness.
+  The library also provides a function for generating random passwords with good pronounceability.
+  The library supports reading and parsing of a configuration file.
+meta.homepage: https://github.com/libpwquality/libpwquality/
+meta.license: BSD or GPLv2+
+meta.summary: Library for password quality checking and generating random passwords.
+name: libpwquality
+patchset:
+  '0': modify-pwquality_conf.patch
+  '1': fix-password-similarity.patch
+  '2': fix-doc-about-difok.patch
+phase.build: |+
+  %configure --with-securedir=%{_moduledir} \
+  --with-pythonsitedir=%{python3_sitearch} \
+  --with-python-binary=%{__python3} \
+  --disable-static \
+
+
+  %make_build
+
+phase.check: |2+
+
+  %ldconfig_scriptlets
+
+phase.install: |+
+  export SETUPTOOLS_USE_DISTUTILS=stdlib
+  %make_install
+
+  rm -f %{buildroot}%{_libdir}/*.la
+  rm -f %{buildroot}%{_moduledir}/*.la
+
+  mkdir %{buildroot}%{_secconfdir}/pwquality.conf.d
+
+  %find_lang libpwquality
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+recommends:
+- cracklib >= 2.8
+release: 5
+requires:
+- pam
+rpmMacros:
+- '%define _moduledir %{_libdir}/security'
+- '%define _secconfdir %{_sysconfdir}/security'
+source:
+  '0': https://github.com/libpwquality/libpwquality/releases/download/libpwquality-%{version}/libpwquality-%{version}.tar.bz2
+subpackage:
+  libpwquality-devel:
+    files: |
+      %{_includedir}/pwquality.h
+      %{_libdir}/libpwquality.so
+      %{_libdir}/pkgconfig/*.pc
+    meta.description: |
+      Files needed for development of applications using the libpwquality library.
+      See the pwquality.h header file for the API.
+    meta.summary: Support for development of applications using the libpwquality library
+    requires:
+    - libpwquality = %{version}-%{release}
+    - pkgconfig
+  libpwquality-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/man1/*
+      %{_mandir}/man5/*
+      %{_mandir}/man3/*
+      %{_mandir}/man8/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  python3-pwquality:
+    files: |
+      %{python3_sitearch}/*.so
+      %{python3_sitearch}/*.egg-info
+    meta.description: This package provides Python3 bindings for the libpwquality
+      library.
+    meta.summary: Python3 bindings for the libpwquality library
+    requires:
+    - libpwquality = %{version}-%{release}
+version: 1.4.4

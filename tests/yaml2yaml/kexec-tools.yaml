@@ -1,0 +1,273 @@
+buildRequires:
+- zlib-devel elfutils-devel-static glib2-devel bzip2-devel ncurses-devel bison flex
+  lzo-devel snappy-devel
+- pkgconfig intltool gettext
+- systemd-units
+- automake autoconf libtool
+files: |
+  %doc News
+  %doc TODO
+  %license COPYING
+  %config(noreplace,missingok) %{_sysconfdir}/sysconfig/kdump
+  %config(noreplace,missingok) %verify(not mtime) %{_sysconfdir}/kdump.conf
+  %config %{_udevrulesdir}
+  %{_udevrulesdir}/../kdump-udev-throttler
+  %dir %{_localstatedir}/crash
+  /usr/sbin/kexec
+  /usr/sbin/mkdumprd
+  /usr/sbin/vmcore-dmesg
+  %{_bindir}/*
+  %{_datadir}/kdump
+  %{_prefix}/lib/kdump
+  %{dracutlibdir}/modules.d/*
+  %{_unitdir}/kdump.service
+  %{_prefix}/lib/systemd/system-generators/kdump-dep-generator.sh
+  %ifarch %{ix86} x86_64 aarch64
+  %{_libdir}/eppic_makedumpfile.so
+  /usr/share/makedumpfile/
+  %endif
+  %ifarch %{ix86} x86_64 aarch64
+  %{_sysconfdir}/makedumpfile.conf.sample
+  %endif
+  %ifarch %{ix86} x86_64 aarch64
+  /usr/sbin/makedumpfile
+  %endif
+meta.description: |
+  kexec-tools provides /sbin/kexec binary that facilitates a new
+  kernel to boot using the kernel's kexec feature either on a
+  normal or a panic reboot. This package contains the /sbin/kexec
+  binary and ancillary utilities that together form the userspace
+  component of the kernel's kexec feature.
+meta.homepage: https://www.kernel.org/
+meta.license: GPLv2
+meta.summary: The kexec/kdump userspace component
+name: kexec-tools
+obsoletes:
+- diskdumputils netdump kexec-tools-eppic %ifarch %{ix86} x86_64
+patchset:
+  '0': arm64-support-more-than-one-crash-kernel-regions.patch
+  '1': add-secure-compile-options-for-makedumpfile.patch
+  '2': kexec-Add-quick-kexec-support.patch
+  '3': kexec-Quick-kexec-implementation-for-arm64.patch
+  '4': arm64-crashdump-deduce-paddr-of-_text-based-on-kerne.patch
+  '5': arm64-make-phys_offset-signed.patch
+  '6': arm64-crashdump-unify-routine-to-get-page_offset.patch
+  '7': arm64-read-VA_BITS-from-kcore-for-52-bits-VA-kernel.patch
+  '8': arm64-fix-PAGE_OFFSET-calc-for-flipped-mm.patch
+phase.build: |+
+  autoreconf
+  %configure --sbindir=/usr/sbin \
+      CFLAGS="${CFLAGS} -fstack-protector-strong -Wl,-z,now -pie -fPIC -fPIE"
+  rm -f kexec-tools.spec.in
+  cp %{SOURCE16} %{SOURCE21} %{SOURCE22} .
+
+  make
+  %ifarch %{ix86} x86_64 aarch64
+  make -C eppic-%{eppic_ver}/libeppic
+  make -C makedumpfile-%{mkdf_ver} LINKTYPE=dynamic USELZO=on USESNAPPY=on
+  make -C makedumpfile-%{mkdf_ver} LDFLAGS="$LDFLAGS -I../eppic-%{eppic_ver}/libeppic -L../eppic-%{eppic_ver}/libeppic" eppic_makedumpfile.so
+  %endif
+
+phase.install: |+
+  mkdir -p -m755 %{buildroot}/usr/sbin
+  mkdir -p -m755 %{buildroot}%{_sysconfdir}/sysconfig
+  mkdir -p -m755 %{buildroot}%{_localstatedir}/crash
+  mkdir -p -m755 %{buildroot}%{_mandir}/man8/
+  mkdir -p -m755 %{buildroot}%{_mandir}/man5/
+  mkdir -p -m755 %{buildroot}%{_docdir}
+  mkdir -p -m755 %{buildroot}%{_datadir}/kdump
+  mkdir -p -m755 %{buildroot}%{_udevrulesdir}
+  mkdir -p %{buildroot}%{_unitdir}
+  mkdir -p -m755 %{buildroot}%{_bindir}
+  mkdir -p -m755 %{buildroot}%{_libdir}
+  mkdir -p -m755 %{buildroot}%{_prefix}/lib/kdump
+  install -m 755 %{SOURCE1} %{buildroot}%{_bindir}/kdumpctl
+
+  install -m 755 build/sbin/kexec %{buildroot}/usr/sbin/kexec
+  install -m 755 build/sbin/vmcore-dmesg %{buildroot}/usr/sbin/vmcore-dmesg
+  install -m 644 build/man/man8/kexec.8 %{buildroot}%{_mandir}/man8/
+  install -m 644 build/man/man8/vmcore-dmesg.8 %{buildroot}%{_mandir}/man8/
+
+  SYSCONFIG=%{_sourcedir}/kdump.sysconfig.%{_target_cpu}
+  [ -f $SYSCONFIG ] || SYSCONFIG=%{_sourcedir}/kdump.sysconfig.%{_arch}
+  [ -f $SYSCONFIG ] || SYSCONFIG=%{_sourcedir}/kdump.sysconfig
+  install -m 644 $SYSCONFIG %{buildroot}%{_sysconfdir}/sysconfig/kdump
+
+  install -m 755 %{SOURCE6} %{buildroot}/usr/sbin/mkdumprd
+  install -m 644 %{SOURCE7} %{buildroot}%{_sysconfdir}/kdump.conf
+  install -m 644 kexec/kexec.8 %{buildroot}%{_mandir}/man8/kexec.8
+  install -m 644 %{SOURCE9} %{buildroot}%{_mandir}/man8/mkdumprd.8
+  install -m 644 %{SOURCE20} %{buildroot}%{_mandir}/man8/kdumpctl.8
+  install -m 755 %{SOURCE15} %{buildroot}%{_prefix}/lib/kdump/kdump-lib.sh
+  install -m 755 %{SOURCE18} %{buildroot}%{_prefix}/lib/kdump/kdump-lib-initramfs.sh
+  install -m 755 %{SOURCE23} $RPM_BUILD_ROOT%{_udevrulesdir}/../kdump-udev-throttler
+  install -m 644 %{SOURCE11} %{buildroot}%{_mandir}/man5/kdump.conf.5
+  install -m 644 %{SOURCE12} %{buildroot}%{_unitdir}/kdump.service
+  install -m 755 -D %{SOURCE17} %{buildroot}%{_prefix}/lib/systemd/system-generators/kdump-dep-generator.sh
+  install -m 644 %{SOURCE10} $RPM_BUILD_ROOT%{_udevrulesdir}/98-kexec.rules
+
+  %ifarch %{ix86} x86_64 aarch64
+  install -m 755 makedumpfile-%{mkdf_ver}/makedumpfile $RPM_BUILD_ROOT/usr/sbin/makedumpfile
+  install -m 644 makedumpfile-%{mkdf_ver}/makedumpfile.8.gz $RPM_BUILD_ROOT/%{_mandir}/man8/makedumpfile.8.gz
+  install -m 644 makedumpfile-%{mkdf_ver}/makedumpfile.conf.5.gz $RPM_BUILD_ROOT/%{_mandir}/man5/makedumpfile.conf.5.gz
+  install -m 644 makedumpfile-%{mkdf_ver}/makedumpfile.conf $RPM_BUILD_ROOT/%{_sysconfdir}/makedumpfile.conf.sample
+  install -m 755 makedumpfile-%{mkdf_ver}/eppic_makedumpfile.so $RPM_BUILD_ROOT/%{_libdir}/eppic_makedumpfile.so
+  mkdir -p $RPM_BUILD_ROOT/usr/share/makedumpfile/eppic_scripts/
+  install -m 644 makedumpfile-%{mkdf_ver}/eppic_scripts/* $RPM_BUILD_ROOT/usr/share/makedumpfile/eppic_scripts/
+  %endif
+
+  %define remove_dracut_prefix() %(echo -n %1|sed 's/.*dracut-//g')
+  %define remove_dracut_early_kdump_prefix() %(echo -n %1|sed 's/.*dracut-early-kdump-//g')
+
+  mkdir -p -m755 %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase
+  cp %{SOURCE25} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE25}}
+  cp %{SOURCE26} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE26}}
+  cp %{SOURCE27} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE27}}
+  cp %{SOURCE28} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE28}}
+  cp %{SOURCE29} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE29}}
+  cp %{SOURCE30} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE30}}
+  cp %{SOURCE31} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE31}}
+  cp %{SOURCE32} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE32}}
+  cp %{SOURCE35} $RPM_BUILD_ROOT/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE35}}
+  chmod 755 %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE25}}
+  chmod 755 %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE26}}
+  mkdir -p -m755 %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99earlykdump
+  cp %{SOURCE33} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99earlykdump/%{remove_dracut_prefix %{SOURCE33}}
+  cp %{SOURCE34} %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99earlykdump/%{remove_dracut_early_kdump_prefix %{SOURCE34}}
+  chmod 755 %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99earlykdump/%{remove_dracut_prefix %{SOURCE33}}
+  chmod 755 %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99earlykdump/%{remove_dracut_early_kdump_prefix %{SOURCE34}}
+  chmod 755 %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/99kdumpbase/%{remove_dracut_prefix %{SOURCE28}}
+
+  %define dracutlibdir %{_prefix}/lib/dracut
+  mkdir -p %{buildroot}/%{dracutlibdir}/modules.d/
+  mv %{buildroot}/etc/kdump-adv-conf/kdump_dracut_modules/* %{buildroot}/%{dracutlibdir}/modules.d/
+
+phase.prep: |+
+  %setup -q
+
+  mkdir -p -m755 kcp
+  tar -z -x -v -f %{SOURCE8}
+  tar -z -x -v -f %{SOURCE14}
+
+  %ifarch aarch64
+  %patch0 -p1
+  %endif
+  %patch1 -p1
+  %patch2 -p1
+  %ifarch aarch64
+  %patch3 -p1
+  %endif
+  %patch4 -p1
+  %patch5 -p1
+  %patch6 -p1
+  %patch7 -p1
+  %patch8 -p1
+
+release: 8
+requires:
+- dracut >= 047-34.git20180604
+- dracut-network >= 044-117
+- dracut-squash >= 049-4
+- ethtool
+- systemd-udev%{?_isa} %ifnarch s390x
+requiresPost:
+- systemd
+requiresPostUn:
+- systemd
+requiresPre:
+- coreutils sed zlib
+requiresPreUn:
+- systemd
+rpmMacros:
+- '%global eppic_ver e8844d3793471163ae4a56d8f95897be9e5bd554'
+- '%global eppic_shortver %(c=%{eppic_ver}; echo ${c:0:7})'
+- '%global mkdf_ver 1.7.0'
+- '%undefine _hardened_build'
+runtimePhase.post: "%systemd_post kdump.service\n\ntouch /etc/kdump.conf\nif [ -d\
+  \ /proc/bus/mckinley ]\nthen\nsed -e's/\\(^KDUMP_COMMANDLINE_APPEND.*\\)\\(\"$\\\
+  )/\\1 machvec=dig\"/' \\\n\t/etc/sysconfig/kdump > /etc/sysconfig/kdump.new\nmv\
+  \ /etc/sysconfig/kdump.new /etc/sysconfig/kdump\nelif [ -d /proc/sgi_sn ]\nthen\n\
+  sed -e's/\\(^KEXEC_ARGS.*\\)\\(\"$\\)/\\1 --noio\"/' \\\n\t/etc/sysconfig/kdump\
+  \ > /etc/sysconfig/kdump.new\nmv /etc/sysconfig/kdump.new /etc/sysconfig/kdump\n\
+  fi\n\n\n"
+runtimePhase.postun: |+
+  %systemd_postun_with_restart kdump.service
+
+runtimePhase.preun: |+
+  %systemd_preun kdump.service
+
+  %triggerun -- kexec-tools < 2.0.2-3
+  /usr/bin/systemd-sysv-convert --save kdump >/dev/null 2>&1 ||:
+  /sbin/chkconfig --del kdump >/dev/null 2>&1 || :
+  /bin/systemctl try-restart kdump.service >/dev/null 2>&1 || :
+
+  %triggerin -- kernel-kdump
+  touch %{_sysconfdir}/kdump.conf
+
+  %triggerpostun -- kernel kernel-xen kernel-debug kernel-PAE kernel-kdump
+  IMGDIR=/boot
+  for i in `ls $IMGDIR/initramfs*kdump.img 2>/dev/null`
+  do
+  KDVER=`echo $i | sed -e's/^.*initramfs-//' -e's/kdump.*$//'`
+  if [ ! -e $IMGDIR/vmlinuz-$KDVER ]
+  then
+  rm -f $i
+  fi
+  done
+
+
+source:
+  '0': http://kernel.org/pub/linux/utils/kernel/kexec/%{name}-%{version}.tar.xz
+  '1': kdumpctl
+  '10': 98-kexec.rules
+  '11': kdump.conf.5
+  '12': kdump.service
+  '13': kdump.sysconfig.s390x
+  '14': https://github.com/lucchouina/eppic/archive/%{eppic_ver}/eppic-%{eppic_shortver}.tar.gz
+  '15': kdump-lib.sh
+  '16': kdump-in-cluster-environment.txt
+  '17': kdump-dep-generator.sh
+  '18': kdump-lib-initramfs.sh
+  '19': kdump.sysconfig.ppc64le
+  '2': kdump.sysconfig
+  '20': kdumpctl.8
+  '21': live-image-kdump-howto.txt
+  '22': early-kdump-howto.txt
+  '23': kdump-udev-throttler
+  '24': kdump.sysconfig.aarch64
+  '25': dracut-kdump.sh
+  '26': dracut-module-setup.sh
+  '27': dracut-monitor_dd_progress
+  '28': dracut-kdump-error-handler.sh
+  '29': dracut-kdump-emergency.service
+  '3': kdump.sysconfig.x86_64
+  '30': dracut-kdump-error-handler.service
+  '31': dracut-kdump-capture.service
+  '32': dracut-kdump-emergency.target
+  '33': dracut-early-kdump.sh
+  '34': dracut-early-kdump-module-setup.sh
+  '35': dracut-kdump-wait-for-target.sh
+  '4': kdump.sysconfig.i386
+  '5': kdump.sysconfig.ppc64
+  '6': mkdumprd
+  '7': kdump.conf
+  '8': https://github.com/makedumpfile/makedumpfile/releases/download/%{mkdf_ver}/makedumpfile-%{mkdf_ver}.tar.gz
+  '9': mkdumprd.8
+subpackage:
+  kexec-tools-help:
+    buildArch: noarch
+    files: |
+      %doc early-kdump-howto.txt
+      %doc kdump-in-cluster-environment.txt
+      %doc live-image-kdump-howto.txt
+      %{_mandir}/man8/kdumpctl.8.gz
+      %{_mandir}/man8/kexec.8.gz
+      %{_mandir}/man8/mkdumprd.8.gz
+      %{_mandir}/man8/vmcore-dmesg.8.gz
+      %{_mandir}/man5/*
+      %ifarch %{ix86} x86_64 aarch64
+      %{_mandir}/man8/makedumpfile.8.gz
+      %endif
+    meta.description: The %{name}-help package contains doc files for %{name}.
+    meta.summary: Doc files for %{name}
+version: 2.0.23

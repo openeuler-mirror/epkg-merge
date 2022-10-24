@@ -63,7 +63,7 @@ conflicts:
 recommends:
     - "%{name}-help = %{epoch}:%{version}-%{release}"
 package:
-    - Version:   %{device_mapper_version}
+    - Version:   "%{device_mapper_version}"
     - License:   LGPLv2
     - URL:       http://sources.redhat.com/dm
     - Requires:  util-linux >= %{util_linux_version}

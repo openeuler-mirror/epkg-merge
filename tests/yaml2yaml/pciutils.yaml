@@ -1,0 +1,111 @@
+Exclusiveos:
+- Linux
+buildRequires:
+- gcc sed kmod-devel pkgconfig zlib-devel
+files: |
+  %doc README ChangeLog pciutils.lsm COPYING
+  /sbin/lspci
+  /sbin/setpci
+  /sbin/update-pciids
+  /%{_lib}/libpci.so.*
+meta.description: |
+  The PCI Utilities are a collection of programs for inspecting and manipulating configuration
+  of PCI devices, all based on a common portable library libpci which offers access to the PCI
+  configuration space on a variety of operating systems.
+
+  The utilities include:
+  lspci
+  displays detailed information about all PCI buses and devices in the system
+  setpci
+  allows reading from and writing to PCI device configuration registers. For example, you
+  can adjust the latency timers with it.
+meta.homepage: http://atrey.karlin.mff.cuni.cz/~mj/pciutils.shtml
+meta.license: GPLv2+
+meta.summary: PCI bus related utilities
+name: pciutils
+obsoletes:
+- '%{name}-libs'
+- '%{name}-libs-debuginfo'
+patchset:
+  '0': 0000-pciutils-2.2.1-idpath.patch
+  '1': 0001-pciutils-dir-d.patch
+  '2': 0002-lspci-Adjust-PCI_EXP_DEV2_-to-PCI_EXP_DEVCTL2_-macro.patch
+  '3': 0003-lspci-Decode-10-Bit-Tag-Requester-Enable.patch
+  '4': 0004-lspci-Decode-VF-10-Bit-Tag-Requester.patch
+  '5': 0005-lspci-Update-tests-files-with-VF-10-Bit-Tag-Requeste.patch
+phase.build: |+
+  make SHARED="no" ZLIB="no" LIBKMOD=yes STRIP="" OPT="$RPM_OPT_FLAGS" LDFLAGS="$RPM_LD_FLAGS" PREFIX="/usr" %{?_smp_mflags}
+  mv lib/libpci.a lib/libpci.a.tobak
+
+  make clean
+
+  make SHARED="yes" ZLIB="no" LIBKMOD=yes STRIP="" OPT="$RPM_OPT_FLAGS"  PREFIX="/usr" LIBDIR="/%{_lib}"  %{?_smp_mflags}
+  sed -i "s|^libdir=.*$|libdir=/%{_lib}|" lib/libpci.pc
+
+phase.clean: |+
+  rm -rf $RPM_BUILD_ROOT
+
+phase.install: |+
+  make install PREFIX=$RPM_BUILD_ROOT/usr SBINDIR=$RPM_BUILD_ROOT/sbin \
+               ROOT=$RPM_BUILD_ROOT/ MANDIR=$RPM_BUILD_ROOT/%{_mandir} STRIP="" \
+               SHARED="yes" LIBDIR=$RPM_BUILD_ROOT/%{_lib}
+
+  install -d $RPM_BUILD_ROOT/{%{_libdir}/pkgconfig,%{_includedir}/pci}
+  mv lib/libpci.a.tobak lib/libpci.a
+  install -p -m 644 lib/libpci.a $RPM_BUILD_ROOT%{_libdir}
+  cp -p lib/{pci,header,config,types}.h $RPM_BUILD_ROOT%{_includedir}/pci
+  install -p lib/config.h $RPM_BUILD_ROOT%{_includedir}/pci/config.%{_lib}.h
+  /sbin/ldconfig -N $RPM_BUILD_ROOT%{_libdir}
+  install -p lib/libpci.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig
+  install -D -m 0644 lib/libpci.pc %{buildroot}%{_libdir}/pkgconfig/libpci.pc
+  install -p lib/libpci.so.* $RPM_BUILD_ROOT/%{_lib}/
+  ln -s ../../%{_lib}/$(basename $RPM_BUILD_ROOT/%{_lib}/*.so.*.*.*) $RPM_BUILD_ROOT%{_libdir}/libpci.so
+  rm -rf $RPM_BUILD_ROOT/usr/share/hwdata/pci.ids*
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- '%{name}-libs'
+- '%{name}-libs-debuginfo'
+release: 3
+requires:
+- hwdata
+runtimePhase.post: |+
+  -p /sbin/ldconfig
+
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+source:
+  '0': https://mirrors.edge.kernel.org/pub/software/utils/pciutils/%{name}-%{version}.tar.gz
+subpackage:
+  '%{name}':
+    files: ''
+  pciutils-devel:
+    files: |
+      %defattr(0644, root, root, 0755)
+      %{_libdir}/pkgconfig/libpci.pc
+      %{_libdir}/libpci.so
+      %{_includedir}/pci
+      %{_libdir}/libpci.a
+    meta.description: |
+      This package contains the files that are necessary for software
+      development using the PCI utilities.
+    meta.summary: Library and Include Files of the PCI utilities
+    obsoletes:
+    - '%{name}-devel-static'
+    provides:
+    - '%{name}-devel-static'
+    requires:
+    - zlib-devel pkgconfig %{name} = %{version}-%{release}
+  pciutils-help:
+    files: |
+      %{_mandir}/man5/*
+      %{_mandir}/man7/*
+      %{_mandir}/man8/*
+    meta.description: This contains man files for the using of pciutils.
+    meta.summary: Including man files for pciutils
+    requires:
+    - man
+version: 3.7.0

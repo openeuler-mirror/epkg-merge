@@ -1,0 +1,170 @@
+buildRequires:
+- gcc pkgconfig texinfo
+- fuse-devel libblkid-devel libuuid-devel
+- audit
+files: |
+  %doc README RELEASE-NOTES
+  %license NOTICE
+  %config(noreplace) /etc/mke2fs.conf
+  %config(noreplace) /etc/e2scrub.conf
+  %{_bindir}/chattr
+  %{_bindir}/fuse2fs
+  %{_bindir}/lsattr
+  %{_libdir}/e2fsprogs/e2scrub_fail
+  %{_libdir}/libe2p.so.*
+  %{_libdir}/libext2fs.so.*
+  %{_libdir}/libcom_err.so.*
+  %{_libdir}/libss.so.*
+  %{_sbindir}/*
+  %{_udevrulesdir}/*.rules
+  %ifnarch i686
+  %{_unitdir}/e2scrub*
+  %endif
+meta.description: |
+  The e2fsprogs package consists of a lot of tools for users to create,
+  check, modify, and correct any inconsistencies in second extended file
+  system.
+meta.homepage: http://e2fsprogs.sourceforge.net/
+meta.license: GPLv2+ and LGPLv2 and MIT
+meta.summary: Second extended file system management tools
+name: e2fsprogs
+obsoletes:
+- e2fsprogs-libs
+- libcom_err
+- libss
+patchset:
+  '0': 0001-e2fsprogs-set-hugefile-from-4T-to-1T-in-hugefile-tes.patch
+  '1': 0002-libss-add-newer-libreadline.so.8-to-dlopen-path.patch
+  '10': 0011-libext2fs-don-t-old-the-CACHE_MTX-while-doing-I-O.patch
+  '11': 0012-tests-fix-ACL-printing-tests.patch
+  '12': 0013-e2fsck-do-not-clean-up-file-acl-if-the-inode-is-trun.patch
+  '13': 0014-e2fsck-handle-level-is-overflow-in-ext2fs_extent_get.patch
+  '14': 0015-libext2fs-add-sanity-check-to-extent-manipulation.patch
+  '15': 0016-e2fsprogs-add-sw64.patch
+  '16': 0017-tune2fs-do-not-change-j_tail_sequence-in-journal-sup.patch
+  '17': 0018-debugfs-teach-logdump-the-n-num_trans-option.patch
+  '18': 0019-tune2fs-fix-tune2fs-segfault-when-ext2fs_run_ext3_jo.patch
+  '19': 0020-tune2fs-tune2fs_main-should-return-rc-when-some-erro.patch
+  '2': 0003-tests-update-expect-files-for-f_mmp_garbage.patch
+  '20': 0021-tune2fs-exit-directly-when-fs-freed-in-ext2fs_run_ext3_journal.patch
+  '3': 0004-tests-update-expect-files-for-f_large_dir-and-f_larg.patch
+  '4': 0005-resize2fs-resize2fs-disk-hardlinks-will-be-error.patch
+  '5': 0006-e2fsck-exit-journal-recovery-when-find-EIO-ENOMEM-er.patch
+  '6': 0007-e2fsck-exit-journal-recovery-when-jounral-superblock.patch
+  '7': 0008-e2fsck-add-env-param-E2FS_UNRELIABLE_IO-to-fi.patch
+  '8': 0009-e2mmpstatus.8.in-detele-filesystem-can-be-UUID-or-LA.patch
+  '9': 0010-tests-update-expect-file-for-u_direct_io.patch
+phase.build: |+
+  %configure CFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing" --enable-elf-shlibs \
+  --enable-nls \
+  --disable-uuidd \
+  --disable-fsck \
+  --disable-e2initrd-helper \
+  --disable-libblkid \
+  --disable-libuuid \
+  --enable-quota \
+  --with-root-prefix=/usr
+  %make_build V=1
+
+phase.check: |+
+  make fullcheck
+
+  %ldconfig_scriptlets
+
+phase.install: |+
+  make install install-libs DESTDIR=%{buildroot} INSTALL="%{__install} -p" \
+      root_sbindir=%{_sbindir} root_libdir=%{_libdir}
+  chmod +w %{buildroot}%{_libdir}/*.a
+
+  %define multilib_arches %{ix86} x86_64
+
+  %ifarch %{multilib_arches}
+  mv -f %{buildroot}%{_includedir}/ext2fs/ext2_types.h \
+        %{buildroot}%{_includedir}/ext2fs/ext2_types-%{_arch}.h
+
+  install -p -m 644 %{SOURCE1} %{buildroot}%{_includedir}/ext2fs/ext2_types.h
+
+  %endif
+
+  %find_lang %{name}
+
+  rm -f %{buildroot}/etc/cron.d/e2scrub_all
+  rm -f %{buildroot}%{_libdir}/e2fsprogs/e2scrub_all_cron
+
+  %ifarch i686
+  rm -rf %{buildroot}%{_unitdir}/e2scrub*
+  %endif
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+
+provides:
+- e2fsprogs-libs%{?_isa} e2fsprogs-libs
+- libcom_err%{?_isa} libcom_err
+- libss%{?_isa} libss
+recommends:
+- '%{name}-help = %{version}-%{release}'
+release: 16
+source:
+  '0': https://www.kernel.org/pub/linux/kernel/people/tytso/%{name}/v%{version}/%{name}-%{version}.tar.xz
+  '1': ext2_types-wrapper.h
+subpackage:
+  e2fsprogs-devel:
+    files: |
+      %{_bindir}/compile_et
+      %{_bindir}/mk_cmds
+      %{_datadir}/et
+      %{_datadir}/ss
+      %{_infodir}/libext2fs.info*
+      %{_includedir}/e2p
+      %{_includedir}/ext2fs
+      %{_includedir}/et
+      %{_includedir}/com_err.h
+      %{_includedir}/ss
+      %{_libdir}/pkgconfig/*.pc
+      %{_libdir}/*.so
+      %{_libdir}/*.a
+    filesInput: '%{name}.lang'
+    meta.description: |
+      This package provides libraries and header files to develop
+      second extended file system userspace programs.
+    meta.license: GPLv2 and LGPLv2 and MIT
+    meta.summary: Second extended file system libraries and headers
+    obsoletes:
+    - libcom_err-devel
+    - libss-devel
+    - e2fsprogs-static
+    provides:
+    - libcom_err-devel%{?_isa} libcom_err-devel
+    - libss-devel%{?_isa} libss-devel
+    - e2fsprogs-static{?_isa} e2fsprogs-static
+    requires:
+    - e2fsprogs = %{version}-%{release}
+    - gawk
+    - pkgconfig
+    requiresPost:
+    - info
+    requiresPreUn:
+    - info
+    runtimePhase.post: |
+      if [ -f %{_infodir}/libext2fs.info.gz ]; then
+      /sbin/install-info %{_infodir}/libext2fs.info.gz %{_infodir}/dir || :
+      fi
+    runtimePhase.preun: |
+      if [ $1 = 0 -a -f %{_infodir}/libext2fs.info.gz ]; then
+      /sbin/install-info --delete %{_infodir}/libext2fs.info.gz %{_infodir}/dir || :
+      fi
+      exit 0
+  e2fsprogs-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/man1/*
+      %{_mandir}/man3/*
+      %{_mandir}/man5/*
+      %{_mandir}/man8/*
+    meta.description: This packages includes man files for e2fsprogs.
+    meta.summary: man files for e2fsprogs
+    requires:
+    - man
+version: 1.46.4

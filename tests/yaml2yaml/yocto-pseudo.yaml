@@ -1,0 +1,10 @@
+buildRequires:
+- gcc
+- make
+meta.description: The pseudo utility offers a way to run commands in a virtualized
+  root environment
+meta.license: LGPLv2+
+meta.summary: Pseudo gives fake root capabilities to a normal user
+name: pseudo
+release: 1
+version: null
