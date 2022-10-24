@@ -1,0 +1,300 @@
+buildRequires:
+- gcc >= 4.1.2-33 m4 zlib-devel gdb-headless gcc-c++
+- bzip2-devel xz-devel xz-libs zstd-devel
+- pkgconfig(libmicrohttpd) >= 0.9.33
+- pkgconfig(libcurl) >= 7.29.0
+- pkgconfig(sqlite3) >= 3.7.17
+- pkgconfig(libarchive) >= 3.1.2
+buildRoot:
+- '%{_tmppath}/%{name}-root'
+files: |
+  %license COPYING COPYING-GPLV2 COPYING-LGPLV3
+  %doc README TODO CONTRIBUTING
+  %{_bindir}/eu-elfcompress
+  %{_bindir}/eu-strip
+  %attr(750,root,root) %{_bindir}/eu-addr2line
+  %attr(750,root,root) %{_bindir}/eu-ar
+  %attr(750,root,root) %{_bindir}/eu-elfclassify
+  %attr(750,root,root) %{_bindir}/eu-elfcmp
+  %attr(750,root,root) %{_bindir}/eu-elflint
+  %attr(750,root,root) %{_bindir}/eu-findtextrel
+  %attr(750,root,root) %{_bindir}/eu-make-debug-archive
+  %attr(750,root,root) %{_bindir}/eu-ranlib
+  %attr(750,root,root) %{_bindir}/eu-size
+  %attr(750,root,root) %{_bindir}/eu-stack
+  %attr(750,root,root) %{_bindir}/eu-strings
+  %attr(750,root,root) %{_bindir}/eu-unstrip
+meta.description: |
+  Elfutils is a collection of utilities, including stack (to show
+  backtraces), nm (for listing symbols from object files), size
+  (for listing the section sizes of an object or archive file),
+  strip (for discarding symbols), elflint (to check for well-formed ELF files) and
+  elfcompress (to compress or decompress ELF sections).
+  Also included are helper libraries which implement DWARF, ELF,
+  and machine-specific ELF handling and process introspection.
+  It also provides a DSO which allows reading and
+  writing ELF files on a high level. Third party programs depend on
+  this package to read internals of ELF files.
+  Yama sysctl setting to enable default attach scope settings
+  enabling programs to use ptrace attach, access to
+  /proc/PID/{mem,personality,stack,syscall}, and the syscalls
+  process_vm_readv and process_vm_writev which are used for
+  interprocess services, communication and introspection
+  (like synchronisation, signaling, debugging, tracing and
+  profiling) of processes.
+meta.homepage: http://elfutils.org/
+meta.license: GPLv3+ and (GPLv2+ or LGPLv3+)
+meta.summary: A collection of utilities and DSOs to handle ELF files and DWARF data
+name: elfutils
+patchset:
+  '0': Fix-segfault-in-eu-ar-m.patch
+  '1': Fix-error-of-parsing-object-file-perms.patch
+  '2': Fix-issue-of-moving-files-by-ar-or-br.patch
+  '3': Get-instance-correctly-for-eu-ar-N-option.patch
+phase.build: |+
+  %configure --program-prefix=%{_programprefix}
+  %make_build
+
+phase.check: |+
+  %make_build check || (cat tests/test-suite.log; true)
+
+phase.clean: |+
+  rm -rf ${RPM_BUILD_ROOT}
+
+phase.install: |+
+  rm -rf ${RPM_BUILD_ROOT}
+  mkdir -p ${RPM_BUILD_ROOT}%{_prefix}
+
+  %make_install
+  chmod +x ${RPM_BUILD_ROOT}%{_prefix}/%{_lib}/lib*.so*
+
+  rm ${RPM_BUILD_ROOT}%{_sysconfdir}/profile.d/debuginfod.sh
+  rm ${RPM_BUILD_ROOT}%{_sysconfdir}/profile.d/debuginfod.csh
+
+  install -Dm0644 config/10-default-yama-scope.conf ${RPM_BUILD_ROOT}%{_sysctldir}/10-default-yama-scope.conf
+  install -Dm0644 config/debuginfod.service ${RPM_BUILD_ROOT}%{_unitdir}/debuginfod.service
+  install -Dm0644 config/debuginfod.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/debuginfod
+  mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/cache/debuginfod
+  touch ${RPM_BUILD_ROOT}%{_localstatedir}/cache/debuginfod/debuginfod.sqlite
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+recommends:
+- elfutils-extra
+release: 8
+requires:
+- elfutils-libelf = %{version}-%{release}
+- elfutils-libs = %{version}-%{release}
+- glibc >= 2.7 libstdc++
+rpmMacros:
+- '%define _gnu %{nil}'
+- '%define _programprefix eu-'
+source:
+  '0': ftp://sourceware.org/pub/elfutils/%{version}/elfutils-%{version}.tar.bz2
+subpackage:
+  elfutils-debuginfod:
+    buildRequires:
+    - systemd
+    files: |
+      %defattr(-,root,root)
+      %{_bindir}/debuginfod
+      %config(noreplace) %verify(not md5 size mtime) %{_sysconfdir}/sysconfig/debuginfod
+      %{_unitdir}/debuginfod.service
+      %{_sysconfdir}/sysconfig/debuginfod
+
+      %dir %attr(0700,debuginfod,debuginfod) %{_localstatedir}/cache/debuginfod
+      %verify(not md5 size mtime) %attr(0600,debuginfod,debuginfod) %{_localstatedir}/cache/debuginfod/debuginfod.sqlite
+    meta.description: |
+      The elfutils-debuginfod package contains the debuginfod binary
+      and control files for a service that can provide ELF/DWARF
+      files to remote clients, based on build-id identification.
+      The ELF/DWARF file searching functions in libdwfl can query
+      such servers to download those files on demand.
+    meta.license: GPLv3+
+    meta.summary: HTTP ELF/DWARF file server addressed by build-id
+    requires:
+    - bsdtar
+    requiresPost:
+    - systemd
+    requiresPostUn:
+    - systemd
+    requiresPre:
+    - shadow-utils
+    requiresPreUn:
+    - systemd
+    runtimePhase.post: |
+      %systemd_post debuginfod.service
+    runtimePhase.postun: |
+      %systemd_postun_with_restart debuginfod.service
+    runtimePhase.pre: |
+      getent group debuginfod >/dev/null || groupadd -r debuginfod
+      getent passwd debuginfod >/dev/null || \
+        useradd -r -g debuginfod -d /var/cache/debuginfod -s /sbin/nologin \
+                -c "elfutils debuginfo server" debuginfod
+      exit 0
+  elfutils-debuginfod-client:
+    files: |
+      %defattr(-,root,root)
+      %{_libdir}/libdebuginfod-%{version}.so
+      %{_bindir}/debuginfod-find
+      %{_libdir}/libdebuginfod.so.*
+    meta.description: |
+      The elfutils-debuginfod-client package contains shared libraries
+      dynamically loaded from -ldw, which use a debuginfod service
+      to look up debuginfo and associated data. Also includes a
+      command-line frontend.
+    meta.license: GPLv3+ and (GPLv2+ or LGPLv3+)
+    meta.summary: Library and command line client for build-id HTTP ELF/DWARF server
+    runtimePhase.post: |
+      -p /sbin/ldconfig
+    runtimePhase.postun: |
+      -p /sbin/ldconfig
+  elfutils-debuginfod-client-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_libdir}/pkgconfig/libdebuginfod.pc
+      %{_includedir}/elfutils/debuginfod.h
+      %{_libdir}/libdebuginfod.so
+    meta.description: |
+      The elfutils-debuginfod-client-devel package contains the libraries
+      to create applications to use the debuginfod service.
+    meta.license: GPLv2+ or LGPLv3+
+    meta.summary: Libraries and headers to build debuginfod client applications
+  elfutils-default-yama-scope:
+    buildArch: noarch
+    files: |
+      %{_sysctldir}/10-default-yama-scope.conf
+    meta.description: |
+      Yama sysctl setting to enable default attach scope settings
+      enabling programs to use ptrace attach, access to
+      /proc/PID/{mem,personality,stack,syscall}, and the syscalls
+      process_vm_readv and process_vm_writev which are used for
+      interprocess services, communication and introspection
+      (like synchronisation, signaling, debugging, tracing and
+      profiling) of processes.
+    meta.license: GPLv2+ or LGPLv3+
+    meta.summary: Default yama attach scope sysctl setting
+    provides:
+    - default-yama-scope
+    runtimePhase.post: |
+      if [ -x /usr/lib/systemd/systemd-sysctl ] ; then
+      %sysctl_apply 10-default-yama-scope.conf
+      fi
+  elfutils-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/dwarf.h
+      %dir %{_includedir}/elfutils
+      %{_includedir}/elfutils/elf-knowledge.h
+      %{_includedir}/elfutils/known-dwarf.h
+      %{_includedir}/elfutils/libasm.h
+      %{_includedir}/elfutils/libdw.h
+      %{_includedir}/elfutils/libdwelf.h
+      %{_includedir}/elfutils/libdwfl.h
+      %{_includedir}/elfutils/version.h
+      %{_libdir}/libasm.a
+      %{_libdir}/libasm.so
+      %{_libdir}/libdw.a
+      %{_libdir}/libdw.so
+      %{_libdir}/libelf.a
+      %{_libdir}/pkgconfig/libdw.pc
+    meta.description: |
+      The elfutils-devel package contains the libraries to create
+      applications for handling compiled objects.  libebl provides some
+      higher-level ELF access functionality.  libdw provides access to
+      the DWARF debugging information.  libasm provides a programmable
+      assembler interface. libelf allows you to
+      access the internals of the ELF object file format, so you can see the
+      different sections of an ELF file.
+    meta.license: GPLv2+ or LGPLv3+
+    meta.summary: Development libraries to handle compiled objects.
+    obsoletes:
+    - elfutils-libelf-devel-static < %{version}-%{release} elfutils-devel-static <
+      %{version}-%{release}
+    provides:
+    - elfutils-libelf-devel-static elfutils-devel-static
+    requires:
+    - elfutils-libs = %{version}-%{release}
+    - elfutils-libelf-devel = %{version}-%{release}
+  elfutils-extra:
+    files: |
+      %{_bindir}/eu-objdump
+      %{_bindir}/eu-readelf
+      %{_bindir}/eu-nm
+    meta.description: |
+      The extra package contains debug tools.
+      readelf - to see the raw ELF file structures
+    meta.summary: extra package including debug tools
+    provides:
+    - elfutils-extra
+    requires:
+    - elfutils = %{version}-%{release}
+  elfutils-help:
+    files: |
+      %{_mandir}/man1/eu-*.1*
+      %{_mandir}/man1/debuginfod-find.1*
+      %{_mandir}/man3/debuginfod_*.3*
+      %{_mandir}/man3/elf_*.3*
+      %{_mandir}/man7/debuginfod*.7.*
+      %{_mandir}/man8/debuginfod.8*
+    meta.description: This package contains help documents for elfutils
+    meta.summary: Help documents for elfutils
+  elfutils-libelf:
+    files: |
+      %license COPYING-GPLV2 COPYING-LGPLV3
+      %{_libdir}/libelf-%{version}.so
+      %{_libdir}/libelf.so.*
+      %{_datadir}/locale/*/LC_MESSAGES/elfutils.mo
+    meta.description: |
+      The elfutils-libelf package provides a DSO which allows reading and
+      writing ELF files on a high level.  Third party programs depend on
+      this package to read internals of ELF files.  The programs of the
+      elfutils package use it also to generate new ELF files.
+    meta.license: GPLv2+ or LGPLv3+
+    meta.summary: Library to read and write ELF files
+    runtimePhase.post: |
+      -p /sbin/ldconfig
+    runtimePhase.postun: |
+      -p /sbin/ldconfig
+  elfutils-libelf-devel:
+    conflicts:
+    - libelf-devel
+    files: |
+      %{_includedir}/libelf.h
+      %{_includedir}/gelf.h
+      %{_includedir}/nlist.h
+      %{_libdir}/libelf.so
+      %{_libdir}/pkgconfig/libelf.pc
+    meta.description: |
+      The elfutils-libelf-devel package contains the libraries to create
+      applications for handling compiled objects.  libelf allows you to
+      access the internals of the ELF object file format, so you can see the
+      different sections of an ELF file.
+    meta.license: GPLv2+ or LGPLv3+
+    meta.summary: Development support for libelf
+    requires:
+    - elfutils-libelf = %{version}-%{release}
+  elfutils-libs:
+    files: |
+      %license COPYING-GPLV2 COPYING-LGPLV3
+      %{_libdir}/libasm-%{version}.so
+      %{_libdir}/libdw-%{version}.so
+      %{_libdir}/libasm.so.*
+      %{_libdir}/libdw.so.*
+    meta.description: |
+      The elfutils-libs package contains libraries which implement DWARF, ELF,
+      and machine-specific ELF handling and process introspection.  These
+      libraries are used by the programs in the elfutils package.  The
+      elfutils-devel package enables building other programs using these
+      libraries.
+    meta.license: GPLv2+ or LGPLv3+
+    meta.summary: Libraries to handle compiled objects
+    requires:
+    - elfutils-libelf = %{version}-%{release}
+    - default-yama-scope
+    runtimePhase.post: |
+      -p /sbin/ldconfig
+    runtimePhase.postun: |
+      -p /sbin/ldconfig
+version: 0.187

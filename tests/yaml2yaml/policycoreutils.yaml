@@ -121,6 +121,16 @@ rpmMacros:
 - '%global _python_bytecompile_extra 0'
 - '%bcond_with sandbox'
 - '%{?python_provide:%python_provide python3-policycoreutils}'
+runtimePhase.post: |+
+  %systemd_post selinux-autorelabel-mark.service restorecond.service
+
+runtimePhase.postun: |+
+  %systemd_postun_with_restart restorecond.service
+
+
+runtimePhase.preun: |+
+  %systemd_preun selinux-autorelabel-mark.service restorecond.service
+
 source:
   '0': https://github.com/SELinuxProject/selinux/archive/refs/tags/policycoreutils-%{version}.tar.gz
   '1': selinux-autorelabel
