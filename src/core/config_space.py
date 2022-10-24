@@ -81,11 +81,12 @@ class ConfigSpace(dict):
     def add_key(self, key, value, fspath, when):
         # key_c, value_c = transform_key_with_use_configure(key, value, fspath)
         key_info = transform_key_default(key, value, fspath)
-        real_keys = []
-        for k, v in key_info:
-            real_keys.append(k)
+        for k, v in key_info.items():
+            if ":" in k:
+                self[k] = v
+                continue
             self.setdefault(f"{k}:values", []).append(v)
-        return real_keys
+        return list(key_info.keys())
 
     def get_package(self, package_name):
         pre_name = f"pkgs.{package_name}"

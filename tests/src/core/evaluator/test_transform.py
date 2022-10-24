@@ -82,15 +82,12 @@ post:%{wxbasename}-devel(){
             "value": "test",
             "fspath": "fspath"
         }
-        k, v = transform_key_with_when(k1, value)
-        self.assertEqual(k, "patch.1")
-        self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '%%use.ssl'})
-        k, v = transform_key_with_when(k2, value)
-        self.assertEqual(k, "patch.1")
-        self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '%%use.ssl'})
-        k, v = transform_key_with_when(k3, value)
-        self.assertEqual(k, "patch.1")
-        self.assertEqual(v, {'value': 'test', 'fspath': 'fspath', 'when': '{{ not %%use.ssl }}'})
+        res = transform_key_with_when({k1: value})
+        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': '%%use.ssl'}})
+        res = transform_key_with_when({k2: value})
+        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': '%%use.ssl'}})
+        res = transform_key_with_when({k3: value})
+        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': '{{ not %%use.ssl }}'}})
 
     def test_parse_file_name(self):
         file = "/tmp/xxx/runtimePhase.sh"
