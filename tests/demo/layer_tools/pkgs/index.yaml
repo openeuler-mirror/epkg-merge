@@ -4,7 +4,7 @@ registerConfigSpaceForEachFile:
   files."%%_filepath":
     name: "%%_basename" # can catch spell error if conflict with the name defined in yaml
     includePhase: phase.sh
-    includeRuntimePhase: runtime-phase.sh
+    includeRuntimePhase: runtimePhase.sh
     include: versions.yaml files.yaml
     :referAttrs: types.package
     meta:referAttrs: types.package.meta

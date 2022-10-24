@@ -518,6 +518,51 @@ rpmMacros:
   --printf="%G %a" "$DEV")" = "root 644" ]; \{os.linesep}    then \{os.linesep}      /bin/chmod
   0664 "$DEV" \{os.linesep}      /bin/chgrp named "$DEV" \{os.linesep}    fi \{os.linesep}  done
   \{os.linesep}fi'
+runtimePhase.post: |+
+  %?ldconfig
+  if [ -e "%{_sysconfdir}/selinux/config" ]; then
+  %selinux_set_booleans -s targeted %{selinuxbooleans}
+  %selinux_set_booleans -s mls %{selinuxbooleans}
+  fi
+  if [ "$1" -eq 1 ]; then
+  [ -x /sbin/restorecon ] && /sbin/restorecon /etc/rndc.* /etc/named.* >/dev/null 2>&1 ;
+  [ -e /etc/rndc.key ] && chown root:named /etc/rndc.key
+  [ -e /etc/rndc.key ] && chmod 0640 /etc/rndc.key
+  else
+  if getent passwd named | grep ':/bin/false$' >/dev/null; then
+  /sbin/usermod -s /sbin/nologin named
+  fi
+  if /usr/sbin/named-checkconf -p /etc/named.conf 2>/dev/null | grep -q named.iscdlv.key
+  then
+  echo "Replacing obsolete named.iscdlv.key with named.root.key..."
+  if cp -Rf --preserve=all --remove-destination /etc/named.conf /etc/named.conf.rpmbackup; then
+  sed -e 's/named\.iscdlv\.key/named.root.key/' \
+          /etc/named.conf.rpmbackup > /etc/named.conf || \
+        mv /etc/named.conf.rpmbackup /etc/named.conf
+  fi
+  fi
+  fi
+  %systemd_post named.service
+  :;
+
+runtimePhase.postun: |+
+  %?ldconfig
+  %systemd_postun_with_restart named.service
+  if [ -e "%{_sysconfdir}/selinux/config" ]; then
+  %selinux_unset_booleans -s targeted %{selinuxbooleans}
+  %selinux_unset_booleans -s mls %{selinuxbooleans}
+  fi
+
+runtimePhase.pre: |+
+  if [ "$1" -eq 1 ]; then
+  /usr/sbin/groupadd -g %{bind_gid} -f -r named >/dev/null 2>&1 || :;
+  /usr/sbin/useradd  -u %{bind_uid} -r -N -M -g named -s /sbin/nologin -d /var/named -c Named named >/dev/null 2>&1 || :;
+  fi;
+  :;
+
+runtimePhase.preun: |+
+  %systemd_preun named.service
+
 source:
   '0': https://downloads.isc.org/isc/bind9/%{version}/bind-%{version}.tar.xz
   '1': named.sysconfig
@@ -591,6 +636,19 @@ subpackage:
     requires:
     - grep
     - bind%{?_isa} = %{epoch}:%{version}-%{release}
+    runtimePhase.post: |
+      %systemd_post named-chroot.service
+      %chroot_fix_devices %{chroot_prefix}
+      :;
+    runtimePhase.posttrans: |
+      if [ -x /usr/sbin/selinuxenabled ] && /usr/sbin/selinuxenabled; then
+      [ -x /sbin/restorecon ] && /sbin/restorecon %{chroot_prefix}/dev/* > /dev/null 2>&1;
+      fi;
+    runtimePhase.postun: |
+      %systemd_postun_with_restart named-chroot.service
+    runtimePhase.preun: |
+      %systemd_preun named-chroot.service named-chroot-setup.service
+      :;
   bind-devel:
     files: |
       %{_libdir}/libbind9.so
@@ -764,6 +822,12 @@ subpackage:
     - 'bind%{?_isa} = %{epoch}:%{version}-%{release} '
     - 'bind-libs%{?_isa} = %{epoch}:%{version}-%{release} '
     - 'bind-pkcs11-libs%{?_isa} = %{epoch}:%{version}-%{release} '
+    runtimePhase.post: |
+      %systemd_post named-pkcs11.service
+    runtimePhase.postun: |
+      %systemd_postun_with_restart named-pkcs11.service
+    runtimePhase.preun: |
+      %systemd_preun named-pkcs11.service
   bind-pkcs11-devel rpmWhen %if %{with PKCS11}:
     files: |
       %{_includedir}/bind9/pk11/*.h
