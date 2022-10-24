@@ -1,0 +1,85 @@
+buildRequires:
+- libattr-devel gawk libtool gettext
+files: |
+  %defattr(-,root,root)
+  %{!?_licensedir:%global license None
+  %license doc/COPYING*
+  %{_bindir}/*acl
+meta.description: |
+  This package contains commands for manipulating POSIX access control lists,
+  and the libacl.so dynamic library which contains the POSIX 1003.1e draft
+  standard 17 functions for manipulating access control lists.
+meta.homepage: https://savannah.nongnu.org/projects/acl
+meta.license: GPLv2+
+meta.summary: Commands for manipulating POSIX access control lists
+name: acl
+phase.build: |+
+  %configure
+  %make_build
+
+phase.check: |+
+  if test 0 = "$(id -u)"; then
+  sed -e 's|test/root/permissions.test||' -i test/Makemodule.am Makefile.in Makefile
+  fi
+  if ! runuser -u bin -- "${PWD}/setfacl" --version; then
+  sed -e 's|test/root/setfacl.test||' -i test/Makemodule.am Makefile.in Makefile
+  fi
+
+  %make_build check
+
+phase.install: |+
+  %make_install
+  %delete_la_and_a
+  rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}*
+
+  %find_lang %{name}
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 1
+source:
+  '0': http://download.savannah.nongnu.org/releases/acl/%{name}-%{version}.tar.gz
+  '1': http://download.savannah.nongnu.org/releases/acl/%{name}-%{version}.tar.gz.sig
+  '2': agruen-key.gpg
+subpackage:
+  acl-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %{_mandir}/man1/*
+      %{_mandir}/man3/*
+      %{_mandir}/man5/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  libacl:
+    conflicts:
+    - filesystem < 3
+    files: |
+      %{_libdir}/libacl.so.*
+    filesInput: '%{name}.lang'
+    meta.description: This package contains the library for manipulating access control
+      list.
+    meta.license: LGPLv2+
+    meta.summary: Library for supporting access control list
+    runtimePhase.post: |
+      -p /sbin/ldconfig
+    runtimePhase.postun: |
+      -p /sbin/ldconfig
+  libacl-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/acl/libacl.h
+      %{_includedir}/sys/acl.h
+      %{_libdir}/libacl.so
+      %{_libdir}/pkgconfig/libacl.pc
+    meta.description: This package contains header files for the POSIX ACL library.
+    meta.license: LGPLv2+
+    meta.summary: Files necessary to develop applications with libacl
+    obsoletes:
+    - acl-devel < %{version}-%{release}
+    requires:
+    - libacl = %{version}-%{release}, libattr-devel
+version: 2.3.1

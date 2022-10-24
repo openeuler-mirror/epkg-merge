@@ -1,0 +1,109 @@
+Buildarchitectures:
+- noarch
+buildRequires:
+- gawk glibc perl-interpreter
+- java-devel
+- glibc-common >= 2.5.90-7
+files: |
+  %{_datadir}/zoneinfo
+  %doc README
+  %doc theory.html
+  %doc tz-link.html
+  %doc tz-art.html
+  %license LICENSE
+meta.description: |
+  This package contains data files with rules for various timezones around
+  the world.
+meta.homepage: https://www.iana.org/time-zones
+meta.license: Public Domain
+meta.summary: Timezone data
+name: tzdata
+patchset:
+  '0': backport-Iran-will-stop-DST-in-2023.patch
+  '1': backport-Chile-s-DST-is-delayed-by-a-week-in-September-2022.patch
+  '10': skip-check_web-testcase.patch
+  '2': backport-Palestine-transitions-are-now-Saturdays-at-02-00.patch
+  '3': backport-Tweak-expression-of-Palestine-transition.patch
+  '4': bugfix-0001-add-Beijing-timezone.patch
+  '5': remove-country-selection-from-tzselect-steps.patch
+  '6': remove-ROC-timezone.patch
+  '7': rename-Macau-to-Macao.patch
+  '8': remove-El_Aaiun-timezone.patch
+  '9': remove-Israel-timezone.patch
+phase.build: |+
+  make VERSION=%{version} tzdata%{version}-rearguard.tar.gz
+  tar zxf tzdata%{version}-rearguard.tar.gz
+  rm tzdata.zi main.zi
+
+  make VERSION=%{version} DATAFORM=rearguard tzdata.zi
+  make VERSION=%{version} DATAFORM=rearguard main.zi
+
+  FILES="africa antarctica asia australasia europe northamerica southamerica
+  etcetera backward factory"
+
+  mkdir zoneinfo/{,posix,right}
+  zic -y ./yearistype -d zoneinfo -L /dev/null -p America/New_York $FILES
+  zic -y ./yearistype -d zoneinfo/posix -L /dev/null $FILES
+  zic -y ./yearistype -d zoneinfo/right -L leapseconds $FILES
+
+  cd javazic
+  javac -source 1.6 -target 1.6 -classpath . `find . -name \*.java`
+  cd ..
+
+  java -classpath javazic/ rht.tools.javazic.Main -V %{version} \
+    -d javazi \
+    $FILES javazic/tzdata_jdk/gmt javazic/tzdata_jdk/jdk11_backward
+
+  cd javazic-1.8
+  javac -source 1.8 -target 1.8 -classpath . `find . -name \*.java`
+  cd ..
+
+  java -classpath javazic-1.8 build.tools.tzdb.TzdbZoneRulesCompiler \
+      -srcdir . -dstfile tzdb.dat \
+      -verbose \
+      $FILES javazic-1.8/tzdata_jdk/gmt javazic-1.8/tzdata_jdk/jdk11_backward
+
+phase.check: |+
+  make check
+
+phase.install: |2+
+
+  rm -fr $RPM_BUILD_ROOT
+  install -d $RPM_BUILD_ROOT%{_datadir}
+  cp -prd zoneinfo $RPM_BUILD_ROOT%{_datadir}
+  install -p -m 644 zone.tab zone1970.tab iso3166.tab leapseconds tzdata.zi $RPM_BUILD_ROOT%{_datadir}/zoneinfo
+  cp -prd javazi $RPM_BUILD_ROOT%{_datadir}/javazi
+  mkdir -p $RPM_BUILD_ROOT%{_datadir}/javazi-1.8
+  install -p -m 644 tzdb.dat $RPM_BUILD_ROOT%{_datadir}/javazi-1.8/
+
+phase.prep: |+
+  %autosetup -c -a 1 -p1
+
+  mkdir javazic
+  tar zxf %{SOURCE2} -C javazic
+  cd javazic
+
+  mv sun rht
+  find . -type f -name '*.java' -print0 \
+      | xargs -0 -- sed -i -e 's:sun\.tools\.:rht.tools.:g' \
+                           -e 's:sun\.util\.:rht.util.:g'
+  cd ..
+
+  tar xf %{SOURCE3}
+
+  echo "%{name}%{version}" >> VERSION
+
+release: 6
+source:
+  '0': https://data.iana.org/time-zones/releases/tzdata%{version}.tar.gz
+  '1': https://data.iana.org/time-zones/releases/tzcode%{version}.tar.gz
+  '2': javazic.tar.gz
+  '3': javazic-1.8-37392f2f5d59.tar.xz
+subpackage:
+  tzdata-java:
+    files: |
+      %{_datadir}/javazi
+      %{_datadir}/javazi-1.8
+    meta.description: This package contains timezone information for use by Java runtimes.
+    meta.summary: Timezone data for Java
+version: null

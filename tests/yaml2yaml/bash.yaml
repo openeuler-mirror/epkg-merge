@@ -1,0 +1,107 @@
+buildRequires:
+- gcc bison texinfo autoconf ncurses-devel
+- glibc-all-langpacks
+files: |
+  %defattr(-,root,root)
+  %license COPYING
+  %config(noreplace) /etc/skel/.b*
+  %{_bindir}/{sh,bash,alias,bg,cd,command,fc,fg,wait,bashbug}
+  %{_bindir}/{hash,getopts,jobs,read,type,ulimit,umask,unalias}
+  %config(noreplace) %{_sysconfdir}/profile.d/alias.sh
+filesInput: '%{name}.lang'
+meta.description: |
+  Bash is the GNU Project's shell. Bash is the Bourne Again SHell. Bash is an sh-compatible
+  shell that incorporates useful features from the Korn shell (ksh) and C shell (csh). It is
+  intended to conform to the IEEE POSIX P1003.2/ISO 9945.2 Shell and Tools standard. It offers
+  functional improvements over sh for both programming and interactive use. In addition, most
+  sh scripts can be run by Bash without modification.
+meta.homepage: https://www.gnu.org/software/bash
+meta.license: GPLv3
+meta.summary: It is the Bourne Again Shell
+name: bash
+patchset:
+  '0': bash-2.05a-interpreter.patch
+  '1': bash-2.05b-pgrp_sync.patch
+  '2': bash-4.0-nobits.patch
+  '3': bash-4.2-coverity.patch
+  '4': bash-4.3-noecho.patch
+  '5': bash-4.3-memleak-lc_all.patch
+  '6': bugfix-Forbidden-non-root-user-to-clear-history.patch
+  '7': enable-dot-logout-and-source-bashrc-through-ssh.patch
+  '8': cd-alias.patch
+  '9': bash-5.1-sw.patch
+phase.build: |+
+  autoconf
+  %configure --with-bash-malloc=no \
+  --with-afs
+  MFLAGS="CPPFLAGS=-D_GNU_SOURCE -DRECYCLES_PIDS -DDEFAULT_PATH_VALUE='\"/usr/local/bin:/usr/bin\"' `getconf LFS_CFLAGS`"
+  make "$MFLAGS" version.h
+  make "$MFLAGS" -C builtins
+  %make_build "$MFLAGS"
+
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install install-headers
+  ln -sf bash %{buildroot}%{_bindir}/sh
+  install -pDm 644 %SOURCE1 %{buildroot}/etc/skel/.bashrc
+  install -pDm 644 %SOURCE2 %{buildroot}/etc/skel/.bash_profile
+  install -pDm 644 %SOURCE3 %{buildroot}/etc/skel/.bash_logout
+  install -pDm 644 ./configs/alias.sh %{buildroot}%{_sysconfdir}/profile.d/alias.sh
+
+  for ea in alias bg cd command fc fg getopts hash jobs read type ulimit umask unalias wait
+  do
+  cat <<EOF > "%{buildroot}"/%{_bindir}/"$ea"
+  builtin $ea "\$@"
+  EOF
+  chmod +x "%{buildroot}"/%{_bindir}/"$ea"
+  done
+
+  %find_lang %{name}
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- /bin/sh /bin/bash
+release: 4
+requires:
+- filesystem
+source:
+  '0': https://ftp.gnu.org/gnu/%{name}/%{name}-%{version}.tar.gz
+  '1': dot-bashrc
+  '2': dot-bash_profile
+  '3': dot-bash_logout
+subpackage:
+  bash-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/%{name}
+      %{_libdir}/pkgconfig/*.pc
+      %{_libdir}/bash/*
+      %exclude %{_libdir}/bash/Makefile*
+    meta.description: This package contains development files for %{name}.
+    meta.summary: Development headers for %{name}
+    requires:
+    - '%{name} = %{version}-%{release}'
+    - pkgconf-pkg-config
+  bash-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc NOTES
+      %doc doc/*.ps doc/*.0 doc/*.html doc/*.txt
+      %doc %{_docdir}/%{name}/*
+      %{_infodir}/%{name}.info*
+      %{_mandir}/man1/*.gz
+      %exclude %{_infodir}/dir
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    obsoletes:
+    - '%{name}-doc < %{version}-%{release}'
+    provides:
+    - '%{name}-doc = %{version}-%{release}'
+    requires:
+    - man info
+version: 5.1.8

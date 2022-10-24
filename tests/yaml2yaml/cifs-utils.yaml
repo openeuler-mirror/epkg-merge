@@ -1,0 +1,73 @@
+buildRequires:
+- python3-docutils libcap-ng-devel libtalloc-devel krb5-devel keyutils-libs-devel
+  autoconf
+- automake libwbclient-devel pam-devel pkg-config fdupes gcc
+files: |
+  %defattr(-,root,root,-)
+  %doc
+  %{_bindir}/*
+  %{_sbindir}/*
+  %dir %{_libdir}/%{name}
+  %{_libdir}/%{name}/idmapwb.so
+  %{_libdir}/security/pam_cifscreds.so
+  %dir %{_sysconfdir}/cifs-utils
+  %config(noreplace) %{_sysconfdir}/request-key.d/cifs.idmap.conf
+  %config(noreplace) %{_sysconfdir}/request-key.d/cifs.spnego.conf
+  %ghost  %config(noreplace) %{_sysconfdir}/cifs-utils/idmap-plugin
+meta.description: |
+  The in-kernel CIFS filesystem is generally the preferred method for mounting
+  SMB/CIFS shares on Linux.
+
+  The in-kernel CIFS filesystem relies on a set of user-space tools. That package
+  of tools is called cifs-utils.Although not really part of Samba proper, these
+  tools were originally part of the Samba package. For several reasons, shipping
+  these tools as part of Samba was problematic and it was deemed better to split
+  them off into their own package.
+meta.homepage: http://linux-cifs.samba.org/cifs-utils/
+meta.license: GPLv3+
+meta.summary: Utilities for doing and managing mounts of the Linux CIFS filesystem
+name: cifs-utils
+obsoletes:
+- pam_cifscreds
+phase.build: |+
+  autoreconf -vif
+  %configure  --prefix=/usr --with-pamdir=%{_libdir}/security ROOTSBINDIR=%{_sbindir}
+  make %{?_smp_mflags}
+
+phase.install: |+
+  rm -rf %{buildroot}
+  %make_install
+  mkdir -p %{buildroot}%{_sysconfdir}/%{name}
+  ln -s %{_libdir}/%{name}/idmapwb.so %{buildroot}%{_sysconfdir}/%{name}/idmap-plugin
+  mkdir -p %{buildroot}%{_sysconfdir}/request-key.d
+  install -m 644 contrib/request-key.d/cifs.idmap.conf %{buildroot}%{_sysconfdir}/request-key.d
+  install -m 644 contrib/request-key.d/cifs.spnego.conf %{buildroot}%{_sysconfdir}/request-key.d
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- pam_cifscreds
+release: 1
+requires:
+- keyutils
+source:
+  '0': https://download.samba.org/pub/linux-cifs/cifs-utils/%{name}-%{version}.tar.bz2
+subpackage:
+  cifs-utils-devel:
+    files: |
+      %{_includedir}/cifsidmap.h
+    meta.description: |
+      The SMB/CIFS protocol is a standard file sharing protocol widely deployed
+      on Microsoft Windows machines. This package contains the header file
+      necessary for building ID mapping plugins for cifs-utils.
+    meta.summary: Files needed for building plugins for cifs-utils
+  cifs-utils-help:
+    files: |
+      %{_mandir}/man1/*
+      %{_mandir}/man8/*
+    meta.description: This contains man files for the using of cifs-utils.
+    meta.summary: Including man files for cifs-utils
+    requires:
+    - man
+version: 6.15

@@ -1,0 +1,76 @@
+buildRequires:
+- xz %if 0%{?fedora} >= 12 || 0%{?centos} >= 6 || 0%{?rhel} >= 6 || 0%{?suse_version}
+  >= 1200 || 0%{?openEuler} >= 1
+- gcc gzip
+- pkgconfig(bluez) %if 0%{?fedora} >= 18 || 0%{?centos} >= 6 || 0%{?rhel} >= 8 ||
+  0%{?suse_version} >= 1200 || 0%{?openEuler} >= 1
+files: |
+  %maybe_use_defattr
+  %doc CREDITS ChangeLog.gz ChangeLog-CVS.gz COPYING NEWS README
+  %{_bindir}/strace
+  %{_bindir}/strace-log-merge
+  %{_mandir}/man1/*
+meta.description: |
+  The strace program intercepts and records the system calls called and
+  received by a running process.  Strace can print a record of each
+  system call, its arguments and its return value.  Strace is useful for
+  diagnosing problems and debugging, as well as for instructional
+  purposes.
+
+  Install strace if you need a tool to track the system calls made and
+  received by a process.
+meta.homepage: https://strace.io
+meta.license: LGPL-2.1+ and GPL-2.0+
+meta.summary: Tracks and displays system calls associated with a running process
+name: strace
+phase.build: |+
+  echo 'BEGIN OF BUILD ENVIRONMENT INFORMATION'
+  uname -a |head -1
+  libc="$(ldd /bin/sh |sed -n 's|^[^/]*\(/[^ ]*/libc\.so[^ ]*\).*|\1|p' |head -1)"
+  $libc |head -1
+  file -L /bin/sh
+  gcc --version |head -1
+  ld --version |head -1
+  kver="$(printf 'None '#include <linux/version.h>' 'LINUX_VERSION_CODE' | gcc -E -P -)"
+  printf 'kernel-headers None $(($kver/65536)) $(($kver/256None $(($kverNone
+  echo 'END OF BUILD ENVIRONMENT INFORMATION'
+
+  CFLAGS_FOR_BUILD="$RPM_OPT_FLAGS"; export CFLAGS_FOR_BUILD
+  %configure --enable-mpers=check \
+
+  make %{?_smp_mflags}
+
+phase.check: |2+
+
+phase.install: |+
+  make DESTDIR=%{buildroot} install
+
+  rm -f %{buildroot}%{_bindir}/strace-graph
+
+  for f in ChangeLog ChangeLog-CVS; do
+  gzip -9n < "$f" > "$f".gz &
+  done
+  wait
+
+phase.prep: |+
+  %autosetup -p1
+  echo -n %version-%release > .tarball-version
+  echo -n 2020 > .year
+  echo -n 2020-04-06 > .strace.1.in.date
+
+release: 1
+rpmMacros:
+- '%define buildrequires_stacktrace BuildRequires: elfutils-devel binutils-devel %if
+  0%{?fedora} >= 20 || 0%{?centos} >= 6 || 0%{?rhel} >= 6 || 0%{?openEuler} >= 1'
+- '%define buildrequires_stacktrace BuildRequires: libdw-devel binutils-devel %if
+  0%{?suse_version} >= 1100'
+- '%{?buildrequires_stacktrace}'
+- '%{?!buildroot:BuildRoot: %_tmppath/buildroot-%name-%version-%release}'
+- '%define maybe_use_defattr %{?suse_version:None'
+source:
+  '0': https://strace.io/files/%{version}/strace-%{version}.tar.xz %if 0%{?fedora}
+    >= 12 || 0%{?centos} >= 6 || 0%{?rhel} >= 6 || 0%{?suse_version} >= 1200 || 0%{?openEuler}
+    >= 1
+  '1': strace-%{version}.tar.gz %else %if 0%{?fedora} >= 12 || 0%{?centos} >= 6 ||
+    0%{?rhel} >= 6 || 0%{?suse_version} >= 1200 || 0%{?openEuler} >= 1
+version: 5.14

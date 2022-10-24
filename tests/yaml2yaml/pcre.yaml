@@ -1,0 +1,98 @@
+buildRequires:
+- readline-devel autoconf automake coreutils
+- gcc gcc-c++ glibc-common libtool make
+- bash diffutils grep
+files: |
+  %doc NEWS README
+  %license LICENCE AUTHORS
+  %{_libdir}/*.so.*
+  %{_bindir}/pcregrep
+  %{_bindir}/pcretest
+meta.description: |
+  The PCRE library is a set of functions that implement regular expression
+  pattern matching using the same syntax and semantics as Perl 5. PCRE has
+  its own native API, as well as a set of wrapper functions that correspond
+  to the POSIX regular expression API. The PCRE library is free, even for
+  building proprietary software.
+
+  PCRE was originally written for the Exim MTA, but is now used by many
+  high-profile open source projects, including Apache, PHP, KDE, Postfix,
+  and Nmap. PCRE has also found its way into some well known commercial
+  products, like Apple Safari. Some other interesting projects using PCRE
+  include Chicken, Ferite, Onyx, Hypermail, Leafnode, Askemos, Wenlin, and
+  8th.
+meta.homepage: http://www.pcre.org/
+meta.license: BSD
+meta.summary: Perl Compatible Regular Expressions
+name: pcre
+obsoletes:
+- '%{name}-utf16 < %{version}-%{release} %{name}-utf32 < %{version}-%{release}'
+- '%{name}-cpp < %{version}-%{release} %{name}-tools < %{version}-%{release}'
+phase.build: |+
+  libtoolize -cf
+  autoreconf -vif
+  %configure \
+  %ifarch riscv64
+  --disable-jit \
+  %else
+  --enable-jit \
+  %endif
+  --enable-pcretest-libreadline \
+  --enable-utf \
+  --enable-unicode-properties \
+  --enable-pcre8 \
+  --enable-pcre16 \
+  --enable-pcre32 \
+  --disable-silent-rules \
+
+  %make_build
+
+phase.check: |+
+  make check VERBOSE=yes
+
+  %ldconfig_scriptlets
+
+phase.install: |+
+  %make_install
+  rm -f %{buildroot}/%{_libdir}/*.la
+  rm -rf %{buildroot}/%{_docdir}/pcre
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- '%{name}-utf16 = %{version}-%{release} %{name}-utf32 = %{version}-%{release}'
+- '%{name}-cpp = %{version}-%{release} %{name}-tools = %{version}-%{release}'
+release: 2
+source:
+  '0': https://ftp.pcre.org/pub/pcre/%{name}-%{version}.tar.bz2
+subpackage:
+  pcre-devel:
+    files: |
+      %{_libdir}/*.so
+      %{_libdir}/pkgconfig/*
+      %{_includedir}/*.h
+      %{_bindir}/pcre-config
+      %{_libdir}/*.a
+    meta.description: |
+      The %{name}-devel package contains libraries and header files for
+      developing applications that use %{name}.
+    meta.summary: Development files for %{name}
+    obsoletes:
+    - '%{name}-static < %{version}-%{release}'
+    provides:
+    - '%{name}-static = %{version}-%{release}'
+    requires:
+    - '%{name} = %{version}-%{release}'
+  pcre-help:
+    buildArch: noarch
+    files: |
+      %doc doc/*.txt doc/html
+      %doc HACKING pcredemo.c
+      %{_mandir}/man1/*
+      %{_mandir}/man3/*
+    meta.description: The %{name}-help package contains doc files for %{name}.
+    meta.summary: Doc files for %{name}
+    requires:
+    - man
+version: 8.45

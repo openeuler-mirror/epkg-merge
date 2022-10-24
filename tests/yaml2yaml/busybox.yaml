@@ -1,0 +1,83 @@
+buildRequires:
+- gcc glibc-static
+- libselinux-devel >= 1.27.7-2
+- libsepol-devel libselinux-static libsepol-static
+buildRoot:
+- '%_topdir/BUILDROOT'
+epoch: 1
+files: |
+  %doc LICENSE README
+  /sbin/busybox
+meta.description: |
+  BusyBox combines tiny versions of many common UNIX utilities into a
+  single small executable. It provides replacements for most of the
+  utilities you usually find in GNU fileutils, shellutils, etc. It provides
+  a fairly complete environment for any small or embedded system.
+meta.homepage: http://www.busybox.net
+meta.license: GPLv2
+meta.summary: The Swiss Army Knife of Embedded Linux
+name: busybox
+patchset:
+  '0': backport-CVE-2022-28391.patch
+  '1': backport-CVE-2022-30065.patch
+  '2': backport-CVE-2022-30067.patch
+phase.build: |+
+  export CFLAGS="$RPM_OPT_FLAGS -fPIE" LDFLAGS="-Wl,-z,now"
+
+  cp %{SOURCE3} .config
+  yes "" | make oldconfig && \
+  cat .config && \
+  make V=1 %{?_smp_mflags} CC="gcc $RPM_OPT_FLAGS"
+
+  cp busybox_unstripped busybox.dynamic
+  cp docs/busybox.1 docs/busybox.dynamic.1
+
+  make clean
+  cp %{SOURCE2} .config
+  yes "" | make oldconfig
+  cat .config && \
+  make V=1 %{?_smp_mflags} CC="%__cc $RPM_OPT_FLAGS"
+
+  cp busybox_unstripped busybox.petitboot
+  cp docs/busybox.1 docs/busybox.petitboot.1
+
+phase.install: |+
+  mkdir -p $RPM_BUILD_ROOT/sbin
+  mkdir -p $RPM_BUILD_ROOT/%{_mandir}/man1
+  install -m 755 busybox.petitboot $RPM_BUILD_ROOT/sbin/busybox.petitboot
+  install -m 755 busybox.dynamic $RPM_BUILD_ROOT/sbin/busybox
+  install -m 644 docs/busybox.petitboot.1 $RPM_BUILD_ROOT/%{_mandir}/man1/busybox.petitboot.1
+  install -m 644 docs/busybox.dynamic.1 $RPM_BUILD_ROOT/%{_mandir}/man1/busybox.1
+
+phase.prep: |
+  # auto apply all needed patch with git
+  echo "prep layer_tools"
+provides:
+- bundled(md5-drepper2)
+release: '%{RELEASE}'
+rpmMacros:
+- '%define VERSION 1.34.1 %if "%{!?VERSION:1}"'
+- '%define RELEASE 17 %if "%{!?RELEASE:1}"'
+source:
+  '0': http://www.busybox.net/downloads/%{name}-%{version}.tar.bz2
+  '1': busybox-static.config
+  '2': busybox-petitboot.config
+  '3': busybox-dynamic.config
+subpackage:
+  busybox-help:
+    files: |
+      %{_mandir}/man1/busybox.1.gz
+      %{_mandir}/man1/busybox.petitboot.1.gz
+    meta.description: This package contains help documentation for busybox
+    meta.summary: Documentation for busybox
+  busybox-petitboot:
+    files: |
+      %doc LICENSE README
+      /sbin/busybox.petitboot
+    meta.description: |
+      The Petitboot bootloader provides a boot menu and boots the chosen boot
+      option using the Linux kernel's kexec functionality. And for use with the
+      Petitboot bootloader used on PlayStation 3, the version of the contained
+      in this package is minimal configured.
+    meta.summary: Configure the busybox version with petitboot
+version: null

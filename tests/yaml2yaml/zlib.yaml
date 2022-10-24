@@ -1,0 +1,124 @@
+buildRequires:
+- automake, autoconf, libtool
+files: |
+  %defattr(-,root,root)
+  %doc README ChangeLog FAQ
+  %{_libdir}/libz.so.*
+meta.description: |
+  Zlib is a free, general-purpose, not covered by any patents, lossless data-compression
+  library for use on virtually any computer hardware and operating system. The zlib data
+  format is itself portable across platforms.
+meta.homepage: http://www.zlib.net
+meta.license: zlib and Boost
+meta.summary: A lossless data-compression library
+name: zlib
+patchset:
+  '0': zlib-1.2.5-minizip-fixuncrypt.patch
+  '1': 0001-Neon-Optimized-hash-chain-rebase.patch
+  '10': backport-0001-CVE-2022-37434.patch
+  '11': backport-0002-CVE-2022-37434.patch
+  '2': 0002-Porting-optimized-longest_match.patch
+  '3': 0003-arm64-specific-build-patch.patch
+  '4': 0004-zlib-Optimize-CRC32.patch
+  '5': zlib-1.2.11-SIMD.patch
+  '6': 0005-Accelerate-Adler32-using-arm64-SVE-instructions.patch
+  '7': fix-undefined-buffer-detected-by-oss-fuzz.patch
+  '8': backport-0001-CVE-2018-25032.patch
+  '9': backport-0002-CVE-2018-25032.patch
+phase.build: |+
+  export CFLAGS="$RPM_OPT_FLAGS"
+  %ifarch aarch64
+  CFLAGS+=" -DARM_NEON -O3"
+  CFLAGS+=" -march=armv8-a+crc"
+  %endif
+
+  ./configure --libdir=%{_libdir} --includedir=%{_includedir} --prefix=%{_prefix}
+  %make_build LDFLAGS="$LDFLAGS -Wl,-z,relro -Wl,-z,now"
+
+  cd contrib/minizip
+  autoreconf --install
+  %configure --enable-static=no \
+
+  %make_build
+
+phase.check: |+
+  make test
+
+phase.install: |+
+  %make_install
+
+  %make_install -C contrib/minizip
+  rm -f $RPM_BUILD_ROOT%_includedir/minizip/crypt.h
+
+  find $RPM_BUILD_ROOT -name '*.la' | xargs rm -f
+
+phase.prep: |+
+  %setup -n %{name}-%{version}
+  %patch0 -p1
+  %ifarch aarch64
+  %patch1 -p1
+  %patch2 -p1
+  %patch3 -p1
+  %patch4 -p1
+  %patch5 -p1
+  %patch6 -p1
+  %endif
+  %patch7 -p1
+  %patch8 -p1
+  %patch9 -p1
+  %patch10 -p1
+  %patch11 -p1
+
+release: 23
+source:
+  '0': http://www.zlib.net/zlib-%{version}.tar.xz
+subpackage:
+  minizip:
+    files: |
+      %doc contrib/minizip/MiniZip64_info.txt contrib/minizip/MiniZip64_Changes.txt
+      %{_libdir}/libminizip.so.*
+    meta.description: Minizip is the upper library of zlib, which encapsulates the
+      operations related to zip files.
+    meta.summary: Encapsulates the operations related to zip files
+    requires:
+    - '%{name} = %{version}-%{release}'
+  minizip-devel:
+    files: |
+      %dir %{_includedir}/minizip
+      %{_includedir}/minizip/*.h
+
+      %{_libdir}/libminizip.so
+      %{_libdir}/pkgconfig/minizip.pc
+    meta.description: This package contains the development-related content related
+      to minizip.
+    meta.summary: The development-related content related to minizip
+    requires:
+    - minizip = %{version}-%{release}
+    - '%{name}-devel = %{version}-%{release}'
+  zlib-devel:
+    files: |
+      %doc doc/algorithm.txt test/example.c
+      %{_includedir}/zlib.h
+      %{_includedir}/zconf.h
+
+      %{_libdir}/libz.so
+      %{_libdir}/pkgconfig/zlib.pc
+      %{_libdir}/libz.a
+    meta.description: |
+      This package contains the static library, the header files, the tests user case and other
+      development content.
+    meta.summary: Header files and libraries for Zlib development
+    obsoletes:
+    - zlib-static
+    provides:
+    - zlib-static
+    requires:
+    - '%{name} = %{version}-%{release}'
+  zlib-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/man3/zlib.3*
+    meta.description: This package includes help documentation and manuals related
+      to zlib.
+    meta.summary: Help documentation related to zlib
+version: 1.2.11

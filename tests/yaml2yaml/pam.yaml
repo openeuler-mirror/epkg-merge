@@ -1,0 +1,164 @@
+buildRequires:
+- autoconf automake libtool bison flex sed cracklib-devel gdbm-devel
+- perl-interpreter pkgconfig gettext-devel libtirpc-devel libnsl2-devel
+- audit-libs-devel libselinux-devel
+files: |
+  %defattr(-,root,root)
+  %license Copyright COPYING gpl-2.0.txt
+  %doc AUTHORS README ChangeLog NEWS
+  %doc doc/README.d/
+  %dir %{_pamconfdir}
+  %config(noreplace) %{_pamconfdir}/other
+  %config(noreplace) %{_pamconfdir}/system-auth
+  %config(noreplace) %{_pamconfdir}/password-auth
+  %config(noreplace) %{_pamconfdir}/config-util
+  %config(noreplace) %{_pamconfdir}/postlogin
+  %{_pamlibdir}/libpam.so.*
+  %{_pamlibdir}/libpamc.so.*
+  %{_pamlibdir}/libpam_misc.so.*
+  %attr(4755,root,root) %{_sbindir}/pam_timestamp_check
+  %attr(4755,root,root) %{_sbindir}/unix_chkpwd
+  %attr(0700,root,root) %{_sbindir}/unix_update
+  %attr(0755,root,root) %{_sbindir}/pwhistory_helper
+  %{_sbindir}/faillock
+  %{_sbindir}/mkhomedir_helper
+  %{_sbindir}/pam_namespace_helper
+  %attr(0755,root,root) %{_sbindir}/pam_namespace_helper
+  %dir %{_moduledir}
+  %{_moduledir}/pam*.so
+  %{_moduledir}/pam_filter/
+  %{_unitdir}/pam_namespace.service
+  %dir %{_secconfdir}
+  %config(noreplace) %{_secconfdir}/access.conf
+  %config(noreplace) %{_secconfdir}/group.conf
+  %config(noreplace) %{_secconfdir}/limits.conf
+  %dir %{_secconfdir}/limits.d
+  %config(noreplace) %{_secconfdir}/namespace.conf
+  %dir %{_secconfdir}/namespace.d
+  %attr(755,root,root) %config(noreplace) %{_secconfdir}/namespace.init
+  %config(noreplace) %{_secconfdir}/pam_env.conf
+  %config(noreplace) %{_secconfdir}/time.conf
+  %config(noreplace) %{_secconfdir}/opasswd
+  %config(noreplace) %{_secconfdir}/sepermit.conf
+  %config(noreplace) %{_secconfdir}/faillock.conf
+  %dir /var/run/sepermit
+  %ghost %verify(not md5 size mtime) /var/log/tallylog
+  %dir /var/run/faillock
+  %{_prefix}/lib/tmpfiles.d/pam.conf
+filesInput: Linux-PAM.lang
+meta.description: |
+  PAM (Pluggable Authentication Modules) is a system of libraries that
+  handle the authentication tasks of applications (services) on the system.
+meta.homepage: http://www.linux-pam.org/
+meta.license: BSD and GPLv2+
+meta.summary: Pluggable Authentication Modules for Linux
+name: pam
+patchset:
+  '0': bugfix-pam-1.1.8-faillock-systemtime.patch
+  '1': openEuler-change-ndbm-to-gdbm.patch
+  '2': 0001-bugfix-cannot-open-database-file.patch
+  '3': add-sm3-crypt-support.patch
+phase.build: "%configure \\\n\t--disable-rpath \\\n--disable-static \\\n--disable-prelude\
+  \ \\\n--enable-db=ndbm \\\n \\\n\t--libdir=%{_pamlibdir} \\\n\t--includedir=%{_includedir}/security\
+  \ \\\n\nmake -C po update-gmo\n%make_build\n\n"
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install
+
+  mkdir -p doc/README.d
+  for readme in modules/pam_*/README ; do
+  cp -f ${readme} doc/README.d/README.`dirname ${readme} | sed -e 's@^modules/@@'`
+  done
+
+  ln -sf pam_sepermit.so $RPM_BUILD_ROOT%{_moduledir}/pam_selinux_permit.so
+
+  rm -rf $RPM_BUILD_ROOT%{_datadir}/doc/Linux-PAM
+  rm -f $RPM_BUILD_ROOT%{_sysconfdir}/environment
+
+  install -d -m 755 $RPM_BUILD_ROOT%{_pamconfdir}
+
+  install -m 644 -D modules/pam_namespace/pam_namespace.service \
+    %{buildroot}%{_unitdir}/pam_namespace.service
+
+  install -m 644 %{SOURCE2} $RPM_BUILD_ROOT%{_pamconfdir}/other
+  install -m 644 %{SOURCE3} $RPM_BUILD_ROOT%{_pamconfdir}/system-auth
+  install -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_pamconfdir}/password-auth
+  install -m 644 %{SOURCE5} $RPM_BUILD_ROOT%{_pamconfdir}/config-util
+  install -m 644 %{SOURCE7} $RPM_BUILD_ROOT%{_pamconfdir}/postlogin
+  install -m 600 /dev/null $RPM_BUILD_ROOT%{_secconfdir}/opasswd
+  install -d -m 755 $RPM_BUILD_ROOT/var/log
+  install -m 600 /dev/null $RPM_BUILD_ROOT/var/log/tallylog
+  install -d -m 755 $RPM_BUILD_ROOT/var/run/faillock
+
+  for phase in auth acct passwd session ; do
+  ln -sf pam_unix.so $RPM_BUILD_ROOT%{_moduledir}/pam_unix_${phase}.so
+  done
+
+  install -m644 -D %{SOURCE6} $RPM_BUILD_ROOT%{_prefix}/lib/tmpfiles.d/pam.conf
+
+  find $RPM_BUILD_ROOT -type f -name "*.la" -delete -print
+  rm -fr $RPM_BUILD_ROOT/usr/share/doc/pam
+
+  %find_lang Linux-PAM
+
+phase.prep: |+
+  %autosetup -n Linux-PAM-%{version} -p1
+  cp %{SOURCE8} .
+  autoreconf -i
+
+provides:
+- '%{name}-sm3 = %{version}-%{release}'
+release: 2
+requires:
+- cracklib libpwquality coreutils glibc audit-libs libselinux libxcrypt-sm3
+rpmMacros:
+- '%define _pamlibdir %{_libdir}'
+- '%define _moduledir %{_libdir}/security'
+- '%define _secconfdir %{_sysconfdir}/security'
+- '%define _pamconfdir %{_sysconfdir}/pam.d'
+runtimePhase.post: |+
+  /sbin/ldconfig
+  if [ ! -e /var/log/tallylog ] ; then
+  /usr/bin/install -m 600 /dev/null /var/log/tallylog || :
+  fi
+
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+source:
+  '0': https://github.com/linux-pam/linux-pam/releases/download/v%{version}/Linux-PAM-%{version}.tar.xz
+  '1': https://github.com/linux-pam/linux-pam/releases/download/v%{version}/Linux-PAM-%{version}.tar.xz.asc
+  '2': other.pamd
+  '3': system-auth.pamd
+  '4': password-auth.pamd
+  '5': config-util.pamd
+  '6': pamtmp.conf
+  '7': postlogin.pamd
+  '8': https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+subpackage:
+  pam-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/security
+      %{_libdir}/libpam.so
+      %{_libdir}/libpamc.so
+      %{_libdir}/libpam_misc.so
+      %{_libdir}/pkgconfig/pam.pc
+      %{_libdir}/pkgconfig/pam_misc.pc
+      %{_libdir}/pkgconfig/pamc.pc
+    meta.description: '%{summary}.'
+    meta.summary: Development files for Linux-PAM
+    requires:
+    - pam = %{version}-%{release}
+  pam-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %{_mandir}/man3/*
+      %{_mandir}/man5/*
+      %{_mandir}/man8/*
+    meta.description: '%{summary}.'
+    meta.summary: Man pages for Linux-PAM
+version: 1.5.2

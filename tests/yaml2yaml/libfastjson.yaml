@@ -1,0 +1,57 @@
+buildRequires:
+- autoconf automake libtool
+files: |
+  %license COPYING
+  %doc AUTHORS ChangeLog README.html
+  %{_libdir}/libfastjson.so*
+meta.description: |
+  libfastjson is a fork from json-c, and is currently
+  under development. The aim of this is not to provide
+  a slightly modified clone of json-c. It's aim is to
+  provide: a small library with essential json handling
+  functions, sufficiently good json support (not 100%
+  standards compliant), be very fast in processing.
+meta.homepage: https://github.com/rsyslog/libfastjson
+meta.license: MIT
+meta.summary: JSON-C - A JSON implementation in C
+name: libfastjson
+obsoletes:
+- '%{name} < %{version}-%{release}'
+phase.build: |+
+  autoreconf -iv
+  export CFLAGS="$RPM_OPT_FLAGS -D_GNU_SOURCE -Wl,-z,relro,-z,now -fstack-protector-strong"
+  %configure --enable-shared \
+  --disable-static \
+
+
+phase.check: |+
+  make V=1 check
+
+phase.install: |+
+  make V=1 DESTDIR=%{buildroot} install
+  rm -f %{buildroot}/usr/lib64/libfastjson.la
+
+phase.prep: |+
+  %autosetup -p1
+
+
+release: 2
+runtimePhase.post: |+
+  -p /sbin/ldconfig
+
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+source:
+  '0': http://download.rsyslog.com/%{name}/%{name}-%{version}.tar.gz
+subpackage:
+  libfastjson-devel:
+    files: |
+      %{_includedir}/libfastjson
+      %{_libdir}/libfastjson.so
+      %{_libdir}/pkgconfig/libfastjson.pc
+    meta.description: provide development files for libfastjson
+    meta.summary: Development files for libfastjson
+    requires:
+    - libfastjson = %{version}-%{release}
+version: 0.99.9

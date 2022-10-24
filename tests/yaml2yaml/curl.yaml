@@ -1,0 +1,183 @@
+buildRequires:
+- automake brotli-devel coreutils gcc groff krb5-devel
+- libidn2-devel libnghttp2-devel libpsl-devel
+- libssh-devel make openldap-devel openssh-clients openssh-server
+- openssl-devel perl-interpreter pkgconfig python3-devel sed
+- stunnel zlib-devel gnutls-utils nghttp2 perl(IO::Compress::Gzip)
+- perl(Getopt::Long) perl(Pod::Usage) perl(strict) perl(warnings)
+- perl(Cwd) perl(Digest::MD5) perl(Exporter) perl(File::Basename)
+- perl(File::Copy) perl(File::Spec) perl(IPC::Open2) perl(MIME::Base64)
+- perl(Time::Local) perl(Time::HiRes) perl(vars)
+- valgrind %ifarch x86_64
+- glibc-debuginfo %ifarch x86_64
+files: |
+  %defattr(-,root,root)
+  %license COPYING
+  %{_bindir}/curl
+  %{_datadir}/zsh
+meta.description: |
+  cURL is a computer software project providing a library (libcurl) and
+  command-line tool (curl) for transferring data using various protocols.
+meta.homepage: https://curl.haxx.se/
+meta.license: MIT
+meta.summary: Curl is used in command lines or scripts to transfer data
+name: curl
+patchset:
+  '0': backport-0101-curl-7.32.0-multilib.patch
+  '1': backport-CVE-2022-22576.patch
+  '10': backport-CVE-2022-32205.patch
+  '11': backport-CVE-2022-32206.patch
+  '12': backport-CVE-2022-32207.patch
+  '13': backport-CVE-2022-32208.patch
+  '14': backport-fix-configure-disable-http-auth-build-error.patch
+  '15': backport-CVE-2022-35252-cookie-reject-cookies-with-control-bytes.patch
+  '2': backport-CVE-2022-27775.patch
+  '3': backport-CVE-2022-27776.patch
+  '4': backport-pre-CVE-2022-27774.patch
+  '5': backport-001-CVE-2022-27774.patch
+  '6': backport-002-CVE-2022-27774.patch
+  '7': backport-CVE-2022-27781.patch
+  '8': backport-pre-CVE-2022-27782.patch
+  '9': backport-CVE-2022-27782.patch
+phase.build: |+
+  install -d build-full
+  export common_configure_opts="--cache-file=../config.cache \
+      --enable-symbol-hiding  --enable-ipv6  --enable-threaded-resolver \
+      --with-gssapi  --with-nghttp2  --with-ssl \
+      --with-ca-bundle=%{_sysconfdir}/pki/tls/certs/ca-bundle.crt"
+
+  %global _configure ../configure
+
+  (
+  cd build-full
+  %configure $common_configure_opts --enable-ldap \
+  --enable-ldaps \
+  --enable-manual \
+  --with-brotli \
+  --with-libidn2 \
+  --with-libpsl \
+  --with-libssh
+  )
+
+  sed -e 's/^runpath_var=.*/runpath_var=/' \
+      -e 's/^hardcode_libdir_flag_spec=".*"$/hardcode_libdir_flag_spec=""/' \
+      -i build-full/libtool
+
+  %make_build V=1 -C build-full
+
+phase.check: |+
+  %make_build V=1 -C build-full/tests
+
+  export OPENSSL_SYSTEM_CIPHERS_OVERRIDE=XXX
+  export OPENSSL_CONF=
+
+  export srcdir=../../tests
+
+  unset DEBUGINFOD_URLS
+
+  for size in full; do (
+  cd build-${size}
+
+  export LD_LIBRARY_PATH="${PWD}/lib/.libs"
+
+  cd tests
+  perl -I../../tests ../../tests/runtests.pl -a -p -v '!flaky'
+  )
+  done
+
+phase.install: |+
+  rm -f ${RPM_BUILD_ROOT}%{_libdir}/libcurl.{la,so}
+
+  install -D -m 644 docs/libcurl/libcurl.m4 $RPM_BUILD_ROOT%{_datadir}/aclocal/libcurl.m4
+
+  cd build-full
+  %make_install
+
+  LD_LIBRARY_PATH="$RPM_BUILD_ROOT%{_libdir}:$LD_LIBRARY_PATH" %make_install -C scripts
+
+  rm -rf ${RPM_BUILD_ROOT}%{_datadir}/fish
+
+  rm -f ${RPM_BUILD_ROOT}%{_libdir}/libcurl.a
+  rm -rf ${RPM_BUILD_ROOT}%{_libdir}/libcurl.la
+
+  %ldconfig_scriptlets
+
+  %ldconfig_scriptlets -n libcurl
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+  printf "1112\n1455\n1184\n1801\n1592\n" >> tests/data/DISABLED
+
+  sed -e 's/^35$/35,52/' -i tests/data/test323
+  (
+  { set +x; } 2>/dev/null
+  cmd="sed -e 's|ip6-localhost|localhost6|' -i tests/data/test[0-9]*"
+  printf "+ %s\n" "$cmd" >&2
+  eval "$cmd"
+  )
+
+  aclocal -I m4
+  automake
+
+provides:
+- curl-full = %{version}-%{release} webclient
+release: 10
+requires:
+- libcurl = %{version}-%{release}
+rpmMacros:
+- '%global libpsl_version %(pkg-config --modversion libpsl 2>/dev/null || echo 0)'
+- '%global libssh_version %(pkg-config --modversion libssh 2>/dev/null || echo 0)'
+- '%global openssl_version %({ pkg-config --modversion openssl 2>/dev/null || echo
+  0;} | sed ''s|-|-0.|'')'
+- '%global _configure ../configure'
+source:
+  '0': https://curl.haxx.se/download/curl-%{version}.tar.xz
+subpackage:
+  curl-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc CHANGES README*
+      %doc docs/BUGS.md docs/FAQ docs/FEATURES.md
+      %doc docs/TheArtOfHttpScripting.md docs/TODO
+      %{_mandir}/man1/curl.1*
+      %{_mandir}/man1/curl-config.1*
+      %{_mandir}/man3/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  libcurl:
+    conflicts:
+    - curl < 7.66.0-3
+    files: |
+      %defattr(-,root,root)
+      %{_libdir}/libcurl.so.4
+      %{_libdir}/libcurl.so.4.[0-9].[0-9]
+    meta.description: A library for getting files from web servers.
+    meta.summary: A library for getting files from web servers
+    provides:
+    - libcurl-full = %{version}-%{release}
+    requires:
+    - libssh >= %{libssh_version} libpsl >= %{libpsl_version}
+    - openssl-libs >= 1:%{openssl_version}
+  libcurl-devel:
+    files: |
+      %defattr(-,root,root)
+      %doc docs/examples/*.c docs/examples/Makefile.example docs/INTERNALS.md
+      %doc docs/CONTRIBUTE.md docs/libcurl/ABI.md
+      %{_bindir}/curl-config*
+      %{_includedir}/curl
+      %{_libdir}/*.so
+      %{_libdir}/pkgconfig/*.pc
+      %{_datadir}/aclocal/libcurl.m4
+    meta.description: Header files for libcurl.
+    meta.summary: Header files for libcurl
+    obsoletes:
+    - curl-devel < %{version}-%{release}
+    provides:
+    - curl-devel = %{version}-%{release}
+    requires:
+    - libcurl = %{version}-%{release}
+version: 7.79.1

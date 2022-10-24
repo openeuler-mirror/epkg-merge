@@ -1,4 +1,4 @@
-configFilesPattern: (?P<_pkgname>[-0-9a-z]+)(/|\\)\1\.yaml
+configFilesPattern: (?P<_pkgname>[-0-9a-zA-Z]+)(/|\\)\1\.yaml
 registerConfigSpaceForEachFile:
   pkgs.%%_basename:fspath: "%%_filepath"
   files."%%_filepath":

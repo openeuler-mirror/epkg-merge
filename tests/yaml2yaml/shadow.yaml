@@ -1,0 +1,206 @@
+buildRequires:
+- gcc, libselinux-devel, audit-libs-devel, libsemanage-devel
+- libacl-devel, libattr-devel
+- bison, flex, gnome-doc-utils, docbook-style-xsl, docbook-dtds
+- autoconf, automake, libtool, gettext-devel, itstool, pam-devel
+buildRoot:
+- '%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)'
+epoch: 2
+files: |
+  %doc NEWS doc/HOWTO README
+  %{!?_licensedir:%global license None
+  %license gpl-2.0.txt shadow-bsd.txt
+  %attr(0644,root,root)   %config(noreplace) %{_sysconfdir}/login.defs
+  %attr(0644,root,root)   %config(noreplace) %{_sysconfdir}/default/useradd
+  %{_bindir}/sg
+  %attr(4755,root,root) %{_bindir}/chage
+  %attr(4755,root,root) %{_bindir}/gpasswd
+  %{_bindir}/lastlog
+  %attr(4755,root,root) %{_bindir}/newgrp
+  %attr(4755,root,root) %{_bindir}/newgidmap
+  %attr(4755,root,root) %{_bindir}/newuidmap
+  %{_sbindir}/adduser
+  %attr(0755,root,root)   %{_sbindir}/user*
+  %attr(0755,root,root)   %{_sbindir}/group*
+  %{_sbindir}/grpck
+  %{_sbindir}/pwck
+  %{_sbindir}/*conv
+  %{_sbindir}/chpasswd
+  %{_sbindir}/chgpasswd
+  %{_sbindir}/newusers
+  %{_sbindir}/vipw
+  %{_sbindir}/vigr
+  %{_sysconfdir}/pam.d/chpasswd
+  %{_sysconfdir}/pam.d/groupmems
+  %{_sysconfdir}/pam.d/newusers
+filesInput: shadow.lang
+meta.description: |
+  This package includes the necessary programs for converting plain
+  password files to the shadow password format and to manage user and
+  group accounts.
+meta.homepage: http://pkg-shadow.alioth.debian.org/
+meta.license: BSD and GPLv2+
+meta.summary: Tools for managing accounts and shadow password files
+name: shadow
+obsoletes:
+- shadow-utils
+patchset:
+  '0': shadow-4.8-goodname.patch
+  '1': shadow-4.9-null-tm.patch
+  '10': libmisc-fix-default-value-in-SHA_get_salt_rounds.patch
+  '11': semanage-close-the-selabel-handle.patch
+  '12': Revert-useradd.c-fix-memleaks-of-grp.patch
+  '13': useradd-change-SELinux-labels-for-home-files.patch
+  '14': libsubid-link-to-PAM-libraries.patch
+  '15': Fix-out-of-tree-builds-with-respect-to-libsubid-incl.patch
+  '16': Respect-enable-static-no-in-libsubid.patch
+  '17': Fixes-the-linking-issues-when-libsubid-is-static-and.patch
+  '18': pwck-fix-segfault-when-calling-fprintf.patch
+  '19': newgrp-fix-segmentation-fault.patch
+  '2': shadow-4.8-long-entry.patch
+  '20': groupdel-fix-SIGSEGV-when-passwd-does-not-exist.patch
+  '21': backport-useradd-modify-check-ID-range-for-system-users.patch
+  '22': shadow-add-sm3-crypt-support.patch
+  '3': usermod-unlock.patch
+  '4': useradd-create-directories-after-the-SELinux-user.patch
+  '5': shadow-4.1.5.1-var-lock.patch
+  '6': shadow-utils-fix-lock-file-residue.patch
+  '7': Makefile-include-libeconf-dependency-in-new-idmap.patch
+  '8': usermod-allow-all-group-types-with-G-option.patch
+  '9': useradd-avoid-generating-an-empty-subid-range.patch
+phase.build: |+
+  export CFLAGS="$RPM_OPT_FLAGS -fpie"
+  export LDFLAGS="-pie -Wl,-z,relro -Wl,-z,now"
+
+  autoreconf -fiv
+  %configure --enable-shadowgrp \
+  --enable-man \
+  --with-audit \
+  --with-sha-crypt \
+  --with-selinux \
+  --without-libcrack \
+  --with-libpam \
+  --enable-shared \
+  --with-group-name-max-length=32 \
+
+  %make_build
+
+phase.install: |+
+  rm -rf $RPM_BUILD_ROOT
+  %make_install gnulocaledir=$RPM_BUILD_ROOT/%{_datadir}/locale MKINSTALLDIRS=`pwd`/mkinstalldirs
+  install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/default
+  install -p -c -m 0644 %{SOURCE2} $RPM_BUILD_ROOT/%{_sysconfdir}/login.defs
+  install -p -c -m 0600 %{SOURCE1} $RPM_BUILD_ROOT/%{_sysconfdir}/default/useradd
+  install -p -c -m 0644 %{SOURCE5} $RPM_BUILD_ROOT/%{_sysconfdir}/pam.d/chpasswd
+  install -p -c -m 0644 %{SOURCE6} $RPM_BUILD_ROOT/%{_sysconfdir}/pam.d/newusers
+
+  ln -s useradd $RPM_BUILD_ROOT%{_sbindir}/adduser
+  ln -s useradd.8 $RPM_BUILD_ROOT/%{_mandir}/man8/adduser.8
+  for subdir in $RPM_BUILD_ROOT/%{_mandir}/{??,??_??,??_??.*}/man* ; do
+  test -d $subdir && test -e $subdir/useradd.8 && echo ".so man8/useradd.8" > $subdir/adduser.8
+  done
+
+  rm $RPM_BUILD_ROOT/%{_bindir}/chfn
+  rm $RPM_BUILD_ROOT/%{_bindir}/chsh
+  rm $RPM_BUILD_ROOT/%{_bindir}/expiry
+  rm $RPM_BUILD_ROOT/%{_bindir}/groups
+  rm $RPM_BUILD_ROOT/%{_bindir}/login
+  rm $RPM_BUILD_ROOT/%{_bindir}/passwd
+  rm $RPM_BUILD_ROOT/%{_bindir}/su
+  rm $RPM_BUILD_ROOT/%{_bindir}/faillog
+  rm $RPM_BUILD_ROOT/%{_sbindir}/logoutd
+  rm $RPM_BUILD_ROOT/%{_sbindir}/nologin
+  rm $RPM_BUILD_ROOT/%{_mandir}/man1/chfn.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man1/chfn.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man1/chsh.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man1/chsh.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man1/expiry.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man1/expiry.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man1/groups.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man1/groups.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man1/login.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man1/login.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man1/passwd.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man1/passwd.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man1/su.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man1/su.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man5/passwd.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man5/passwd.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man5/suauth.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man5/suauth.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man8/logoutd.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man8/logoutd.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man8/nologin.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man8/nologin.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man3/getspnam.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man3/getspnam.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man5/faillog.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man5/faillog.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/man8/faillog.*
+  rm $RPM_BUILD_ROOT/%{_mandir}/*/man8/faillog.*
+  rm $RPM_BUILD_ROOT/%{_sysconfdir}/pam.d/chfn
+  rm $RPM_BUILD_ROOT/%{_sysconfdir}/pam.d/chsh
+  rm $RPM_BUILD_ROOT/%{_sysconfdir}/pam.d/login
+  rm $RPM_BUILD_ROOT/%{_sysconfdir}/pam.d/passwd
+  rm $RPM_BUILD_ROOT/%{_sysconfdir}/pam.d/su
+
+  find $RPM_BUILD_ROOT%{_mandir} -depth -type d -empty -delete
+  %find_lang shadow
+  for dir in $(ls -1d $RPM_BUILD_ROOT%{_mandir}/{??,??_??}) ; do
+  dir=$(echo $dir | sed -e "s|^$RPM_BUILD_ROOT||")
+  lang=$(basename $dir)
+  done
+
+  echo $(ls)
+  mkdir -p $RPM_BUILD_ROOT/%{includesubiddir}
+  install -m 644 libsubid/subid.h $RPM_BUILD_ROOT/%{includesubiddir}/
+
+  rm -f $RPM_BUILD_ROOT/%{_libdir}/libsubid.la
+
+phase.prep: |+
+  %autosetup -n shadow-%{version} -p1
+
+  iconv -f ISO88591 -t utf-8  doc/HOWTO > doc/HOWTO.utf8
+  cp -f doc/HOWTO.utf8 doc/HOWTO
+
+  cp -a %{SOURCE3} %{SOURCE4} .
+
+provides:
+- shadow-utils
+release: 4
+requires:
+- libselinux
+- audit-libs
+- setup
+requiresPost:
+- coreutils
+requiresPre:
+- coreutils
+rpmMacros:
+- '%global includesubiddir %{_includedir}/shadow'
+source:
+  '0': https://github.com/shadow-maint/shadow/releases/download/v%{version}/shadow-%{version}.tar.xz
+  '1': shadow-utils.useradd
+  '2': shadow-utils.login.defs
+  '3': shadow-bsd.txt
+  '4': https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+  '5': chpasswd
+  '6': newusers
+subpackage:
+  shadow-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/*/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  shadow-subid-devel:
+    files: |
+      %{_libdir}/libsubid.so.*
+      %{includesubiddir}/subid.h
+      %{_libdir}/libsubid.so
+    meta.description: Development files for shadow-utils-subid.
+    meta.license: BSD and GPLv2+
+    meta.summary: Development package for shadow-utils-subid
+version: 4.9

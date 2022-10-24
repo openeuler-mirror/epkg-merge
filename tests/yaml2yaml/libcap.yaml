@@ -1,0 +1,75 @@
+buildRequires:
+- libattr-devel pam-devel perl-interpreter gcc
+files: |
+  %defattr(-,root,root)
+  %license License
+  %doc doc/capability.notes
+  %{_libdir}/*.so.*
+  %{_sbindir}/*
+  %{_libdir}/security/pam_cap.so
+meta.description: |
+  This is a library for getting and setting POSIX.1e (formerly POSIX 6)
+  draft 15 capabilities.
+meta.homepage: https://sites.google.com/site/fullycapable
+meta.license: GPLv2
+meta.summary: A library for getting and setting POSIX.1e draft 15 capabilities
+name: libcap
+patchset:
+  '0': libcap-buildflags.patch
+  '1': Fix-syntax-error-in-DEBUG-protected-setcap.c-code.patch
+  '2': backport-psx-free-allocated-memory-at-exit.patch
+  '3': backport-Avoid-a-deadlock-in-forked-psx-thread-exit.patch
+phase.build: |+
+  make prefix=%{_prefix} lib=%{_lib} LIBDIR=%{_libdir} SBINDIR=%{_sbindir} \
+       INCDIR=%{_includedir} MANDIR=%{_mandir} PKGCONFIGDIR=%{_libdir}/pkgconfig/
+
+phase.check: |+
+  %make_build COPTS="%{optflags}" test
+
+phase.install: |+
+  make install RAISE_SETFCAP=no DESTDIR=%{buildroot} LIBDIR=%{_libdir} SBINDIR=%{_sbindir} PKGCONFIGDIR=%{_libdir}/pkgconfig/
+
+  mkdir -p %{buildroot}/%{_mandir}/man{2,3,8}
+  mv -f doc/*.3 %{buildroot}/%{_mandir}/man3/
+  chmod +x %{buildroot}/%{_libdir}/*.so.*
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 3
+runtimePhase.post: |+
+  -p /sbin/ldconfig
+
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+runtimePhase.pre: |2+
+
+runtimePhase.preun: |2+
+
+source:
+  '0': https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/%{name}-%{version}.tar.gz
+subpackage:
+  libcap-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/*
+      %{_libdir}/*.so
+      %{_libdir}/pkgconfig/*.pc
+      %{_libdir}/*.a
+    meta.description: Development headers and libraries for %{name}
+    meta.summary: Development headers and libraries for %{name}
+    requires:
+    - '%{name} = %{version}-%{release}'
+  libcap-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %{_mandir}/man3/*.gz
+      %{_mandir}/man1/*.gz
+      %{_mandir}/man8/*.gz
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 2.61

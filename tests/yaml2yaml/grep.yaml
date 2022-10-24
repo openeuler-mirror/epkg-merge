@@ -1,0 +1,66 @@
+buildRequires:
+- gcc pcre2-devel texinfo gettext libsigsegv-devel automake
+files: |
+  %{_datadir}/locale/*
+  %config(noreplace) %{_sysconfdir}/profile.d/color_grep.sh
+  %config(noreplace) %{_sysconfdir}/profile.d/colorgrep.csh
+  %doc NEWS README THANKS TODO
+  %license COPYING AUTHORS
+  %{_bindir}/*grep
+  %{_libexecdir}/grepconf.sh
+  %{_infodir}/grep.info.gz
+  %{_mandir}/man1/*grep.1.gz
+meta.description: |
+  Grep searches one or more input files for lines containing a match to
+  a specified pattern. By default, Grep outputs the matching lines.
+meta.homepage: http://www.gnu.org/software/grep/
+meta.license: GPLv3+
+meta.summary: A string search utility
+name: grep
+patchset:
+  '0': backport-grep-avoid-sticky-problem-with-f-f.patch
+  '1': backport-grep-s-does-not-suppress-binary-file-matches.patch
+  '10': backport-tests-improve-tests-of.patch
+  '11': backport-grep-sanity-check-GREP_COLOR.patch
+  '12': backport-grep-fix-regex-compilation-memory-leaks.patch
+  '2': backport-grep-work-around-PCRE-bug.patch
+  '3': backport-grep-migrate-to-pcre2.patch
+  '4': backport-grep-Don-t-limit-jitstack_max-to-INT_MAX.patch
+  '5': backport-grep-speed-up-fix-bad-UTF8-check-with-P.patch
+  '6': backport-grep-fix-minor-P-memory-leak.patch
+  '7': backport-grep-djb2-correction.patch
+  '8': backport-build-update-gnulib-submodule-to-latest.patch
+  '9': backport-grep-fix-bug-with-and-some-Hangul-Syllables.patch
+phase.build: |+
+  %configure --disable-silent-rules \
+  CPPFLAGS="-I%{_includedir}/pcre2" CFLAGS="$RPM_OPT_FLAGS -fsigned-char"
+  %make_build
+
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install
+  rm -f $RPM_BUILD_ROOT%{_infodir}/dir
+  mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/profile.d
+
+  install -pm 644 %{SOURCE1} %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/profile.d
+  install -Dpm 755 %{SOURCE3} $RPM_BUILD_ROOT%{_libexecdir}/grepconf.sh
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- /bin/egrep /bin/fgrep /bin/grep bundled(gnulib)
+release: 7
+runtimePhase.post: ''
+runtimePhase.postun: |2+
+
+runtimePhase.pre: ''
+runtimePhase.preun: ''
+source:
+  '0': https://ftp.gnu.org/gnu/grep/grep-%{version}.tar.xz
+  '1': color_grep.sh
+  '2': colorgrep.csh
+  '3': grepconf.sh
+version: 3.7

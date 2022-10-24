@@ -1,0 +1,116 @@
+buildRequires:
+- autoconf, automake, coreutils, rpcgen, systemd, gcc
+- e2fsprogs-devel, gettext-devel, openldap-devel
+- pkgconfig(dbus-1), pkgconfig(libnl-3.0) >= 3.1, pkgconfig(libnl-genl-3.0), pkgconfig(libtirpc)
+epoch: 1
+files: |
+  %license COPYING
+  %doc Changelog
+  %{_bindir}/*
+  %{_sbindir}/*
+  %{_unitdir}/*.service
+  %config(noreplace) %{_sysconfdir}/*
+  %exclude %{_docdir}/%{name}
+filesInput: '%{name}.lang'
+meta.description: |
+  Tools and patches for the Linux Diskquota system as part of the Linux kernel
+  It also include quota_nld daemon,
+meta.homepage: http://sourceforge.net/projects/linuxquota/
+meta.license: BSD and GPLv2 and GPLv2+ and LGPLv2+
+meta.summary: Linux Diskquota system as part of the Linux kernel
+name: quota
+obsoletes:
+- '%{name}-doc'
+- '%{name}-nld'
+- '%{name}-nls'
+- '%{name}-rpc'
+- '%{name}-warnquota'
+patchset:
+  '0': 0000-Limit-number-of-comparison-characters-to-4.patch
+  '1': 0001-Limit-maximum-of-RPC-port.patch
+  '2': 0002-quotaio_xfs-Warn-when-large-kernel-timestamps-cannot.patch
+phase.build: |+
+  autoreconf -fi
+  %configure --enable-bsd-behaviour \
+  --enable-ext2direct=yes \
+  --enable-ldapmail=yes \
+  --disable-libwrap \
+  --enable-netlink=yes \
+  --enable-nls \
+  --disable-rpath \
+  --enable-rpc=yes \
+  --enable-rpcsetquota=yes \
+  --disable-silent-rules \
+  --disable-xfs-roothack \
+
+  make
+
+
+phase.check: |+
+  make check
+
+
+phase.install: |+
+  %make_install
+
+  install -D -p -m 644 %{SOURCE1} $RPM_BUILD_ROOT%{_unitdir}/quota_nld.service
+  install -D -p -m 644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/quota_nld
+  install -D -p -m 644 %{SOURCE3} $RPM_BUILD_ROOT%{_unitdir}/rpc-rquotad.service
+  install -D -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/rpc-rquotad
+
+  %find_lang %{name}
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- '%{name}-doc = %{epoch}:%{version}-%{release}'
+- '%{name}-nld = %{epoch}:%{version}-%{release}'
+- '%{name}-nls = %{epoch}:%{version}-%{release}'
+- '%{name}-rpc = %{epoch}:%{version}-%{release}'
+- '%{name}-warnquota = %{epoch}:%{version}-%{release}'
+release: 4
+requires:
+- rpcbind
+requiresPost:
+- systemd
+requiresPostUn:
+- systemd
+requiresPreUn:
+- systemd
+runtimePhase.post: |+
+  %systemd_post quota_nld.service rpc-rquotad.service
+
+runtimePhase.postun: |+
+  %systemd_postun_with_restart quota_nld.service rpc-rquotad.service
+
+
+
+runtimePhase.preun: |+
+  %systemd_preun quota_nld.service rpc-rquotad.service
+
+source:
+  '0': http://downloads.sourceforge.net/linuxquota/%{name}-%{version}.tar.gz
+  '1': quota_nld.service
+  '2': quota_nld.sysconfig
+  '3': rpc-rquotad.service
+  '4': rpc-rquotad.sysconfig
+subpackage:
+  quota-devel:
+    files: |
+      %doc doc/* ldap-scripts
+      %dir %{_includedir}/rpcsvc
+      %{_includedir}/rpcsvc/*
+    meta.description: This contains  header files for the developing of quota RPC.
+    meta.license: GPLv2
+    meta.summary: Including header files for the developing of quota RPC
+    requires:
+    - quota  = %{epoch}:%{version}-%{release}
+  quota-help:
+    files: |
+      %{_mandir}/man*/*
+    meta.description: This contains man files for the using of quota.
+    meta.summary: Including man files for quota
+    requires:
+    - man
+version: 4.06

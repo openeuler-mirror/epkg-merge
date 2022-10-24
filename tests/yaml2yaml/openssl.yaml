@@ -1,0 +1,231 @@
+buildRequires:
+- gcc perl make lksctp-tools-devel coreutils util-linux zlib-devel
+epoch: 1
+files: |
+  %license LICENSE
+  %doc AUTHORS CHANGES FAQ NEWS README
+  %{_pkgdocdir}/Makefile.certificate
+  %{_bindir}/openssl
+meta.description: |
+  OpenSSL is a robust, commercial-grade, and full-featured toolkit for the
+  Transport Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
+meta.homepage: https://www.openssl.org/
+meta.license: OpenSSL and SSLeay
+meta.summary: Cryptography and SSL/TLS Toolkit
+name: openssl
+obsoletes:
+- openssl-SMx < %{epoch}:%{version}-%{release}
+patchset:
+  '0': openssl-1.1.1-build.patch
+  '1': openssl-1.1.1-fips.patch
+  '10': Backport-Add-documents-for-SM2-cert-verification.patch
+  '11': Backport-Fix-a-memleak-in-apps-verify.patch
+  '12': Backport-Skip-the-correct-number-of-tests-if-SM2-is-disabled.patch
+  '13': Backport-Make-X509_set_sm2_id-consistent-with-other-setters.patch
+  '14': Backport-Support-SM2-certificate-signing.patch
+  '15': Backport-Support-parsing-of-SM2-ID-in-hexdecimal.patch
+  '16': Backport-Fix-a-double-free-issue-when-signing-SM2-cert.patch
+  '17': Backport-Fix-a-document-description-in-apps-req.patch
+  '18': Backport-Update-expired-SCT-certificates.patch
+  '19': Backport-ct_test.c-Update-the-epoch-time.patch
+  '2': CVE-2022-0778-Add-a-negative-testcase-for-BN_mod_sqrt.patch
+  '20': Feature-Support-TLCP-protocol.patch
+  '21': Feature-X509-command-supports-SM2-certificate-signing-with-default-sm2id.patch
+  '22': CVE-2022-2068-Fix-file-operations-in-c_rehash.patch
+  '23': CVE-2022-2097-Fix-AES-OCB-encrypt-decrypt-for-x86-AES-NI.patch
+  '3': CVE-2022-0778-Fix-possible-infinite-loop-in-BN_mod_sqrt.patch
+  '4': CVE-2022-1292.patch
+  '5': Backport-Support-raw-input-data-in-apps-pkeyutl.patch
+  '6': Backport-Fix-no-ec-no-sm2-and-no-sm3.patch
+  '7': Backport-Support-SM2-certificate-verification.patch
+  '8': Backport-Guard-some-SM2-functions-with-OPENSSL_NO_SM2.patch
+  '9': Backport-Add-test-cases-for-SM2-cert-verification.patch
+phase.build: |2+
+
+  sslarch=%{_os}-%{_target_cpu}
+  %ifarch x86_64 aarch64
+  sslflags=enable-ec_nistp_64_gcc_128
+  %endif
+
+  RPM_OPT_FLAGS="$RPM_OPT_FLAGS -Wa,--noexecstack -DPURIFY $RPM_LD_FLAGS"
+  ./Configure \
+      --prefix=%{_prefix} \
+      --openssldir=%{_sysconfdir}/pki/tls ${sslflags} \
+      zlib enable-camellia enable-seed enable-rfc3779 enable-sctp \
+      enable-cms enable-md2 enable-rc5 enable-ssl3 enable-ssl3-method \
+      enable-weak-ssl-ciphers \
+      no-mdc2 no-ec2m enable-sm2 enable-sm3 enable-sm4 enable-tlcp \
+      shared ${sslarch} $RPM_OPT_FLAGS '-DDEVRANDOM="\"/dev/urandom\""'
+
+  %make_build all
+
+  %define __spec_install_post \
+      %{?__debug_package:%{__debug_install_post}} \
+      %{__arch_install_post} \
+      %{__os_install_post} \
+      crypto/fips/fips_standalone_hmac $RPM_BUILD_ROOT%{_libdir}/libcrypto.so.%{version} >$RPM_BUILD_ROOT%{_libdir}/.libcrypto.so.%{version}.hmac \
+      ln -sf .libcrypto.so.%{version}.hmac $RPM_BUILD_ROOT%{_libdir}/.libcrypto.so.%{soversion}.hmac \
+      crypto/fips/fips_standalone_hmac $RPM_BUILD_ROOT%{_libdir}/libssl.so.%{version} >$RPM_BUILD_ROOT%{_libdir}/.libssl.so.%{version}.hmac \
+      ln -sf .libssl.so.%{version}.hmac $RPM_BUILD_ROOT%{_libdir}/.libssl.so.%{soversion}.hmac \
+  %{nil}
+
+phase.check: |+
+  LD_LIBRARY_PATH=`pwd`${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+  export LD_LIBRARY_PATH
+  crypto/fips/fips_standalone_hmac libcrypto.so.%{soversion} >.libcrypto.so.%{soversion}.hmac
+  ln -s .libcrypto.so.%{soversion}.hmac .libcrypto.so.hmac
+  crypto/fips/fips_standalone_hmac libssl.so.%{soversion} >.libssl.so.%{soversion}.hmac
+  ln -s .libssl.so.%{soversion}.hmac .libssl.so.hmac
+  OPENSSL_ENABLE_MD5_VERIFY=
+  export OPENSSL_ENABLE_MD5_VERIFY
+  OPENSSL_SYSTEM_CIPHERS_OVERRIDE=xyz_nonexistent_file
+  export OPENSSL_SYSTEM_CIPHERS_OVERRIDE
+  make test || :
+
+phase.install: |2+
+
+  %make_install
+
+  rename so.%{soversion} so.%{version} $RPM_BUILD_ROOT%{_libdir}/*.so.%{soversion}
+  for lib in $RPM_BUILD_ROOT%{_libdir}/*.so.%{version} ; do
+  ln -s -f `basename ${lib}` $RPM_BUILD_ROOT%{_libdir}/`basename ${lib} .%{version}`
+  ln -s -f `basename ${lib}` $RPM_BUILD_ROOT%{_libdir}/`basename ${lib} .%{version}`.%{soversion}
+  done
+
+  mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/certs
+  install -m644 %{SOURCE1} $RPM_BUILD_ROOT%{_pkgdocdir}/Makefile.certificate
+
+  mv $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/misc/*.pl $RPM_BUILD_ROOT%{_bindir}
+  mv $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/misc/tsget $RPM_BUILD_ROOT%{_bindir}
+
+
+  mkdir -p -m755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/CA/{certs,crl,newcerts,private}
+  chmod 700 $RPM_BUILD_ROOT%{_sysconfdir}/pki/CA/private
+
+  touch -r %{SOURCE1} $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/{openssl.cnf,ct_log_list.cnf}
+
+
+  %define manpostfix _openssl
+  pushd $RPM_BUILD_ROOT%{_mandir}
+  ln -s -f config.5 man5/openssl.cnf.5
+  for manpage in man*/* ; do
+  if [ -L ${manpage} ]; then
+  targetfile=`ls -l ${manpage} | awk '{print $NF}'`
+  ln -sf ${targetfile}%{manpostfix} ${manpage}%{manpostfix}
+  rm -f ${manpage}
+  else
+  mv ${manpage} ${manpage}%{manpostfix}
+  fi
+  done
+  popd
+
+  sed -i '/^\#ifndef OPENSSL_NO_SSL_TRACE/i\
+
+  rm -f $RPM_BUILD_ROOT%{_sysconfdir}/pki/tls/*.dist
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- openssl-SMx = %{epoch}:%{version}-%{release}
+release: 7
+requires:
+- coreutils %{name}-libs%{?_isa} = %{epoch}:%{version}-%{release}
+rpmMacros:
+- '%define soversion 1.1'
+source:
+  '0': https://www.openssl.org/source/%{name}-%{version}.tar.gz
+  '1': Makefile.certificate
+subpackage:
+  openssl-devel:
+    files: |
+      %defattr(-,root,root)
+      %doc doc/dir-locals.example.el doc/openssl-c-indent.el
+      %{_prefix}/include/openssl
+      %{_libdir}/pkgconfig/*.pc
+      %{_libdir}/*.so
+      %{_libdir}/*.a
+    meta.description: '%{summary}.'
+    meta.summary: Development files for openssl
+    obsoletes:
+    - openssl-static < %{epoch}:%{version}-%{release}
+    - openssl-SMx-devel < %{epoch}:%{version}-%{release}
+    provides:
+    - openssl-static = %{epoch}:%{version}-%{release} openssl-static%{?_isa} = %{epoch}:%{version}-%{release}
+    - openssl-SMx-devel = %{epoch}:%{version}-%{release}
+    requires:
+    - '%{name}-libs%{?_isa} = %{epoch}:%{version}-%{release}'
+    - krb5-devel zlib-devel pkgconfig
+  openssl-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %{_mandir}/man1/*
+      %{_mandir}/man3/*
+      %{_mandir}/man5/*
+      %{_mandir}/man7/*
+      %{_pkgdocdir}/html/
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  openssl-libs:
+    files: |
+      %defattr(-,root,root)
+      %license LICENSE
+      %dir %{_sysconfdir}/pki/tls
+      %dir %{_sysconfdir}/pki/tls/certs
+      %dir %{_sysconfdir}/pki/tls/misc
+      %dir %{_sysconfdir}/pki/tls/private
+      %config(noreplace) %{_sysconfdir}/pki/tls/openssl.cnf
+      %config(noreplace) %{_sysconfdir}/pki/tls/ct_log_list.cnf
+      %{_libdir}/libcrypto.so.%{version}
+      %{_libdir}/libcrypto.so.%{soversion}
+      %{_libdir}/libssl.so.%{version}
+      %{_libdir}/libssl.so.%{soversion}
+      %{_libdir}/engines-%{soversion}
+      %attr(0644,root,root) %{_libdir}/.libcrypto.so.*.hmac
+      %attr(0644,root,root) %{_libdir}/.libssl.so.*.hmac
+    group: System Environment/Libraries
+    meta.description: |
+      The openssl-libs package contains the libraries that are used
+      by various applications which support cryptographic algorithms
+      and protocols.
+    meta.summary: A general purpose cryptography library with TLS implementation
+    obsoletes:
+    - openssl < 1:1.0.1-0.3.beta3
+    - openssl-fips < 1:1.0.1e-28
+    - openssl-SMx-libs < %{epoch}:%{version}-%{release}
+    provides:
+    - openssl-fips = %{epoch}:%{version}-%{release}
+    - openssl-SMx-libs = %{epoch}:%{version}-%{release}
+    recommends:
+    - openssl-pkcs11%{?_isa}
+    requires:
+    - ca-certificates >= 2008-5
+    - crypto-policies >= 20180730
+    runtimePhase.post: |
+      -p /sbin/ldconfig
+    runtimePhase.postun: |
+      -p /sbin/ldconfig
+  openssl-perl:
+    files: |
+      %{_bindir}/c_rehash
+      %{_bindir}/*.pl
+      %{_bindir}/tsget
+      %dir %{_sysconfdir}/pki/CA
+      %dir %{_sysconfdir}/pki/CA/private
+      %dir %{_sysconfdir}/pki/CA/certs
+      %dir %{_sysconfdir}/pki/CA/crl
+      %dir %{_sysconfdir}/pki/CA/newcerts
+
+      %ldconfig_scriptlets libs
+    meta.description: |
+      OpenSSL is a toolkit for supporting cryptography. The openssl-perl
+      package provides Perl scripts for converting certificates and keys
+      from other formats to the formats used by the OpenSSL toolkit.
+    meta.summary: Perl scripts provided with OpenSSL
+    requires:
+    - perl-interpreter
+    - '%{name}%{?_isa} = %{epoch}:%{version}-%{release}'
+version: null

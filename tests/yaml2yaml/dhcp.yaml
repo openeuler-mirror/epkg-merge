@@ -1,0 +1,286 @@
+buildRequires:
+- gcc autoconf automake libtool openldap-devel krb5-devel libcap-ng-devel
+- systemd systemd-devel
+epoch: null
+files: |
+  %defattr(-,root,root)
+  %license LICENSE
+  %doc README RELNOTES doc/References.txt
+  %doc README.dhclient.d
+  %doc contrib/ldap/ contrib/dhcp-lease-list.pl
+  %{_datadir}/doc/dhcp-client/dhclient.conf.example
+  %{_datadir}/doc/dhcp-server/dhcpd.conf.example
+  %{_datadir}/doc/dhcp-client/dhclient6.conf.example
+  %{_datadir}/doc/dhcp-server/dhcpd6.conf.example
+  %{_datadir}/doc/dhcp-server/dhcpd.conf.example
+  %dir %{_sysconfdir}/openldap/schema
+  %config(noreplace) %{_sysconfdir}/openldap/schema/dhcp.schema
+  %attr(0750,root,root) %dir %{dhcpconfdir}
+  %dir %{_localstatedir}/lib/dhclient
+  %dir %{dhcpconfdir}/dhclient.d
+  %dir %{_sysconfdir}/NetworkManager
+  %dir %{_sysconfdir}/NetworkManager/dispatcher.d
+  %{_sysconfdir}/NetworkManager/dispatcher.d/11-dhclient
+  %attr(0644,root,root)   %{_unitdir}/dhcpd.service
+  %attr(0644,root,root)   %{_unitdir}/dhcpd6.service
+  %attr(0644,root,root) %{_unitdir}/dhcrelay.service
+  %attr(0755,dhcpd,dhcpd) %dir %{_localstatedir}/lib/dhcpd
+  %attr(0644,dhcpd,dhcpd) %verify(mode) %config(noreplace) %{_localstatedir}/lib/dhcpd/dhcpd.leases
+  %attr(0644,dhcpd,dhcpd) %verify(mode) %config(noreplace) %{_localstatedir}/lib/dhcpd/dhcpd6.leases
+  %config(noreplace) %{_sysconfdir}/sysconfig/dhcpd
+  %config(noreplace) %{dhcpconfdir}/dhcpd.conf
+  %config(noreplace) %{dhcpconfdir}/dhcpd6.conf
+  %{_sbindir}/dhcpd
+  %{_sbindir}/dhclient
+  %{_sbindir}/dhclient-script
+  %{_sbindir}/dhcrelay
+  %{_bindir}/omshell
+  %attr(0755,root,root) %{_libdir}/pm-utils/sleep.d/56dhclient
+meta.description: The Dynamic Host Configuration Protocol (DHCP) is a network management
+  protocol used on UDP/IP networks whereby a DHCP server dynamically assigns an IP
+  address and other network configuration parameters to each device on a network so
+  they can communicate with other IP networks.
+meta.homepage: https://www.isc.org/dhcp/
+meta.license: ISC
+meta.summary: Dynamic host configuration protocol software
+name: dhcp
+obsoletes:
+- '%{name}-common %{name}-libs %{name}-server %{name}-relay %{name}-compat %{name}-client'
+- dhcp < %{epoch}:%{version}-%{release}
+- dhclient < %{epoch}:%{version}-%{release}
+patchset:
+  '0': backport-0001-change-bug-url.patch
+  '1': backport-0002-additional-dhclient-options.patch
+  '10': backport-0011-Drop-unnecessary-capabilities.patch
+  '11': backport-0012-RFC-3442-Classless-Static-Route-Option-for-DHCPv4-51.patch
+  '12': backport-0013-DHCPv6-over-PPP-support-626514.patch
+  '13': backport-0014-IPoIB-support-660681.patch
+  '14': backport-0015-Add-GUID-DUID-to-dhcpd-logs-1064416.patch
+  '15': backport-0016-Turn-on-creating-sending-of-DUID.patch
+  '16': backport-0017-Send-unicast-request-release-via-correct-interface.patch
+  '17': backport-0018-No-subnet-declaration-for-iface-should-be-info-not-e.patch
+  '18': backport-0019-dhclient-write-DUID_LLT-even-in-stateless-mode-11563.patch
+  '19': backport-0020-Discover-all-hwaddress-for-xid-uniqueness.patch
+  '2': backport-0003-Handle-releasing-interfaces-requested-by-sbin-ifup.patch
+  '20': backport-0021-Load-leases-DB-in-non-replay-mode-only.patch
+  '21': backport-0022-dhclient-make-sure-link-local-address-is-ready-in-st.patch
+  '22': backport-0023-option-97-pxe-client-id.patch
+  '23': backport-0024-Detect-system-time-changes.patch
+  '24': backport-0025-bind-Detect-system-time-changes.patch
+  '25': backport-0026-Add-dhclient-5-B-option-description.patch
+  '26': backport-0027-Add-missed-sd-notify-patch-to-manage-dhcpd-with-syst.patch
+  '27': bugfix-dhcp-4.2.5-check-dhclient-pid.patch
+  '28': bugfix-reduce-getifaddr-calls.patch
+  '29': bugfix-dhcpd-2038-problem.patch
+  '3': backport-0004-Support-unicast-BOOTP-for-IBM-pSeries-systems-and-ma.patch
+  '30': dhcpd-coredump-infiniband.patch
+  '31': bugfix-dhclient-check-if-pid-was-held.patch
+  '32': bugfix-dhcp-64-bit-lease-parse.patch
+  '33': backport-CVE-2021-25217.patch
+  '34': fix-multiple-definition-with-gcc-10-1.patch
+  '35': fix-multiple-definition-with-gcc-10-2.patch
+  '36': fix-coredump-when-client-active-is-NULL.patch
+  '37': feature-lease-time-config-ipv6.patch
+  '38': add-a-test-case-to-parse-code93-in-option_unittest.patch
+  '39': bugfix-error-message-display.patch
+  '4': backport-0005-Change-default-requested-options.patch
+  '40': backport-Fix-CVE-2021-25214.patch
+  '41': backport-Fix-CVE-2021-25215.patch
+  '42': backport-Fix-CVE-2021-25219.patch
+  '43': backport-Fix-CVE-2021-25220.patch
+  '44': backport-Fix-CVE-2022-2928.patch
+  '45': backport-Fix-CVE-2022-2929.patch
+  '5': backport-0006-Various-man-page-only-fixes.patch
+  '6': backport-0007-Change-paths-to-conform-to-our-standards.patch
+  '7': backport-0008-Make-sure-all-open-file-descriptors-are-closed-on-ex.patch
+  '8': backport-0009-Fix-garbage-in-format-string-error.patch
+  '9': backport-0010-Handle-null-timeout.patch
+phase.build: |+
+  autoreconf --verbose --force --install
+
+  CFLAGS="%{optflags} -fno-strict-aliasing" \
+  %configure --with-srv-lease-file=%{_localstatedir}/lib/dhcpd/dhcpd.leases \
+  --with-srv6-lease-file=%{_localstatedir}/lib/dhcpd/dhcpd6.leases \
+  --with-cli-lease-file=%{_localstatedir}/lib/dhclient/dhclient.leases \
+  --with-cli6-lease-file=%{_localstatedir}/lib/dhclient/dhclient6.leases \
+  --with-srv-pid-file=%{_localstatedir}/run/dhcpd.pid \
+  --with-srv6-pid-file=%{_localstatedir}/run/dhcpd6.pid \
+  --with-cli-pid-file=%{_localstatedir}/run/dhclient.pid \
+  --with-cli6-pid-file=%{_localstatedir}/run/dhclient6.pid \
+  --with-relay-pid-file=%{_localstatedir}/run/dhcrelay.pid \
+  --with-ldap \
+  --with-ldapcrypto \
+  --with-ldap-gssapi \
+  --disable-static \
+  --enable-log-pid \
+  --enable-paranoia \
+  --enable-early-chroot \
+  --enable-binary-leases \
+  --with-systemd
+
+  make
+
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install
+
+  install -D -p -m 0755 %{SOURCE1} $RPM_BUILD_ROOT%{_sbindir}/dhclient-script
+
+  install -p -m 0644 %{SOURCE2} .
+
+  mkdir -p $RPM_BUILD_ROOT%{dhcpconfdir}/dhclient.d
+
+  mkdir -p $RPM_BUILD_ROOT%{nmconfdir}/dispatcher.d
+  install -p -m 0755 %{SOURCE3} $RPM_BUILD_ROOT%{nmconfdir}/dispatcher.d
+
+  install -D -p -m 0755 %{SOURCE4} $RPM_BUILD_ROOT%{_libdir}/pm-utils/sleep.d/56dhclient
+
+  mkdir -p $RPM_BUILD_ROOT%{_unitdir}
+  install -m 644 %{SOURCE5} $RPM_BUILD_ROOT%{_unitdir}
+  install -m 644 %{SOURCE6} $RPM_BUILD_ROOT%{_unitdir}
+  install -m 644 %{SOURCE7} $RPM_BUILD_ROOT%{_unitdir}
+
+  mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/dhcpd/
+  touch $RPM_BUILD_ROOT%{_localstatedir}/lib/dhcpd/dhcpd.leases
+  touch $RPM_BUILD_ROOT%{_localstatedir}/lib/dhcpd/dhcpd6.leases
+  mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/dhclient/
+
+  mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
+  cat <<EOF > %{buildroot}%{_sysconfdir}/sysconfig/dhcpd
+
+
+
+  EOF
+
+  mkdir -p $RPM_BUILD_ROOT%{dhcpconfdir}
+  cat << EOF > %{buildroot}%{dhcpconfdir}/dhcpd.conf
+  EOF
+  cat << EOF > %{buildroot}%{dhcpconfdir}/dhcpd6.conf
+  EOF
+
+  rm -f $RPM_BUILD_ROOT/usr/lib/debug/usr/sbin/dhcrelay-4.3.6-28.7.aarch64.debug
+
+  mkdir -p $RPM_BUILD_ROOT%{_datadir}/doc/dhcp-client
+  mkdir -p $RPM_BUILD_ROOT%{_datadir}/doc/dhcp-server
+
+  mv -f $RPM_BUILD_ROOT%{_sysconfdir}/dhclient.conf.example doc/examples/dhclient-dhcpv4.conf
+  mv -f $RPM_BUILD_ROOT%{_sysconfdir}/dhcpd.conf.example doc/examples/dhcpd-dhcpv4.conf
+  install -p -m 0755 doc/examples/dhclient-dhcpv4.conf $RPM_BUILD_ROOT%{_datadir}/doc/dhcp-client/dhclient.conf.example
+  install -p -m 0755 doc/examples/dhcpd-dhcpv4.conf $RPM_BUILD_ROOT%{_datadir}/doc/dhcp-server/dhcpd.conf.example
+
+  install -p -m 0755 doc/examples/dhclient-dhcpv6.conf $RPM_BUILD_ROOT%{_datadir}/doc/dhcp-client/dhclient6.conf.example
+  install -p -m 0755 doc/examples/dhcpd-dhcpv6.conf $RPM_BUILD_ROOT%{_datadir}/doc/dhcp-server/dhcpd6.conf.example
+  install -p -m 0755 server/dhcpd.conf.example $RPM_BUILD_ROOT%{_datadir}/doc/dhcp-server/dhcpd.conf.example
+
+  install -D -p -m 0644 contrib/ldap/dhcp.schema $RPM_BUILD_ROOT%{_sysconfdir}/openldap/schema/dhcp.schema
+
+  find $RPM_BUILD_ROOT -type f -name "*.la" -delete -print
+
+phase.prep: |+
+  %setup -n %{name}-%{version}
+  pushd bind
+  tar -xvf bind.tar.gz
+  ln -s bind-9* bind
+  popd
+  %autopatch -p1
+
+  sed -i -e 's|/var/db/|%{_localstatedir}/lib/dhcpd/|g' contrib/dhcp-lease-list.pl
+
+provides:
+- '%{name}-common %{name}-libs %{name}-server %{name}-relay %{name}-compat %{name}-client'
+- dhcp = %{epoch}:%{version}-%{release}
+- dhclient = %{epoch}:%{version}-%{release}
+release: 15
+requires:
+- shadow-utils coreutils grep sed systemd gawk ipcalc iproute iputils
+rpmMacros:
+- '%global nmconfdir %{_sysconfdir}/NetworkManager'
+- '%global dhcpconfdir %{_sysconfdir}/dhcp'
+runtimePhase.post: |+
+  /sbin/ldconfig
+  %systemd_post dhcpd.service dhcpd6.service dhcrelay.service
+
+  for servicename in dhcpd dhcpd6 dhcrelay; do
+  etcservicefile=%{_sysconfdir}/systemd/system/${servicename}.service
+  if [ -f ${etcservicefile} ]; then
+  grep -q Type= ${etcservicefile} || sed -i '/\[Service\]/a Type=notify' ${etcservicefile}
+  sed -i 's/After=network.target/Wants=network-online.target\nAfter=network-online.target/' ${etcservicefile}
+  fi
+  done
+  exit 0
+
+runtimePhase.postun: |+
+  /sbin/ldconfig
+  %systemd_postun_with_restart dhcpd.service dhcpd6.service dhcrelay.service
+
+runtimePhase.pre: |+
+  %global gid_uid 177
+  if ! getent group dhcpd > /dev/null ; then
+  groupadd --force --gid %{gid_uid} --system dhcpd
+  fi
+
+  if ! getent passwd dhcpd >/dev/null ; then
+  if ! getent passwd %{gid_uid} >/dev/null ; then
+  useradd --system --uid %{gid_uid} --gid dhcpd --home / --shell /sbin/nologin --comment "DHCP server" dhcpd
+  else
+  useradd --system --gid dhcpd --home / --shell /sbin/nologin --comment "DHCP server" dhcpd
+  fi
+  fi
+
+
+
+  exit 0
+
+runtimePhase.preun: |+
+  %systemd_preun dhcpd.service dhcpd6.service dhcrelay.service
+
+
+source:
+  '0': http://ftp.isc.org/isc/dhcp/%{version}/dhcp-%{version}.tar.gz
+  '1': dhclient-script
+  '2': README.dhclient.d
+  '3': 11-dhclient
+  '4': 56dhclient
+  '5': dhcpd.service
+  '6': dhcpd6.service
+  '7': dhcrelay.service
+subpackage:
+  dhcp-devel:
+    files: |
+      %defattr(-,root,root)
+      %doc doc/IANA-arp-parameters doc/api+protocol
+      %{_includedir}/dhcpctl
+      %{_includedir}/omapip
+      %{_libdir}/libdhcp*.a
+      %{_libdir}/libomapi.a
+    meta.description: |
+      Header files for using the ISC DHCP libraries.  The
+      libdhcpctl and libomapi static libraries are also included in this package.
+    meta.summary: Development headers and libraries for interfacing to the DHCP server
+    requires:
+    - '%{name} = %{epoch}:%{version}-%{release}'
+  dhcp-help:
+    buildArch: noarch
+    files: |
+      %defattr(644,root,root)
+      %doc doc/*
+      %{_mandir}/man1/omshell.1.gz
+      %{_mandir}/man5/dhcpd.conf.5.gz
+      %{_mandir}/man5/dhcpd.leases.5.gz
+      %{_mandir}/man8/dhcpd.8.gz
+      %{_mandir}/man5/dhcp-options.5.gz
+      %{_mandir}/man5/dhcp-eval.5.gz
+      %{_mandir}/man5/dhclient.conf.5.gz
+      %{_mandir}/man5/dhclient.leases.5.gz
+      %{_mandir}/man8/dhclient.8.gz
+      %{_mandir}/man8/dhclient-script.8.gz
+      %{_mandir}/man8/dhcrelay.8.gz
+      %{_mandir}/man3/dhcpctl.3.gz
+      %{_mandir}/man3/omapi.3.gz
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 4.4.2

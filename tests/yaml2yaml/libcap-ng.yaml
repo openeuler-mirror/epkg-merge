@@ -1,0 +1,101 @@
+buildRequires:
+- gcc, kernel-headers >= 2.6.11, libattr-devel
+files: |
+  %{!?_licensedir:%global license None
+  %license COPYING.LIB COPYING
+  %attr(0755,root,root) %{_bindir}/*
+  /%{_lib}/libcap-ng.so.*
+  /%{_lib}/libdrop_ambient.so.*
+meta.description: |
+  The libcap-ng library is intended to make programming with posix
+  capabilities much easier than the traditional libcap library.It
+  includes utilities that can analyse all currently running applications
+  and print out any capabilities and whether or not it has an open
+  ended bounding set.
+meta.homepage: http://people.redhat.com/sgrubb/libcap-ng
+meta.license: LGPLv2+ and GPLv2+
+meta.summary: Libcap-ng is a library used for posix capabilities programming
+name: libcap-ng
+obsoletes:
+- '%{name}-utils < %{version}-%{release}'
+phase.build: |+
+  %configure --libdir=/%{_lib} --with-python=no \
+  --with-python3 \
+
+  make CFLAGS="%{optflags}" %{?_smp_mflags}
+
+phase.check: |+
+  make check
+
+  %ldconfig_scriptlets
+
+phase.install: |+
+  %make_install
+
+  rm -f $RPM_BUILD_ROOT/%{_lib}/%{name}.so
+  rm -f $RPM_BUILD_ROOT/%{_lib}/libdrop_ambient.so
+  mkdir -p $RPM_BUILD_ROOT%{_libdir}
+  VLIBNAME=$(ls $RPM_BUILD_ROOT/%{_lib}/%{name}.so.*.*.*)
+  LIBNAME=$(basename $VLIBNAME)
+  ln -s ../../%{_lib}/$LIBNAME $RPM_BUILD_ROOT%{_libdir}/%{name}.so
+  ln -s ../../%{_lib}/libdrop_ambient.so.0.0.0 $RPM_BUILD_ROOT%{_libdir}/libdrop_ambient.so
+  mv $RPM_BUILD_ROOT/%{_lib}/pkgconfig $RPM_BUILD_ROOT%{_libdir}
+  mv $RPM_BUILD_ROOT/%{_lib}/libcap-ng.a $RPM_BUILD_ROOT%{_libdir}
+  mv $RPM_BUILD_ROOT/%{_lib}/libdrop_ambient.a $RPM_BUILD_ROOT%{_libdir}
+
+  %delete_la
+
+phase.prep: |+
+  %autosetup -p1
+
+provides:
+- '%{name}-utils = %{version}-%{release}'
+release: 1
+rpmMacros:
+- '%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig
+  import get_python_lib; print get_python_lib(1)")}'
+source:
+  '0': https://people.redhat.com/sgrubb/libcap-ng/%{name}-%{version}.tar.gz
+subpackage:
+  libcap-ng-devel:
+    files: |
+      %attr(0644,root,root) %{_includedir}/cap-ng.h
+      %{_libdir}/libcap-ng.so
+      %{_libdir}/libcap-ng.a
+      %{_libdir}/libdrop_ambient.so
+      %{_libdir}/libdrop_ambient.a
+      %attr(0644,root,root) %{_datadir}/aclocal/cap-ng.m4
+      %{_libdir}/pkgconfig/libcap-ng.pc
+    meta.description: |
+      The %{name}-devel package contains the files needed for developing
+      applications that need to use the %{name} library.
+    meta.license: LGPLv2+
+    meta.summary: Development libraries and header files for %{name}
+    requires:
+    - kernel-headers >= 2.6.11
+    - '%{name} = %{version}-%{release}'
+    - pkgconfig
+  libcap-ng-help:
+    buildArch: noarch
+    files: |
+      %attr(0644,root,root) %{_mandir}/man3/*
+      %attr(0644,root,root) %{_mandir}/man7/*
+      %attr(0644,root,root) %{_mandir}/man8/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  libcap-ng-python3:
+    buildRequires:
+    - python3-devel swig
+    files: |
+      %attr(755,root,root) %{python3_sitearch}/*
+      %{python3_sitearch}/capng.py*
+    meta.description: |
+      The %{name}-python3 package contains the bindings so that %{name} and
+      can be used by python3 applications.
+    meta.license: LGPLv2+
+    meta.summary: Python3 bindings for libcap-ng library
+    requires:
+    - '%{name} = %{version}-%{release}'
+version: 0.8.2

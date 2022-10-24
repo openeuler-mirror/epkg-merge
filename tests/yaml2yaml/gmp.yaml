@@ -1,0 +1,97 @@
+buildRequires:
+- autoconf automake libtool gcc gcc-c++ perl-Carp
+epoch: 1
+files: |
+  %license COPYING COPYING.LESSERv3 COPYINGv2 COPYINGv3
+  %doc NEWS README
+  %{_libdir}/libgmp.so.*
+  %{_libdir}/pkgconfig/gmp.pc
+meta.description: |
+  GMP is a portable library written in C for arbitrary precision arithmetic
+  on integers, rational numbers, and floating-point numbers. It aims to provide
+  the fastest possible arithmetic for all applications that need higher
+  precision than is directly supported by the basic C types.
+meta.homepage: https://gmplib.org
+meta.license: LGPLv3 and GPLv2
+meta.summary: A GNU multiple precision arithmetic library
+name: gmp
+patchset:
+  '0': 0001-CVE-2021-43618.patch
+phase.build: |+
+  autoreconf -ifv
+  if as --help | grep -q execstack; then
+  export CCAS="gcc -c -Wa,--noexecstack"
+  fi
+
+  %ifarch %{ix86}
+  export CFLAGS=$(echo %{optflags} | sed -e "s/-mtune=[^ ]*//g" | sed -e "s/-march=[^ ]*/-march=i686/g")
+  export CXXFLAGS=$(echo %{optflags} | sed -e "s/-mtune=[^ ]*//g" | sed -e "s/-march=[^ ]*/-march=i686/g")
+  %endif
+
+  %configure --enable-cxx
+
+  sed -e 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' \
+      -e 's|-lstdc++ -lm|-lstdc++|' \
+      -e 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' \
+      -i libtool
+  export LD_LIBRARY_PATH=`pwd`/.libs
+  make %{?_smp_mflags}
+
+phase.check: |+
+  export LD_LIBRARY_PATH=`pwd`/.libs
+  make %{?_smp_mflags} check
+
+phase.install: |+
+  export LD_LIBRARY_PATH=`pwd`/.libs
+  make install DESTDIR=$RPM_BUILD_ROOT
+  install -m 644 gmp-mparam.h ${RPM_BUILD_ROOT}%{_includedir}
+  rm -f $RPM_BUILD_ROOT%{_infodir}/dir
+  rm -f $RPM_BUILD_ROOT%{_libdir}/lib{gmp,mp,gmpxx}.la
+  /sbin/ldconfig -n $RPM_BUILD_ROOT%{_libdir}
+  ln -sf libgmpxx.so.4 $RPM_BUILD_ROOT%{_libdir}/libgmpxx.so
+
+  basearch=%{_arch}
+  %ifarch %{ix86}
+  basearch=i386
+  %endif
+
+phase.prep: |+
+  %autosetup -p1
+
+release: 3
+runtimePhase.post: |
+  -p /sbin/ldconfig
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+source:
+  '0': https://gmplib.org/download/gmp/gmp-%{version}.tar.bz2
+subpackage:
+  gmp-c++:
+    files: |
+      %{_libdir}/libgmpxx.so.*
+      %{_libdir}/pkgconfig/gmpxx.pc
+    meta.description: GMP dependent library for C++ applications.
+    meta.summary: C++ development library package for GMP.
+    requires:
+    - '%{name}%{?_isa} = %{epoch}:%{version}-%{release}'
+    runtimePhase.post: |
+      -p /sbin/ldconfig
+    runtimePhase.postun: |
+      -p /sbin/ldconfig
+  gmp-devel:
+    files: |
+      %{_libdir}/libgmpxx.so
+      %{_libdir}/libgmp.so
+      %{_includedir}/*.h
+      %{_infodir}/gmp.info*
+      %{_libdir}/libgmpxx.a
+      %{_libdir}/libgmp.a
+    meta.description: Devel package include header files, documentation and libraries
+      for GMP
+    meta.summary: Development library package for GMP.
+    requires:
+    - '%{name}%{?_isa} = %{epoch}:%{version}-%{release}'
+    - '%{name}-c++%{?_isa} = %{epoch}:%{version}-%{release}'
+    - '%{name}-devel = %{epoch}:%{version}-%{release}'
+version: 6.2.1

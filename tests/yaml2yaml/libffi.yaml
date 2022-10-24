@@ -1,0 +1,90 @@
+buildRequires:
+- gcc gcc-c++ dejagnu
+files: |
+  %{_libdir}/*.so.*
+meta.description: |
+  Compilers for high level languages generate code that follows certain conventions. These
+  conventions are necessary, in part, for separate compilation to work. One such convention
+  is the "calling convention". The "calling convention" is a set of assumptions made by the
+  compiler about where function arguments will be found on entry to a function. A "calling
+  convention" also specifies where the return value for a function is found.
+
+  Some programs may not know at the time of compilation what arguments are to be passed to a
+  function. For instance, an interpreter may be told at run-time about the number and types
+  of arguments used to call a given function. Libffi can be used in such programs to provide
+  a bridge from the interpreter program to compiled code.
+
+  The libffi library provides a portable, high level programming interface to various calling
+  conventions. This allows a programmer to call any function specified by a call interface
+  description at run-time.
+
+  FFI stands for Foreign Function Interface. A foreign function interface is the popular name
+  for the interface that allows code written in one language to call code written in another
+  language. The libffi library really only provides the lowest, machine dependent layer of a
+  fully featured foreign function interface. A layer must exist above libffi that handles type
+  conversions for values passed between the two languages.
+meta.homepage: http://sourceware.org/libffi
+meta.license: MIT
+meta.summary: A Portable Foreign Function Interface Library
+name: libffi
+patchset:
+  '0': backport-x86-64-Always-double-jump-table-slot-size-for-CET-71.patch
+  '1': backport-Fix-check-for-invalid-varargs-arguments-707.patch
+phase.build: |+
+  %configure \
+  %ifarch riscv64
+  --disable-multi-os-directory \
+  %endif
+  --disable-static \
+  --disable-exec-static-tramp \
+
+
+  %make_build
+
+phase.check: |+
+  %make_build check
+
+phase.install: |+
+  %make_install
+  %delete_la
+
+  rm -f $RPM_BUILD_ROOT%{_infodir}/dir
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -p1 -n %{name}-%{version}
+
+release: 2.h2
+source:
+  '0': https://github.com/libffi/libffi/releases/download/v%{version}/%{name}-%{version}.tar.gz
+  '1': ffi-multilib.h
+  '2': ffitarget-multilib.h
+subpackage:
+  libffi-devel:
+    files: |
+      %{_libdir}/pkgconfig/*.pc
+      %{_includedir}/ffi*.h
+      %{_libdir}/*.so
+    meta.description: The devel package with header files and libraries is for developing
+      apps which needs libffi.
+    meta.summary: Development files for libffi
+    requires:
+    - '%{name} = %{version}-%{release}'
+    - pkgconfig
+  libffi-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/man3/*.gz
+      %{_infodir}/libffi.info.gz
+    meta.description: The help package contains man files.
+    meta.summary: libffi help
+    requires:
+    - info
+    runtimePhase.post: |
+      /sbin/install-info --info-dir=%{_infodir} %{_infodir}/libffi.info.gz || :
+    runtimePhase.preun: |
+      if [ $1 = 0 ] ;then
+      /sbin/install-info --delete --info-dir=%{_infodir} %{_infodir}/libffi.info.gz || :
+      fi
+version: 3.4.2
