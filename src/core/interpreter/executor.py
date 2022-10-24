@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from src.core.interpreter import constants
 from src.core.interpreter import scanner
+from src.log import log
 import ast
 import sys
 
@@ -18,11 +19,11 @@ def call(py_code) -> dict:
         'legality': validate_code(py_code),
         'result': exec_code(py_code)
     }
+    log.info(result)
     return result
 
 
 def exec_code(py_code) -> str:
-    result = 'Code execution error'
     try:
         result = eval(py_code)
     except Exception as e:
@@ -36,7 +37,7 @@ def validate_code(py_code) -> bool:
     try:
         ast.parse(py_code.strip())
     except SyntaxError as e:
-        print('Input isnt code.' + e)
+        log.error(e)
         return False
-    print('Code is ok.')
+    log.info('Code is ok.')
     return True

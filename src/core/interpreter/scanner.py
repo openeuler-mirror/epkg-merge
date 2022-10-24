@@ -5,6 +5,7 @@ import sys
 
 from src.core.interpreter import constants
 from src.core.interpreter import illegal_import_exception
+from src.log import log
 
 
 def scan_module(py_list) -> dict:
@@ -12,11 +13,10 @@ def scan_module(py_list) -> dict:
     for py in py_list:
         method_dict = {
             "py_name": py,
-            "module_lists": get_methods_name(py)
+            "method_lists": get_methods_name(py)
         }
         list_modules.append(method_dict)
-    print("Scanned method name：")
-    print(list_modules)
+        log.info(method_dict)
     return list_modules
 
 
@@ -29,8 +29,7 @@ def scan_risk_import(py_list) -> dict:
             "import_lists": imprt_lists
         }
         list_imports.append(import_dict)
-    print("Scanned import name：")
-    print(list_imports)
+        log.info(import_dict)
     return list_imports
 
 
