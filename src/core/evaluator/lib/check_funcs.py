@@ -110,7 +110,7 @@ def is_env_path(key, value, check_func, check_params):
 def is_version(key, value, check_func, check_params):
     # version string should like: 1.1, 1.1.1
     # it should startwith and end with a integer, and filled with ingeter and '.' between them.
-    if re.match("^[0-9][0-9.]*[0-9]$", value):
+    if re.match("^[0-9][0-9.]*[0-9]$", str(value)):
         return None
 
     err_code = {
