@@ -1,0 +1,229 @@
+buildRequires:
+- gcc
+- pam-devel libsepol-static >= 3.3 libsemanage-static >= 3.3 libselinux-devel >= 3.3  libcap-devel
+  audit-libs-devel  gettext
+- desktop-file-utils dbus-devel dbus-glib-devel python3-devel libcap-ng-devel
+- systemd systemd-units
+files: |
+  %license policycoreutils/COPYING
+  %doc %{_usr}/share/doc/%{name}
+  %config(noreplace) %{_sysconfdir}/sestatus.conf
+  %config(noreplace) %{_sysconfdir}/pam.d/newrole
+  %config(noreplace) %{_sysconfdir}/selinux/restorecond.conf
+  %config(noreplace) %{_sysconfdir}/selinux/restorecond_user.conf
+  %{_sbindir}/*
+  %exclude %{_sbindir}/{seunshare,semanage}
+  %{_bindir}/secon
+  %{_bindir}/semodule_expand
+  %{_bindir}/semodule_link
+  %{_bindir}/semodule_package
+  %{_bindir}/semodule_unpackage
+  %{_bindir}/sestatus
+  %{_libexecdir}/selinux/hll
+  %dir %{_datadir}/bash-completion
+  %{_datadir}/bash-completion/completions/setsebool
+  %{_unitdir}/restorecond.service
+  %{_userunitdir}/restorecond_user.service
+  %{_sysconfdir}/xdg/autostart/restorecond.desktop
+  %{_datadir}/dbus-1/services/org.selinux.Restorecond.service
+  %attr(0755,root,root) %caps(cap_dac_read_search,cap_setpcap,cap_audit_write,cap_sys_admin,cap_fowner,cap_chown,cap_dac_override=pe) %{_bindir}/newrole
+  %{_libexecdir}/selinux/selinux-autorelabel
+  %{_unitdir}/selinux-autorelabel-mark.service
+  %{_unitdir}/selinux-autorelabel.service
+  %{_unitdir}/selinux-autorelabel.target
+  %{_systemdgeneratordir}/selinux-autorelabel-generator.sh
+filesInput: '%{name}.lang'
+meta.description: It contains the selinux policy core utilities
+meta.homepage: https://github.com/SELinuxProject
+meta.license: GPLv2
+meta.summary: Policy core utilities of selinux
+name: policycoreutils
+obsoletes:
+- '%{name}-restorecond < %{version}-%{release}'
+- '%{name}-newrole < %{version}-%{release}'
+- python2-policycoreutils
+patchset:
+  '0': fix-fixfiles-N-date-function.patch
+  '1': fix-fixfiles-N-date-function-two.patch
+phase.build: |+
+  %set_build_flags
+  export PYTHON=%{__python3}
+
+  make -C policycoreutils LSPP_PRIV=y SBINDIR="%{_sbindir}" LIBDIR="%{_libdir}" SEMODULE_PATH="%{_sbindir}" LIBSEPOLA="%{_libdir}/libsepol.a" all
+  make -C python  SBINDIR="%{_sbindir}" LSPP_PRIV=y LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" all
+  make -C semodule-utils  SBINDIR="%{_sbindir}" LSPP_PRIV=y LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" all
+  make -C restorecond     SBINDIR="%{_sbindir}" LSPP_PRIV=y LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" all
+  %if %{with sandbox}
+  make -C sandbox SBINDIR="%{_sbindir}" LSPP_PRIV=y LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" all
+  %endif
+  make -C dbus    SBINDIR="%{_sbindir}" LSPP_PRIV=y LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" all
+
+phase.install: |
+  mkdir -p %{buildroot}/%{_defaultdocdir}/%{name}/
+  make -C policycoreutils LSPP_PRIV=y  DESTDIR="%{buildroot}" SBINDIR="%{_sbindir}" LIBDIR="%{_libdir}" SEMODULE_PATH="/usr/sbin" LIBSEPOLA="%{_libdir}/libsepol.a" install
+  make -C python  PYTHON=%{__python3} DESTDIR="%{buildroot}" SBINDIR="%{_sbindir}" LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" install
+  make -C semodule-utils  PYTHON=%{__python3} DESTDIR="%{buildroot}" SBINDIR="%{_sbindir}" LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" install
+  make -C restorecond     PYTHON=%{__python3} DESTDIR="%{buildroot}" SBINDIR="%{_sbindir}" LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" install
+  %if %{with sandbox}
+  make -C sandbox PYTHON=%{__python3} DESTDIR="%{buildroot}" SBINDIR="%{_sbindir}" LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" install
+  %endif
+  make -C dbus    PYTHON=%{__python3} DESTDIR="%{buildroot}" SBINDIR="%{_sbindir}" LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" install
+
+
+  rm -rf %{buildroot}/%{_sysconfdir}/rc.d/init.d/restorecond
+  rm -f %{buildroot}/%{_sbindir}/open_init_pty
+  rm -f %{buildroot}/%{_sbindir}/run_init
+  rm -f %{buildroot}/%{_mandir}/man8/open_init_pty.8
+  rm -f %{buildroot}/%{_mandir}/ru/man8/run_init.8*
+  rm -f %{buildroot}/%{_mandir}/man8/run_init.8*
+  rm -f %{buildroot}/etc/pam.d/run_init*
+
+  rm -f  %{buildroot}%{python3_sitelib}/sepolicy/gui.*
+  rm -f  %{buildroot}%{python3_sitelib}/sepolicy/sepolicy.glade
+
+  install -m 644 -p %{SOURCE2} %{buildroot}/%{_unitdir}/
+  install -m 644 -p %{SOURCE3} %{buildroot}/%{_unitdir}/
+  install -m 644 -p %{SOURCE4} %{buildroot}/%{_unitdir}/
+  install -D -m 755 -p %{SOURCE5} %{buildroot}/%{_systemdgeneratordir}/%{basename:%{SOURCE5}}
+  install -m 755 -p %{SOURCE1} %{buildroot}/%{_libexecdir}/selinux/
+
+  pathfix.py -i "%{__python3} -Es" -p %{buildroot}%{python3_sitelib}
+  pathfix.py -i "%{__python3} -Es" -p %{buildroot}%{_sbindir}/semanage \
+  %if %{with sandbox}
+  %{buildroot}%{_bindir}/sandbox \
+      %{buildroot}%{_datadir}/sandbox/start \
+      %endif
+  %{buildroot}%{_bindir}/chcat  %{buildroot}%{_bindir}/audit2allow \
+      %{buildroot}%{_bindir}/sepolicy   %{buildroot}%{_bindir}/sepolgen-ifgen \
+      %{buildroot}%{_datadir}/system-config-selinux/selinux_server.py
+
+
+  find %{buildroot}%{python3_sitelib} %{buildroot}%{python3_sitearch} \
+      %{buildroot}%{_sbindir} %{buildroot}%{_bindir} %{buildroot}%{_datadir} -type f -name '*~' | xargs rm -f
+
+  %py_byte_compile %{__python3} %{buildroot}%{_datadir}/system-config-selinux
+
+  %find_lang policycoreutils
+
+  %endif
+phase.prep: |+
+  %autosetup -p 1  -n selinux-policycoreutils-%{version}
+
+provides:
+- '%{name}-restorecond = %{version}-%{release}'
+- '%{name}-newrole = %{version}-%{release}'
+- /sbin/fixfiles
+- /sbin/restorecon
+release: 2
+requires:
+- libsepol >= 3.3 libselinux-utils util-linux grep gawk diffutils rpm sed coreutils
+rpmMacros:
+- '%global _python_bytecompile_extra 0'
+- '%bcond_with sandbox'
+- '%{?python_provide:%python_provide python3-policycoreutils}'
+source:
+  '0': https://github.com/SELinuxProject/selinux/archive/refs/tags/policycoreutils-%{version}.tar.gz
+  '1': selinux-autorelabel
+  '2': selinux-autorelabel.service
+  '3': selinux-autorelabel-mark.service
+  '4': selinux-autorelabel.target
+  '5': selinux-autorelabel-generator.sh
+subpackage:
+  policycoreutils-dbus:
+    buildArch: noarch
+    files rpmWhen %if %{with sandbox}: |
+      %{_datadir}/system-config-selinux/selinux_server.py
+      %{_datadir}/polkit-1/actions/org.selinux.policy
+      %{_sysconfdir}/dbus-1/system.d/org.selinux.conf
+      %{_datadir}/dbus-1/system-services/org.selinux.service
+      %dir %{_datadir}/system-config-selinux/__pycache__
+      %{_datadir}/system-config-selinux/__pycache__/selinux_server.*
+    meta.description: It contains policy core DBUS for selinux
+    meta.summary: Policy core DBUS for selinux
+    requires:
+    - python3-policycoreutils = %{version}-%{release} python3-slip-dbus
+  policycoreutils-devel:
+    files rpmWhen %if %{with sandbox}: |
+      %{_bindir}/sepolicy
+      %{_bindir}/sepolgen
+      %{_bindir}/sepolgen-*
+      %{_usr}/share/bash-completion/completions/sepolicy
+      %dir  /var/lib/sepolgen
+      /var/lib/sepolgen/perm_map
+    meta.description: It contains policy core devel utilities for selinux
+    meta.summary: Policy core devel utilities for selinux
+    requires:
+    - policycoreutils-python-utils = %{version}-%{release}
+    - /usr/bin/make
+    - selinux-policy-devel
+  policycoreutils-help:
+    files rpmWhen %if %{with sandbox}: |
+      %{_mandir}/*
+    meta.description: This contains man files for the using of selinux.
+    meta.summary: Including man files for selinux
+    requires:
+    - man
+  policycoreutils-python-utils:
+    buildArch: noarch
+    files rpmWhen %if %{with sandbox}: |
+      %{_bindir}/audit2allow
+      %{_bindir}/audit2why
+      %{_sbindir}/semanage
+      %{_bindir}/chcat
+      %if %{with sandbox}
+      %{_bindir}/sandbox
+      %endif
+      %{_sysconfdir}/dbus-1/system.d/org.selinux.conf
+      %{_datadir}/bash-completion/completions/semanage
+    meta.description: It contains the python utilities for selinux
+    meta.summary: Policy core python utilities for selinux
+    obsoletes:
+    - policycoreutils-python <= 2.4-4
+    requires:
+    - python3-policycoreutils = %{version}-%{release}
+  policycoreutils-sandbox rpmWhen %if %{with sandbox}:
+    files: |
+      %config(noreplace) %{_sysconfdir}/sysconfig/sandbox
+      %{_datadir}/sandbox/{start,sandboxX.sh}
+      %caps(cap_setpcap,cap_setuid,cap_fowner,cap_dac_override,cap_sys_admin,cap_sys_nice=pe) %{_sbindir}/seunshare
+    meta.description: It contains sandbox utilities for selinux
+    meta.summary: Sandbox utilities for selinux
+    requires:
+    - 'python3-policycoreutils = %{version}-%{release} '
+    - 'xorg-x11-server-Xephyr >= 1.14.1-2 /usr/bin/rsync /usr/bin/xmodmap '
+    - 'openbox '
+  python3-policycoreutils:
+    buildArch: noarch
+    files rpmWhen %if %{with sandbox}: |
+      %{python3_sitelib}/__pycache__
+      %{python3_sitelib}/sepolgen
+      %dir %{python3_sitelib}/sepolicy
+      %{python3_sitelib}/sepolicy/templates
+      %dir %{python3_sitelib}/sepolicy/help
+      %{python3_sitelib}/sepolicy/help/*
+      %{python3_sitelib}/sepolicy/__init__.py*
+      %{python3_sitelib}/sepolicy/__pycache__
+      %{python3_sitelib}/sepolicy/manpage.py*
+      %{python3_sitelib}/sepolicy/network.py*
+      %{python3_sitelib}/sepolicy/transition.py*
+      %{python3_sitelib}/sepolicy/sedbus.py*
+      %{python3_sitelib}/sepolicy*.egg-info
+      %{python3_sitelib}/sepolicy/booleans.py*
+      %{python3_sitelib}/sepolicy/communicate.py*
+      %{python3_sitelib}/sepolicy/generate.py*
+      %{python3_sitelib}/sepolicy/interface.py*
+      %{python3_sitelib}/seobject.py*
+    meta.description: It contains the python3 policy core utilities for selinux
+    meta.summary: python3 utilities for seLinux policy core
+    obsoletes:
+    - '%{name}-python3 < %{version}-%{release}'
+    provides:
+    - '%{name}-python3 = %{version}-%{release}'
+    requires:
+    - policycoreutils = %{version}-%{release}
+    - python3-libselinux python3-libsemanage >= 3.3
+    - audit-libs-python3 >= 2.8.5
+    - python3-IPy
+    - checkpolicy
+    - python3-setools >= 4.3.0
+version: 3.3
