@@ -15,7 +15,7 @@ def transform_include_phase(file):
 
 
 def parse_file_name(file):
-    file = file.split("/")[-1]
+    file = os.path.split(file)[-1]
     file_name = file.split(".")[0]
     return file_name
 
