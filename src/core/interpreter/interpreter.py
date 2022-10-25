@@ -2,7 +2,7 @@
 from src.core.interpreter import scanner
 from src.core.interpreter import importer
 from src.core.interpreter import illegal_import_exception
-from src import log
+from src.log import log
 
 
 default_lib = importer.import_default_lib()
@@ -23,8 +23,23 @@ class StartUp:
             # Import required for preloading code
             from src.core.interpreter import executor
         except illegal_import_exception.IllegalImportException as e:
-            return {'startup_status': False, 'error_info': e.error_info}
+            startup_result = {
+                'startup_status': False,
+                'error_info': e.error_info
+            }
+            log.error(startup_result)
+            return startup_result
         except Exception as e:
-            return {'startup_status': False, 'error_info': e}
+            startup_result = {
+                'startup_status': False,
+                'error_info': e
+            }
+            log.error(startup_result)
+            return startup_result
         else:
-            return {'startup_status': True, 'error_info': None}
+            startup_result = {
+                'startup_status': True,
+                'error_info': None
+            }
+            log.info(startup_result)
+            return startup_result
