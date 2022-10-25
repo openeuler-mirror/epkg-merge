@@ -18,14 +18,16 @@ def handle_package(package, config_space):
 def handle_output(package_name, content, output):
     if not content:
         return
+    path_current = os.getcwd()
     if not output:
-        output = "./" + package_name
+        output = os.path.join(path_current, "merge", package_name)
     else:
-        output = output + "/" + package_name
+        output = os.path.join(output, package_name)
     # $output/$package_name.yaml
     if not os.path.exists(output):
         os.makedirs(output)
-    file = output + "/" + package_name + ".yaml"
+    # file = output + "/" + package_name + ".yaml"
+    file = os.path.join(output, package_name + ".yaml")
     with open(file, "w") as f:
         yaml.SafeDumper.org_represent_str = yaml.SafeDumper.represent_str
 
@@ -37,7 +39,7 @@ def handle_output(package_name, content, output):
         yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
         yaml.safe_dump(content, f, allow_unicode='uft-8')
 
-    os.system(f"python3 ./src/tools/transition/openEulerTransitionMain.py -t {file}")
+    os.system(f"openEulerTransition -t {file}")
 
     for path in ConfigSpace.fspath_loaded:
         package_path, file_name = os.path.split(path)
@@ -47,4 +49,7 @@ def handle_output(package_name, content, output):
                 if sub_file.endswith(".yaml") or sub_file.endswith(".spec"):
                     continue
                 src_path = os.path.join(package_path, sub_file)
-                shutil.copy(src_path, output)
+                if os.path.isdir(src_path):
+                  shutil.copytree(src_path, os.path.join(output, os.path.split(src_path)[-1]))
+                else:
+                  shutil.copy(src_path, output)
