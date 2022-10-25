@@ -1,0 +1,56 @@
+subpackage.openssl-libs.files: |
+    %defattr(-,root,root)
+    %license LICENSE
+    %dir %{_sysconfdir}/pki/tls
+    %dir %{_sysconfdir}/pki/tls/certs
+    %dir %{_sysconfdir}/pki/tls/misc
+    %dir %{_sysconfdir}/pki/tls/private
+    %config(noreplace) %{_sysconfdir}/pki/tls/openssl.cnf
+    %config(noreplace) %{_sysconfdir}/pki/tls/ct_log_list.cnf
+    %{_libdir}/libcrypto.so.%{version}
+    %{_libdir}/libcrypto.so.%{soversion}
+    %{_libdir}/libssl.so.%{version}
+    %{_libdir}/libssl.so.%{soversion}
+    %{_libdir}/engines-%{soversion}
+    %attr(0644,root,root) %{_libdir}/.libcrypto.so.*.hmac
+    %attr(0644,root,root) %{_libdir}/.libssl.so.*.hmac
+    
+    
+subpackage.openssl-perl.files: |
+    %{_bindir}/c_rehash
+    %{_bindir}/*.pl
+    %{_bindir}/tsget
+    %dir %{_sysconfdir}/pki/CA
+    %dir %{_sysconfdir}/pki/CA/private
+    %dir %{_sysconfdir}/pki/CA/certs
+    %dir %{_sysconfdir}/pki/CA/crl
+    %dir %{_sysconfdir}/pki/CA/newcerts
+    
+    %ldconfig_scriptlets libs
+    
+    
+subpackage.openssl-devel.files: |
+    %defattr(-,root,root)
+    %doc doc/dir-locals.example.el doc/openssl-c-indent.el
+    %{_prefix}/include/openssl
+    %{_libdir}/pkgconfig/*.pc
+    %{_libdir}/*.so
+    %{_libdir}/*.a
+    
+    
+subpackage.openssl-help.files: |
+    %defattr(-,root,root)
+    %{_mandir}/man1/*
+    %{_mandir}/man3/*
+    %{_mandir}/man5/*
+    %{_mandir}/man7/*
+    %{_pkgdocdir}/html/
+    
+    
+files: |
+    %license LICENSE
+    %doc AUTHORS CHANGES FAQ NEWS README
+    %{_pkgdocdir}/Makefile.certificate
+    %{_bindir}/openssl
+    
+    

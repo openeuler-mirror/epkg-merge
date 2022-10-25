@@ -1,0 +1,106 @@
+buildRequires:
+- gcc python3-devel bison flex bzip2-devel audit-libs-devel
+- libselinux-devel >= %{libselinux_version} swig  libsepol-devel >= %{libsepol_version}
+- CUnit-devel gdb-headless
+files: |
+  %license COPYING
+  %dir %{_sysconfdir}/selinux
+  %config(noreplace) %{_sysconfdir}/selinux/semanage.conf
+  %{_libdir}/libsemanage.so.*
+  %dir %{_libexecdir}/selinux
+  %dir %{_sharedstatedir}/selinux
+  %dir %{_sharedstatedir}/selinux/tmp
+meta.description: |
+  libsemanage is the policy management library. Using libsepol and
+  libselinux to interact with the SELinux system, it also calls helper
+  programs for loading policy and for checking whether the
+  file_contexts configuration is valid.
+meta.homepage: https://github.com/SELinuxProject/selinux/wiki
+meta.license: LGPLv2+
+meta.summary: SELinux binary policy manipulation library
+name: libsemanage
+patchset:
+  '0': fix-test-failure-with-secilc.patch
+phase.build: |+
+  export LDFLAGS="%{?__global_ldflags}"
+
+  make clean
+  %make_build CFLAGS="%{optflags}" swigify
+  %make_build CFLAGS="%{optflags}" LIBDIR="%{_libdir}" SHLIBDIR="%{_lib}" all
+  %make_build %{__python3} LIBDIR="%{_libdir}" CFLAGS="-g %{optflags}" pywrap
+
+phase.check: |+
+  make test
+
+phase.install: |+
+  mkdir -p %{buildroot}%{_libdir}
+  mkdir -p %{buildroot}%{_includedir}
+  mkdir -p %{buildroot}%{_sharedstatedir}/selinux
+  mkdir -p %{buildroot}%{_sharedstatedir}/selinux/tmp
+
+  make DESTDIR="%{buildroot}" LIBDIR="%{_libdir}" SHLIBDIR="%{_libdir}" install
+  make PYTHON=%{__python3} DESTDIR="%{buildroot}" LIBDIR="%{_libdir}" SHLIBDIR="%{_lib}" install-pywrap
+
+  cp %{SOURCE1} %{buildroot}/etc/selinux/semanage.conf
+  ln -sf  %{_libdir}/libsemanage.so.2 %{buildroot}/%{_libdir}/libsemanage.so
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -n libsemanage-%{version} -p1
+
+release: 3
+requires:
+- bzip2-libs audit-libs
+- libselinux >= %{libselinux_version}
+rpmMacros:
+- '%define libsepol_version 3.3-1'
+- '%define libselinux_version 3.3-1'
+source:
+  '0': https://github.com/SELinuxProject/selinux/releases/download/3.3/libsemanage-%{version}.tar.gz
+  '1': semanage.conf
+subpackage:
+  libsemanage-devel:
+    files: |
+      %{_libdir}/libsemanage.a
+      %{_libdir}/libsemanage.so
+      %{_libdir}/pkgconfig/libsemanage.pc
+      %dir %{_includedir}/semanage
+      %{_includedir}/semanage/*.h
+    meta.description: |
+      The libsemanage-devel package contains the libraries and header files
+      needed for developing applications that manipulate SELinux policies.
+    meta.summary: Header files and libraries used to build policy manipulation tools
+    obsoletes:
+    - libsemanage-static < %{version}-%{release}
+    provides:
+    - libsemanage-static = %{version}-%{release}
+    requires:
+    - '%{name} = %{version}-%{release}'
+  libsemanage-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/man3/*
+      %{_mandir}/man5/*
+      %{_mandir}/ru/man5/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  python3-libsemanage:
+    files: |
+      %{python3_sitearch}/*.so
+      %{python3_sitearch}/semanage.py*
+      %{python3_sitearch}/__pycache__/semanage*
+      %{_libexecdir}/selinux/semanage_migrate_store
+    meta.description: |
+      The python3-libsemanage package contains the python bindings for developing
+      SELinux management applications.
+    meta.summary: python3 bindings for libsemanage
+    obsoletes:
+    - '%{name}-python3 < %{version}-%{release}'
+    provides:
+    - '%{name}-python3 = %{version}-%{release}'
+    requires:
+    - '%{name} = %{version}-%{release} libselinux-python3'
+version: 3.3

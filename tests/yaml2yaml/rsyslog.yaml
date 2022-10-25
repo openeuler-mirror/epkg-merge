@@ -1,0 +1,429 @@
+buildRequires:
+- gcc autoconf automake bison dos2unix flex pkgconfig python3-docutils libtool
+- libgcrypt-devel libuuid-devel zlib-devel krb5-devel libnet-devel gnutls-devel
+- libfastjson-devel >= 0.99.8 libestr-devel >= 0.1.9
+- mariadb-connector-c-devel net-snmp-devel qpid-proton-c-devel libcurl-devel
+- systemd-devel >= 204-8 %if %{systemd_lived} == 1
+files: |
+  %defattr(-,root,root,-)
+  %doc ChangeLog README.md
+  %license AUTHORS
+  %doc %{rsyslog_docdir}/pgsql-createDB.sql
+  %license COPYING*
+  %{rsyslog_docdir}
+  %dir %{_libdir}/rsyslog
+  %dir %{_sysconfdir}/rsyslog.d
+  %dir %{rsyslog_statedir}
+  %dir %{rsyslog_pkidir}
+  %{_sbindir}/rsyslogd
+  %attr(500,root,root) %{_bindir}/os_rotate_and_save_log.sh
+  %attr(500,root,root) %{_bindir}/os_check_timezone_for_rsyslog.sh
+  %attr(500,root,root) %{_bindir}/timezone_update.sh
+  /etc/cron.d/timezone.cron
+  %{_unitdir}/rsyslog.service
+  %config(noreplace) %{_sysconfdir}/rsyslog.conf
+  %config(noreplace) %{_sysconfdir}/sysconfig/rsyslog
+  %config(noreplace) %{_sysconfdir}/logrotate.d/rsyslog
+  %{_libdir}/rsyslog/fmhttp.so
+  %{_libdir}/rsyslog/fmhash.so
+  %{_libdir}/rsyslog/imfile.so
+  %if %{systemd_lived} == 1
+  %{_libdir}/rsyslog/omjournal.so
+  %{_libdir}/rsyslog/imjournal.so
+  %endif
+  %{_libdir}/rsyslog/imklog.so
+  %{_libdir}/rsyslog/immark.so
+  %{_libdir}/rsyslog/impstats.so
+  %{_libdir}/rsyslog/imptcp.so
+  %{_libdir}/rsyslog/imtcp.so
+  %{_libdir}/rsyslog/imudp.so
+  %{_libdir}/rsyslog/imuxsock.so
+  %{_libdir}/rsyslog/lmnet.so
+  %{_libdir}/rsyslog/lmnetstrms.so
+  %{_libdir}/rsyslog/lmnsd_ptcp.so
+  %{_libdir}/rsyslog/lmregexp.so
+  %{_libdir}/rsyslog/lmtcpclt.so
+  %{_libdir}/rsyslog/lmtcpsrv.so
+  %{_libdir}/rsyslog/lmzlibw.so
+  %{_libdir}/rsyslog/mmanon.so
+  %{_libdir}/rsyslog/mmcount.so
+  %{_libdir}/rsyslog/mmexternal.so
+  %{_libdir}/rsyslog/ommail.so
+  %{_libdir}/rsyslog/omprog.so
+  %{_libdir}/rsyslog/omstdout.so
+  %{_libdir}/rsyslog/omtesting.so
+  %{_libdir}/rsyslog/omuxsock.so
+  %{_libdir}/rsyslog/pmaixforwardedfrom.so
+  %{_libdir}/rsyslog/pmcisconames.so
+  %{_libdir}/rsyslog/pmlastmsg.so
+  %{_libdir}/rsyslog/pmsnare.so
+  %exclude %{rsyslog_docdir}/html
+  %exclude %{rsyslog_docdir}/mysql-createDB.sql
+  %exclude %{rsyslog_docdir}/pgsql-createDB.sql
+meta.description: |
+  RSYSLOG is the rocket-fast system for log processing.It offers high-performance,
+  great security features and a modular design. While it started as a regular syslogd,
+  rsyslog has evolved into a kind of swiss army knife of logging, being able to
+  accept inputs from a wide variety of sources, transform them, and output to the
+  results to diverse destinations.
+
+  RSYSLOG can deliver over one million messages per second to local destinations when
+  limited processing is applied. Even with remote destinations and more elaborate
+  processing the performance is usually considered “stunning”.
+meta.homepage: http://www.rsyslog.com/
+meta.license: (GPLv3+ and ASL 2.0)
+meta.summary: The rocket-fast system for log processing
+name: rsyslog
+obsoletes:
+- sysklogd < 1.5-11
+patchset:
+  '0': rsyslog-8.24.0-ensure-parent-dir-exists-when-writting-log-file.patch
+  '1': bugfix-rsyslog-7.4.7-imjournal-add-monotonic-timestamp.patch
+  '10': backport-gnutls-bugfix-Fix-error-handling-in-gtlsRecordRecv.patch
+  '11': backport-Fix-non-null-terminated-string-used-with-strlen.patch
+  '12': backport-tcpsrv-do-not-decrease-number-of-to-be-processed-fds.patch
+  '13': backport-imptcp-bugfix-worker-thread-starvation-on-extreme-tr.patch
+  '14': backport-Fix-memory-leak-when-globally-de-initialize-GnuTLS.patch
+  '15': backport-Fix-memory-leak-when-free-action-worker-data-table.patch
+  '2': bugfix-rsyslog-7.4.7-add-configuration-to-avoid-memory-leak.patch
+  '3': rsyslog-8.37.0-initialize-variables-and-check-return-value.patch
+  '4': print-main-queue-info-to-journal-when-queue-full.patch %if %{systemd_lived}
+    == 1
+  '5': print-main-queue-info-to-journal-when-receive-USR1-signal.patch %if %{systemd_lived}
+    == 1
+  '6': bugfix-CVE-2022-24903.patch
+  '7': backport-testbench-skip-omfwd_fast_imuxsock.sh-if-liblogging-stdlog-is-not-available.patch
+  '8': backport-Fixes-4395-by-correctly-checking-for-EPIPE.patch
+  '9': backport-rsyslogd-adjust-the-order-of-doHUP-and-processImInte.patch
+phase.build: "autoreconf -vfi\n\n%ifarch sparc64\nexport CFLAGS=\"$RPM_OPT_FLAGS -fPIE\
+  \ -DPATH_PIDFILE=\\\\\\\"%{Pidfile}\\\\\\\"\"\n%else\nexport CFLAGS=\"$RPM_OPT_FLAGS\
+  \ -fpie -DPATH_PIDFILE=\\\\\\\"%{Pidfile}\\\\\\\"\"\nexport LDFLAGS=\"-pie -Wl,-z,relro\
+  \ -Wl,-z,now\"\n%endif\n\nexport HIREDIS_CFLAGS=-I/usr/include/hiredis\nexport HIREDIS_LIBS=\"\
+  -L%{_libdir} -lhiredis\"\n%configure \\\n\t--prefix=/usr \\\n\t--disable-static\
+  \ \\\n--enable-testbench \\\n--enable-elasticsearch \\\n--enable-generate-man-pages\
+  \ \\\n--enable-gnutls \\\n--enable-gssapi-krb5 \\\n--enable-imdiag \\\n--enable-imfile\
+  \ \\\n--enable-impstats \\\n--enable-imptcp \\\n--enable-mail \\\n--enable-mmanon\
+  \ \\\n--enable-mmaudit \\\n--enable-mmcount \\\n--enable-mmkubernetes \\\n--enable-mmjsonparse\
+  \ \\\n--enable-mmnormalize \\\n--enable-mmsnmptrapd \\\n--enable-mysql \\\n--enable-omamqp1\
+  \ \\\n--enable-omhiredis \\\n--enable-ommongodb \\\n--enable-omprog \\\n--enable-omrabbitmq\
+  \ \\\n--enable-omstdout \\\n--enable-omudpspoof \\\n--enable-omuxsock \\\n--enable-pgsql\
+  \ \\\n--enable-pmaixforwardedfrom \\\n--enable-pmcisconames \\\n--enable-pmlastmsg\
+  \ \\\n--enable-pmsnare \\\n--enable-relp \\\n--enable-snmp \\\n--enable-unlimited-select\
+  \ \\\n--enable-usertools \\\n--enable-omkafka \\\n \\\n%if %{systemd_lived} == 1\n\
+  --enable-imjournal \\\n        --enable-omjournal \\\n        %endif\n\n%make_build\n\
+  \n%endif\n"
+phase.check: |+
+  make V=1 check
+
+phase.install: |+
+  %make_install
+
+  install -d -m 755 $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
+  install -d -m 755 $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d
+  install -d -m 755 $RPM_BUILD_ROOT%{_unitdir}
+  install -d -m 755 $RPM_BUILD_ROOT%{_sysconfdir}/rsyslog.d
+  install -d -m 700 $RPM_BUILD_ROOT%{rsyslog_statedir}
+  install -d -m 700 $RPM_BUILD_ROOT%{rsyslog_pkidir}
+  install -d -m 755 $RPM_BUILD_ROOT%{rsyslog_docdir}/html
+
+  install -p -m 644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/rsyslog.conf
+  install -p -m 644 %{SOURCE3} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/rsyslog
+  install -p -m 644 %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/rsyslog
+  install -p -m 644 %{SOURCE8} $RPM_BUILD_ROOT%{_unitdir}/rsyslog.service
+  install -p -m 644 plugins/ommysql/createDB.sql $RPM_BUILD_ROOT%{rsyslog_docdir}/mysql-createDB.sql
+  install -p -m 644 plugins/ompgsql/createDB.sql $RPM_BUILD_ROOT%{rsyslog_docdir}/pgsql-createDB.sql
+  dos2unix tools/recover_qi.pl
+  install -p -m 644 tools/recover_qi.pl $RPM_BUILD_ROOT%{rsyslog_docdir}/recover_qi.pl
+
+  mkdir -p $RPM_BUILD_ROOT/etc/cron.d/
+  install -m 0600 %{_sourcedir}/timezone.cron $RPM_BUILD_ROOT/etc/cron.d/
+  install -m 0500 %{SOURCE5} $RPM_BUILD_ROOT%{_bindir}/os_rotate_and_save_log.sh
+  install -m 0500 %{SOURCE6} $RPM_BUILD_ROOT%{_bindir}/os_check_timezone_for_rsyslog.sh
+  install -m 0500 %{SOURCE9} $RPM_BUILD_ROOT%{_bindir}/timezone_update.sh
+
+  cp -r doc/* $RPM_BUILD_ROOT%{rsyslog_docdir}/html
+  rm -f %{buildroot}%{_libdir}/rsyslog/imdiag.so
+  rm -f %{buildroot}%{_libdir}/rsyslog/liboverride_getaddrinfo.so
+  rm -f %{buildroot}%{_libdir}/rsyslog/liboverride_gethostname.so
+  rm -f %{buildroot}%{_libdir}/rsyslog/liboverride_gethostname_nonfqdn.so
+  %delete_la
+
+phase.prep: |+
+  %setup -q -a 1 -T -c
+  mv build doc
+
+  %autosetup -n %{name}-%{version} -D -p1
+
+provides:
+- syslog
+release: 11
+requires:
+- logrotate >= 3.5.2 bash >= 2.0
+rpmMacros:
+- '%define rsyslog_statedir %{_sharedstatedir}/rsyslog'
+- '%define rsyslog_pkidir %{_sysconfdir}/pki/rsyslog'
+- '%define rsyslog_docdir %{_docdir}/rsyslog'
+- '%define systemd_lived 1'
+- '%{?systemd_requires}'
+runtimePhase.post: |
+  for n in /var/log/{messages,secure,maillog,spooler}
+  do
+  [ -f $n ] && continue
+  umask 066 && touch $n
+  done
+
+  %if %{systemd_lived} == 1
+  %systemd_post rsyslog.service
+
+  %endif
+runtimePhase.postun: |+
+  %systemd_postun_with_restart rsyslog.service
+
+runtimePhase.pre: |2+
+
+runtimePhase.preun: |+
+  %systemd_preun rsyslog.service
+
+source:
+  '0': http://www.rsyslog.com/files/download/rsyslog/%{name}-%{version}.tar.gz
+  '1': http://www.rsyslog.com/files/download/rsyslog/%{name}-doc-%{version}.tar.gz
+  '2': rsyslog.conf
+  '3': rsyslog.sysconfig
+  '4': rsyslog.log
+  '5': os_rotate_and_save_log.sh
+  '6': os_check_timezone_for_rsyslog.sh
+  '7': timezone.cron
+  '8': rsyslog.service
+  '9': timezone_update.sh
+subpackage:
+  rsyslog-crypto:
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_bindir}/rscryutil
+      %{_libdir}/rsyslog/lmcry_gcry.so
+    meta.description: |
+      This package contains a module providing log file encryption and a
+      command line tool to process encrypted logs.
+    meta.summary: Encryption support
+    requires:
+    - '%name = %version-%release'
+  rsyslog-doc:
+    buildArch: noarch
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %doc %{rsyslog_docdir}/html
+    meta.description: This subpackage contains documentation for rsyslog.
+    meta.summary: HTML documentation for rsyslog
+  rsyslog-elasticsearch:
+    buildRequires:
+    - libcurl-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/omelasticsearch.so
+    meta.description: |
+      This module provides the capability for rsyslog to feed logs directly into
+      Elasticsearch.
+    meta.summary: ElasticSearch output module for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-gnutls:
+    buildRequires:
+    - gnutls-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/lmnsd_gtls.so
+    meta.description: |
+      The rsyslog-gnutls package contains the rsyslog plugins that provide the
+      ability to send and receive syslog messages via TCP or RELP using TLS
+      encryption via GnuTLS library. For details refer to rsyslog doc on imtcp
+      and omfwd modules.
+    meta.summary: TLS protocol support for rsyslog via GnuTLS library
+    requires:
+    - '%name = %version-%release'
+  rsyslog-gssapi:
+    buildRequires:
+    - krb5-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/lmgssutil.so
+      %{_libdir}/rsyslog/imgssapi.so
+      %{_libdir}/rsyslog/omgssapi.so
+    meta.description: |
+      The rsyslog-gssapi package contains the rsyslog plugins which support GSSAPI
+      authentication and secure connections. GSSAPI is commonly used for Kerberos
+      authentication.
+    meta.summary: GSSAPI authentication and encryption support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-help:
+    buildArch: noarch
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %doc %{rsyslog_docdir}/html
+      %{_mandir}/man5/rsyslog.conf.5.gz
+      %{_mandir}/man8/rsyslogd.8.gz
+      %{_mandir}/man1/rscryutil.1.gz
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  rsyslog-hiredis:
+    buildRequires:
+    - hiredis-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/omhiredis.so
+    group: System Environment/Daemons
+    meta.description: This package provides support from redis.
+    meta.summary: Redis support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-kafka:
+    buildRequires:
+    - librdkafka-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/omkafka.so
+    group: System Environment/Daemons
+    meta.description: This package provides support from kafka.
+    meta.summary: Provides the omkafka module
+    requires:
+    - '%name = %version-%release'
+  rsyslog-mmaudit:
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/mmaudit.so
+    meta.description: |
+      This module provides message modification supporting Linux audit format
+      in various settings.
+    meta.summary: Message modification module supporting Linux audit format
+    requires:
+    - '%name = %version-%release'
+  rsyslog-mmjsonparse:
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/mmjsonparse.so
+    meta.description: |
+      This module provides the capability to recognize and parse JSON enhanced
+      syslog messages.
+    meta.summary: JSON enhanced logging support
+    requires:
+    - '%name = %version-%release'
+  rsyslog-mmkubernetes:
+    buildRequires:
+    - libcurl-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/mmkubernetes.so
+    group: System Environment/Daemons
+    meta.description: This package provides support for kubernetes to add container
+      metadata.
+    meta.summary: Provides the mmkubernetes module
+    requires:
+    - '%name = %version-%release'
+  rsyslog-mmnormalize:
+    buildRequires:
+    - libestr-devel liblognorm-devel >= 1.0.2
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/mmnormalize.so
+    group: System Environment/Daemons
+    meta.description: This module provides the capability to normalize log messages
+      via liblognorm.
+    meta.summary: Log normalization support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-mmsnmptrapd:
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/mmsnmptrapd.so
+    meta.description: |
+      This message modification module takes messages generated from snmptrapd and
+      modifies them so that they look like they originated from the read originator.
+    meta.summary: Message modification module for snmptrapd generated messages
+    requires:
+    - '%name = %version-%release'
+  rsyslog-mongodb:
+    buildRequires:
+    - mongo-c-driver-devel snappy-devel cyrus-sasl-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_bindir}/logctl
+      %{_libdir}/rsyslog/ommongodb.so
+    group: System Environment/Daemons
+    meta.description: This package provides support from mongodb.
+    meta.summary: MongoDB support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-mysql:
+    buildRequires:
+    - mariadb-connector-c-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %doc %{rsyslog_docdir}/mysql-createDB.sql
+      %{_libdir}/rsyslog/ommysql.so
+    meta.description: |
+      The rsyslog-mysql package contains a dynamic shared object that will add
+      MySQL database support to rsyslog.
+    meta.summary: MySQL support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-omamqp1:
+    buildRequires:
+    - qpid-proton-c-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/omamqp1.so
+    group: System Environment/Daemons
+    meta.description: |
+      The omamqp1 output module can be used to send log messages via an AMQP
+      1.0-compatible messaging bus.
+    meta.summary: Provides the omamqp1 module
+    requires:
+    - '%name = %version-%release'
+  rsyslog-pgsql:
+    buildRequires:
+    - postgresql-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %doc %{rsyslog_docdir}/pgsql-createDB.sql
+      %{_libdir}/rsyslog/ompgsql.so
+    group: System Environment/Daemons
+    meta.description: |
+      The rsyslog-pgsql package contains a dynamic shared object that will add
+      PostgreSQL database support to rsyslog.
+    meta.summary: PostgresSQL support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-rabbitmq:
+    buildRequires:
+    - librabbitmq-devel >= 0.2
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/omrabbitmq.so
+    group: System Environment/Daemons
+    meta.description: This package provides support from rabbitmq.
+    meta.summary: RabbitMQ support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-relp:
+    buildRequires:
+    - librelp-devel >= 1.0.3
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/imrelp.so
+      %{_libdir}/rsyslog/omrelp.so
+    group: System Environment/Daemons
+    meta.description: |
+      The rsyslog-relp package contains the rsyslog plugins that provide
+      the ability to receive syslog messages via the reliable RELP
+      protocol.
+    meta.summary: RELP protocol support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-snmp:
+    buildRequires:
+    - net-snmp-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/omsnmp.so
+    group: System Environment/Daemons
+    meta.description: |
+      The rsyslog-snmp package contains the rsyslog plugin that provides the
+      ability to send syslog messages as SNMPv1 and SNMPv2c traps.
+    meta.summary: SNMP protocol support for rsyslog
+    requires:
+    - '%name = %version-%release'
+  rsyslog-udpspoof:
+    buildRequires:
+    - libnet-devel
+    files rpmWhen %if %{systemd_lived} == 1: |
+      %{_libdir}/rsyslog/omudpspoof.so
+    meta.description: |
+      This module is similar to the regular UDP forwarder, but permits to
+      spoof the sender address. Also, it enables to circle through a number
+      of source ports.
+    meta.summary: Provides the omudpspoof module
+    requires:
+    - '%name = %version-%release'
+version: 8.2110.0

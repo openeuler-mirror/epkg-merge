@@ -1,0 +1,273 @@
+buildRequires:
+- filesystem          >= 3
+- gcc
+- gettext
+- glib2-devel
+- pkgconfig
+- popt-devel
+- setup
+- systemd
+files: |
+  %license COPYING
+  %doc doc/sysconfig.txt
+
+  %dir %{_sysconfdir}/rc.d
+  %dir %{_sysconfdir}/rc.d/init.d
+  %dir %{_sysconfdir}/rc.d/rc[0-6].d
+  %dir %{_sysconfdir}/sysconfig/console
+  %dir %{_sysconfdir}/sysconfig/modules
+  %dir %{_libexecdir}/%{name}
+  %dir %{_libexecdir}/%{name}/legacy-actions
+
+
+  %{_sysconfdir}/rc.d/init.d/functions
+
+  %{_sysconfdir}/rc[0-6].d
+  %{_sysconfdir}/init.d
+
+
+  %{_bindir}/*
+  %{_sbindir}/consoletype
+  %{_sbindir}/genhostid
+
+  %{_libexecdir}/import-state
+  %{_libexecdir}/loadmodules
+
+  %{_prefix}/lib/systemd/system/import-state.service
+  %{_prefix}/lib/systemd/system/loadmodules.service
+  %{_prefix}/lib/udev/rename_device
+
+  %{_udevrulesdir}/*
+
+  %{_mandir}/man1/*
+meta.description: |
+  This package provides basic support for legacy System V init scripts, and some
+  other legacy tools & utilities.
+meta.homepage: https://github.com/fedora-sysv/initscripts
+meta.license: GPLv2
+meta.summary: Basic support for legacy System V init scripts
+name: initscripts
+obsoletes:
+- '%{name}            < 9.82-2'
+patchset:
+  '0': backport-run-ifdown-on-all-interfaces.patch
+  '1': bugfix-initscripts-add-udev-wait-dependency-for-network.patch
+  '2': bugfix-mod-network-function-when-NM-unmanage-devices.patch
+  '3': bugfix-initscripts-set-PERSISTENT_DHCLIENT-default-to-yes.patch
+  '4': bugfix-network-need-chkconfig-on.patch
+  '5': bugfix-restart-network-warning.patch
+  '6': new-network-fork-to-start-dhcp.patch
+  '7': exec-udevadm-settle-when-network-start.patch
+  '8': remove-rename_device_lock-when-process-does-not-exis.patch
+phase.build: |+
+  %make_build
+
+
+phase.install: |+
+  %make_install
+
+  %find_lang %{name}
+
+  %ifnarch s390 s390x
+  rm -f %{buildroot}%{_sysconfdir}/sysconfig/network-scripts/ifup-ctc
+  %endif
+
+  install -m 0755 -d %{buildroot}%{_docdir}/network-scripts
+
+  ln -s  %{_docdir}/%{name}/sysconfig.txt %{buildroot}%{_docdir}/network-scripts/
+  ln -sr %{_mandir}/man8/ifup.8           %{buildroot}%{_mandir}/man8/ifdown.8
+
+  touch %{buildroot}%{_sbindir}/ifup
+  touch %{buildroot}%{_sbindir}/ifdown
+
+
+phase.prep: |+
+  %autosetup -p1
+
+
+release: 3
+requires:
+- findutils
+- grep
+- procps-ng
+- setup
+- systemd
+- util-linux
+- chkconfig
+- initscripts-service
+requiresPost:
+- coreutils
+requiresPre:
+- shadow-utils
+rpmMacros:
+- '%global _hardened_build 1'
+- '%global shared_requirements \{os.linesep}Requires:         bash                       \{os.linesep}Requires:         filesystem          >=
+  3   \{os.linesep}Requires:         coreutils                  \{os.linesep}Requires:         gawk                       \{os.linesep}'
+- '%{?systemd_requires}'
+runtimePhase.post: |+
+  %systemd_post import-state.service loadmodules.service
+
+runtimePhase.postun: |+
+  %systemd_postun import-state.service loadmodules.service
+
+
+runtimePhase.preun: |+
+  %systemd_preun import-state.service loadmodules.service
+
+source:
+  '0': https://github.com/fedora-sysv/initscripts/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
+subpackage:
+  initscripts-service:
+    buildArch: noarch
+    files: |2
+
+      %dir %{_libexecdir}/%{name}
+      %dir %{_libexecdir}/%{name}/legacy-actions
+
+      %{_sbindir}/service
+
+      %{_mandir}/man8/service.*
+    meta.description: This package provides service command.
+    meta.summary: Support for service command
+    provides:
+    - /sbin/service
+    requires:
+    - systemd
+  netconsole-service:
+    buildArch: noarch
+    files: |
+      %config(noreplace) %{_sysconfdir}/sysconfig/netconsole
+
+      %{_libexecdir}/netconsole
+      %{_prefix}/lib/systemd/system/netconsole.service
+    meta.description: |
+      This packages provides a 'netconsole' service for loading of netconsole kernel
+      module with the configured parameters. The netconsole kernel module itself then
+      allows logging of kernel messages over the network.
+    meta.summary: Service for initializing of network console logging
+    obsoletes:
+    - '%{name}            < 9.82-2'
+    requires:
+    - '%{name} = %{version}-%{release}'
+    - glibc-common
+    - iproute
+    - iputils
+    - kmod
+    - sed
+    - util-linux
+    runtimePhase.post: |
+      %systemd_post netconsole.service
+    runtimePhase.postun: |
+      %systemd_postun netconsole.service
+    runtimePhase.preun: |
+      %systemd_preun netconsole.service
+  network-scripts:
+    files: |
+      %doc doc/examples/
+      %dir %{_sysconfdir}/sysconfig/network-scripts
+
+      %{_sysconfdir}/rc.d/init.d/network
+      %{_sysconfdir}/sysconfig/network-scripts/*
+
+      %config(noreplace)    %{_sysconfdir}/sysconfig/network-scripts/ifcfg-lo
+
+      %ghost                %{_sbindir}/ifup
+      %ghost                %{_sbindir}/ifdown
+      %attr(4755,root,root) %{_sbindir}/usernetctl
+
+      %{_mandir}/man8/ifup.*
+      %{_mandir}/man8/ifdown.*
+      %{_mandir}/man8/usernetctl.*
+      %{_docdir}/network-scripts/*
+    meta.description: |
+      This package contains the legacy scripts for activating & deactivating of most
+      network interfaces. It also provides a legacy version of 'network' service.
+
+      The 'network' service is enabled by default after installation of this package,
+      and if the network-scripts are installed alongside NetworkManager, then the
+      ifup/ifdown commands from network-scripts take precedence over the ones provided
+      by NetworkManager.
+
+      If user has both network-scripts & NetworkManager installed, and wishes to
+      use ifup/ifdown from NetworkManager primarily, then they has to run command:
+      $ update-alternatives --config ifup
+
+      Please note that running the command above will also disable the 'network'
+      service.
+    meta.summary: Legacy scripts for manipulating of network devices
+    obsoletes:
+    - '%{name}            < 9.82-2'
+    provides:
+    - deprecated()
+    requires:
+    - '%{name}%{?_isa} = %{version}-%{release}'
+    - bc
+    - dbus
+    - gawk
+    - grep
+    - hostname
+    - iproute
+    - ipcalc
+    - kmod
+    - procps-ng
+    - sed
+    - systemd
+    requiresPost:
+    - chkconfig
+    - '%{_sbindir}/update-alternatives'
+    requiresPostUn:
+    - '%{_sbindir}/update-alternatives'
+    requiresPreUn:
+    - chkconfig
+    runtimePhase.post: |
+      chkconfig --add network > /dev/null 2>&1 || :
+
+      [ -L %{_sbindir}/ifup ]   || rm -f %{_sbindir}/ifup
+      [ -L %{_sbindir}/ifdown ] || rm -f %{_sbindir}/ifdown
+
+      %{_sbindir}/update-alternatives --install %{_sbindir}/ifup   ifup   %{_sysconfdir}/sysconfig/network-scripts/ifup 90 \
+                                      --slave   %{_sbindir}/ifdown ifdown %{_sysconfdir}/sysconfig/network-scripts/ifdown \
+                                      --initscript network
+    runtimePhase.preun: |
+      if [ $1 -eq 0 ]; then
+      chkconfig --del network > /dev/null 2>&1 || :
+      %{_sbindir}/update-alternatives --remove ifup %{_sysconfdir}/sysconfig/network-scripts/ifup
+      fi
+  readonly-root:
+    buildArch: noarch
+    files: |
+      %dir %{_sharedstatedir}/stateless
+      %dir %{_sharedstatedir}/stateless/state
+      %dir %{_sharedstatedir}/stateless/writable
+
+      %config(noreplace) %{_sysconfdir}/rwtab
+      %config(noreplace) %{_sysconfdir}/statetab
+      %config(noreplace) %{_sysconfdir}/sysconfig/readonly-root
+
+      %{_libexecdir}/readonly-root
+      %{_prefix}/lib/systemd/system/readonly-root.service
+    filesInput: '%{name}.lang'
+    meta.description: |
+      This package provides script & configuration file for setting up read-only root
+      support. Additional configuration is required after installation.
+
+      Please note that readonly-root package is considered deprecated with limited support.
+      Please use systemd-volatile-root functionality instead, if possible.
+    meta.summary: Service for configuring read-only root support
+    obsoletes:
+    - '%{name}            < 9.82-2'
+    requires:
+    - '%{name} = %{version}-%{release}'
+    - cpio
+    - findutils
+    - hostname
+    - iproute
+    - ipcalc
+    - util-linux
+    runtimePhase.post: |
+      %systemd_post readonly-root.service
+    runtimePhase.postun: |
+      %systemd_postun readonly-root.service
+    runtimePhase.preun: |
+      %systemd_preun readonly-root.service
+version: 10.12

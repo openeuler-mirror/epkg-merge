@@ -1,0 +1,12 @@
+subpackage.libfastjson-devel.files: |
+    %{_includedir}/libfastjson
+    %{_libdir}/libfastjson.so
+    %{_libdir}/pkgconfig/libfastjson.pc
+    
+    
+files: |
+    %license COPYING
+    %doc AUTHORS ChangeLog README.html
+    %{_libdir}/libfastjson.so*
+    
+    

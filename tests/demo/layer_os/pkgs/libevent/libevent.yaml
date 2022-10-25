@@ -1,0 +1,30 @@
+name: libevent
+meta.summary: An event notification library
+version: 2.1.12
+release: 6
+meta.license: BSD
+meta.homepage: "http://libevent.org/"
+source:
+    "0": https://github.com/libevent/libevent/releases/download/release-%{version}-stable/libevent-%{version}-stable.tar.gz
+patchset:
+    "0": libevent-nonettests.patch
+    "1": http-add-callback-to-allow-server-to-decline-and-the.patch
+    "2": add-testcases-for-event.c-apis.patch
+    "3": 0001-Revert-Fix-checking-return-value-of-the-evdns_base_r.patch
+meta.description: |
+    Libevent additionally provides a sophisticated framework for buffered network IO, with support for sockets,
+    filters, rate-limiting, SSL, zero-copy file transmission, and IOCP.
+    Libevent includes support for several useful protocols, including DNS, HTTP, and a minimal RPC framewor.
+buildRequires:
+    - "gcc doxygen openssl-devel"
+subpackage:
+    libevent-devel:
+        meta.summary: Development files for %{name}
+        meta.description: |
+            This package contains the header files and libraries for developing
+            with %{name}.
+        requires:
+            - "%{name} = %{version}-%{release}"
+env.configureFlags: |
+    --disable-dependency-tracking
+    --disable-static

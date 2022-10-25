@@ -1,0 +1,52 @@
+name: libffi
+meta.summary: A Portable Foreign Function Interface Library
+version: 3.4.2
+release: 2.h2
+meta.license: MIT
+meta.homepage: "http://sourceware.org/libffi"
+source:
+    "0": https://github.com/libffi/libffi/releases/download/v%{version}/%{name}-%{version}.tar.gz
+    "1": ffi-multilib.h
+    "2": ffitarget-multilib.h
+patchset:
+    "0": backport-x86-64-Always-double-jump-table-slot-size-for-CET-71.patch
+    "1": backport-Fix-check-for-invalid-varargs-arguments-707.patch
+meta.description: |
+    Compilers for high level languages generate code that follows certain conventions. These
+    conventions are necessary, in part, for separate compilation to work. One such convention
+    is the "calling convention". The "calling convention" is a set of assumptions made by the
+    compiler about where function arguments will be found on entry to a function. A "calling
+    convention" also specifies where the return value for a function is found.
+    
+    Some programs may not know at the time of compilation what arguments are to be passed to a
+    function. For instance, an interpreter may be told at run-time about the number and types
+    of arguments used to call a given function. Libffi can be used in such programs to provide
+    a bridge from the interpreter program to compiled code.
+    
+    The libffi library provides a portable, high level programming interface to various calling
+    conventions. This allows a programmer to call any function specified by a call interface
+    description at run-time.
+    
+    FFI stands for Foreign Function Interface. A foreign function interface is the popular name
+    for the interface that allows code written in one language to call code written in another
+    language. The libffi library really only provides the lowest, machine dependent layer of a
+    fully featured foreign function interface. A layer must exist above libffi that handles type
+    conversions for values passed between the two languages.
+buildRequires:
+    - "gcc gcc-c++ dejagnu"
+subpackage:
+    libffi-devel:
+        meta.summary: Development files for libffi
+        meta.description: The devel package with header files and libraries is for developing apps which needs libffi.
+        requires:
+            - "%{name} = %{version}-%{release}"
+            - "pkgconfig"
+    libffi-help:
+        meta.summary: libffi help
+        meta.description: The help package contains man files.
+        requires:
+            - "info"
+        buildArch: noarch
+env.configureFlags: |
+    --disable-static
+    --disable-exec-static-tramp

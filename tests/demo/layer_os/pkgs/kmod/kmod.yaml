@@ -1,0 +1,57 @@
+name: kmod
+meta.summary: Kernel module management
+version: 30
+release: 2
+meta.license: GPLv2+ and LGPLv2+
+meta.homepage: "http://git.kernel.org/?p=utils/kernel/kmod/kmod.git;a=summary"
+source:
+    "0": https://www.kernel.org/pub/linux/utils/kernel/kmod/%{name}-%{version}.tar.xz
+    "1": weak-modules
+    "2": depmod.conf.dist
+patchset:
+    "0": 0001-Module-replace-the-module-with-new-module.patch
+    "1": 0002-Module-suspend-the-module-by-rmmod-r-option.patch
+meta.description: |
+    The kmod package provides several commands to manage the kernel modules,
+    such as insmod to load and rmmod to unload the modules.
+buildRequires:
+    - "gcc chrpath zlib-devel xz-devel libxslt openssl-devel"
+provides:
+    - "module-init-tools = 4.0-1"
+    - "/sbin/modprobe"
+subpackage:
+    kmod-libs:
+        meta.summary: Libraries to handle kernel module loading and unloading
+        meta.license: LGPLv2+
+        meta.description: |
+            The kmod-libs package provides runtime libraries for any application that
+            wishes to load or unload Linux kernel modules from the running system.
+    kmod-devel:
+        meta.summary: Header files for kmod development
+        meta.description: |
+            The kmod-devel package provides header files used for loading or unloading
+            kernel modules.
+        requires:
+            - "%{name} = %{version}-%{release} %{name}-libs"
+    python3-kmod:
+        meta.summary: Python3 bindings for kmod/libkmod.
+        meta.description: |
+            python3-kmod is a Python3 wrapper module for libkmod, exposing common
+            module operations: listing installed modules, modprobe, and rmmod.
+        requires:
+            - "python3"
+        buildRequires:
+            - "python3 python3-devel python3-Cython kmod-devel kmod-libs"
+    kmod-help:
+        meta.summary: Documents and man pages for the kmod
+        meta.description: |
+            The kmod-help package provides several documents and the man pages to help
+            developers to understand the kmod.
+        requires:
+            - "man info"
+          
+env.configureFlags: |
+    --with-openssl
+    --with-zlib
+    --with-xz
+    --enable-python

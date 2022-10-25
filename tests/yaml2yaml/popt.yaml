@@ -1,0 +1,80 @@
+buildRequires:
+- gcc git gettext
+files: |
+  %license COPYING
+  %{_sysconfdir}/%{name}.d
+  %{_libdir}/lib%{name}.so*
+filesInput: '%{name}.lang'
+meta.description: |
+  The popt library exists essentially for parsing command line options. Some
+  specific advantages of popt are no global variables (allowing multiple passes
+  in parsing argv), parsing an arbitrary array of argv-style elements (allowing
+  parsing of command-line-strings from any source), a standard method of option
+  aliasing, ability to exec external option filters, and automatic generation
+  of help and usage messages.
+meta.homepage: https://github.com/rpm-software-management/popt/
+meta.license: MIT
+meta.summary: C library for parsing command line parameters
+name: popt
+patchset:
+  '0': fix-obscure-iconv-mis-call-error-path-could-lead-to-.patch
+  '1': fix-handle-newly-added-asset-.-call-like-elsewhere.patch
+  '2': fix-permit-reading-aliases-remove-left-over-goto-exi.patch
+  '3': fix-coverity-CID-1057440-Unused-pointer-value-UNUSED.patch
+  '4': backport-Consider-POPT_CONTEXT_KEEP_FIRST-during-reset.patch
+  '5': backport-Fix-incorrect-handling-of-leftovers-with-poptStuffAr.patch
+phase.build: |+
+  %configure
+  %make_build
+
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install
+  rm -f %{buildroot}/%{_libdir}/libpopt.la
+  mkdir -p %{buildroot}/%{_sysconfdir}/popt.d
+
+  %find_lang %{name}
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 3
+runtimePhase.post: |+
+  -p /sbin/ldconfig
+
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+runtimePhase.pre: |2+
+
+runtimePhase.preun: |2+
+
+source:
+  '0': http://ftp.rpm.org/%{name}/releases/%{name}-1.x/%{name}-%{version}.tar.gz
+subpackage:
+  popt-devel:
+    files: |
+      %{_includedir}/%{name}.h
+      %{_libdir}/pkgconfig/%{name}.pc
+      %{_libdir}/lib%{name}.a
+    meta.description: |
+      The %{name}-devel package contains libraries and header files for
+      developing applications that use %{name}.
+    meta.summary: Development files for %{name}
+    obsoletes:
+    - '%{name}-static < %{version}-%{release}'
+    provides:
+    - '%{name}-static = %{version}-%{release}'
+    requires:
+    - '%{name} = %{version}-%{release}'
+    - pkgconfig
+  popt-help:
+    buildArch: noarch
+    files: |
+      %doc CHANGES README
+      %{_mandir}/man3/%{name}.3.gz
+    meta.description: The %{name}-help package contains doc files for %{name}.
+    meta.summary: Doc files for %{name}
+version: 1.18

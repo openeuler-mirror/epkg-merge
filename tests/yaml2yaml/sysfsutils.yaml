@@ -1,0 +1,74 @@
+buildRequires:
+- gcc chrpath autoconf automake make libtool
+files: |
+  %license COPYING cmd/GPL lib/LGPL
+  %doc README
+  %{_bindir}/systool
+  /%{_lib}/libsysfs.so.*
+meta.description: |
+  This package's purpose is to provide a set of utilities for interfacing
+  with sysfs, a virtual filesystem in Linux kernel versions 2.5+ that
+  provides a tree of system devices.
+meta.homepage: https://github.com/linux-ras/sysfsutils
+meta.license: GPLv2 and LGPLv2+
+meta.summary: A set of utilities for interfacing with sysfs
+name: sysfsutils
+obsoletes:
+- libsysfs
+phase.build: |+
+  ./autogen
+  %configure --disable-static \
+   --libdir=/%{_lib}
+  %make_build
+
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install
+
+  rm -f %{buildroot}/%{_bindir}/dlist_test
+  rm -f %{buildroot}/%{_bindir}/get_device
+  rm -f %{buildroot}/%{_bindir}/get_driver
+  rm -f %{buildroot}/%{_lib}/libsysfs.la
+
+  chrpath -d  $(find $RPM_BUILD_ROOT -name get_module)
+  chrpath -d  $(find $RPM_BUILD_ROOT -name systool)
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- libsysfs libsysfs%{?_isa}
+release: 1
+source:
+  '0': https://github.com/linux-ras/sysfsutils/archive/v%{version}.tar.gz
+subpackage:
+  sysfsutils-devel:
+    files: |
+      %dir %{_includedir}/sysfs
+      %{_includedir}/sysfs/libsysfs.h
+      %{_includedir}/sysfs/dlist.h
+      /%{_lib}/libsysfs.so
+      /%{_lib}/pkgconfig/libsysfs.pc
+    meta.description: This contains dynamic libraries and header files for the developing
+      of sysfsutils.
+    meta.license: LGPLv2+
+    meta.summary: Including header files and library for the developing of sysfsutils
+    obsoletes:
+    - libsysfs-devel
+    provides:
+    - libsysfs-devel
+    requires:
+    - sysfsutils = %{version}-%{release}
+  sysfsutils-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/man1/systool.1.gz
+    meta.description: This contains man files for the using of sysfsutils.
+    meta.summary: Including man files for sysfsutils
+    requires:
+    - man
+version: 2.1.1

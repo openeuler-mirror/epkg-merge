@@ -1,0 +1,926 @@
+buildRequires:
+- gcc, make
+- openssl-devel, libtool, autoconf, pkgconfig, libcap-devel
+- libidn2-devel, libxml2-devel
+- selinux-policy
+- python3-devel
+- python3-ply
+- findutils sed
+- libuv-devel
+- systemd
+- libnsl2
+- openldap-devel, libpq-devel, sqlite-devel, mariadb-connector-c-devel %if %{with
+  DLZ}
+- libcmocka-devel kyua %if %{with UNITTEST}
+- softhsm %if %{with PKCS11} && (%{with UNITTEST} || %{with SYSTEMTEST})
+- perl(Net::DNS) perl(Net::DNS::Nameserver) perl(Time::HiRes) perl(Getopt::Long) %if
+  %{with SYSTEMTEST}
+- iproute %if %{with SYSTEMTEST}
+- krb5-devel %if %{with GSSTSIG}
+- lmdb-devel %if %{with LMDB}
+- json-c-devel %if %{with JSON}
+- libmaxminddb-devel %if %{with GEOIP2}
+- fstrm-devel protobuf-c-devel %if %{with DNSTAP}
+- python3-sphinx python3-sphinx_rtd_theme %if %{with DOC}
+- doxygen %if %{with DOC}
+- python3-sphinx-latex latexmk texlive-xetex texlive-xindy %if %{with DOCPDF}
+- libtsan %if %{with TSAN}
+epoch: null
+files: |
+  %dir %{_libdir}/named
+  %{_libdir}/named/*.so
+  %config(noreplace) %verify(not md5 size mtime) %{_sysconfdir}/sysconfig/named
+  %config(noreplace) %attr(0644,root,named) %{_sysconfdir}/named.root.key
+  %config(noreplace) %{_sysconfdir}/logrotate.d/named
+  %{_tmpfilesdir}/named.conf
+  %{_sysconfdir}/rwtab.d/named
+  %{_unitdir}/named.service
+  %{_unitdir}/named-setup-rndc.service
+  %{_sbindir}/named-journalprint
+  %{_sbindir}/named-checkconf
+  %{_bindir}/named-rrchecker
+  %{_bindir}/mdig
+  %{_sbindir}/named
+  %{_sbindir}/rndc*
+  %{_libexecdir}/generate-rndc-key.sh
+  %{_mandir}/man1/mdig.1*
+  %{_mandir}/man1/named-rrchecker.1*
+  %{_mandir}/man5/named.conf.5*
+  %{_mandir}/man5/rndc.conf.5*
+  %{_mandir}/man8/rndc.8*
+  %{_mandir}/man8/named.8*
+  %{_mandir}/man8/named-checkconf.8*
+  %{_mandir}/man8/rndc-confgen.8*
+  %{_mandir}/man8/named-journalprint.8*
+  %{_mandir}/man8/filter-aaaa.8.gz
+  %doc CHANGES README named.conf.default
+  %doc sample/
+
+  %defattr(0640,root,named,0750)
+  %dir %{_sysconfdir}/named
+  %config(noreplace) %verify(not link) %{_sysconfdir}/named.conf
+  %config(noreplace) %verify(not link) %{_sysconfdir}/named.rfc1912.zones
+  %defattr(0660,root,named,01770)
+  %dir %{_localstatedir}/named
+  %defattr(0660,named,named,0770)
+  %dir %{_localstatedir}/named/slaves
+  %dir %{_localstatedir}/named/data
+  %dir %{_localstatedir}/named/dynamic
+  %ghost %{_localstatedir}/log/named.log
+  %defattr(0640,root,named,0750)
+  %config %verify(not link) %{_localstatedir}/named/named.ca
+  %config %verify(not link) %{_localstatedir}/named/named.localhost
+  %config %verify(not link) %{_localstatedir}/named/named.loopback
+  %config %verify(not link) %{_localstatedir}/named/named.empty
+  %ghost %config(noreplace) %{_sysconfdir}/rndc.key
+  %ghost %config(noreplace) %{_sysconfdir}/rndc.conf
+  %defattr(-,named,named,-)
+  %dir /run/named
+meta.description: |
+  BIND (Berkeley Internet Name Domain) is an implementation of the DNS
+  (Domain Name System) protocols. BIND includes a DNS server (named),
+  which resolves host names to IP addresses; a resolver library
+  (routines for applications to use when interfacing with DNS); and
+  tools for verifying that the DNS server is operating properly.
+meta.homepage: https://www.isc.org/downloads/bind/
+meta.license: MPLv2.0
+meta.summary: The Berkeley Internet Name Domain (BIND) DNS (Domain Name System) server
+name: bind
+patchset:
+  '0': bind-9.5-PIE.patch
+  '1': bind-9.16-redhat_doc.patch
+  '10': bind-9.11-rh1666814.patch
+  '11': CVE-2022-0396.patch
+  '12': CVE-2021-25220.patch
+  '13': bugfix-limit-numbers-of-test-threads.patch
+  '2': bind-9.5-dlz-64bit.patch
+  '3': bind93-rh490837.patch
+  '4': bind97-rh645544.patch
+  '5': bind-9.9.1-P2-dlz-libdb.patch
+  '6': bind-9.14-config-pkcs11.patch
+  '7': bind-9.10-dist-native-pkcs11.patch
+  '8': bind-9.11-kyua-pkcs11.patch
+  '9': bind-9.11-fips-tests.patch
+phase.build: |+
+  %define _configure "../configure"
+
+  %define unit_prepare_build() \
+    cp -uv Kyuafile "%{1}/" \
+    find lib -name 'K*.key' -exec cp -uv '{}' "%{1}/{}" ';' \
+    find lib -name 'Kyuafile' -exec cp -uv '{}' "%{1}/{}" ';' \
+    find lib -name 'testdata' -type d -exec cp -Tav '{}' "%{1}/{}" ';' \
+    find lib -name 'testkeys' -type d -exec cp -Tav '{}' "%{1}/{}" ';' \
+
+  %define systemtest_prepare_build() \
+    cp -Tuav bin/tests "%{1}/bin/tests/" \
+    cp -uv version "%{1}" \
+
+  CFLAGS="$CFLAGS $RPM_OPT_FLAGS"
+  %if %{with TSAN}
+  CFLAGS+=" -O1 -fsanitize=thread -fPIE -pie"
+  %endif
+  export CFLAGS
+  export STD_CDEFINES="$CPPFLAGS"
+
+
+
+  libtoolize -c -f; aclocal -I libtool.m4 --force; autoconf -f
+
+  mkdir build
+
+  %if %{with DLZ}
+  # DLZ modules do not support oot builds. Copy files into build
+  mkdir -p build/contrib/dlz
+  cp -frp contrib/dlz/modules build/contrib/dlz/modules
+  %endif
+
+  pushd build
+  LIBDIR_SUFFIX=
+  export LIBDIR_SUFFIX
+  %configure --with-python=%{__python3} \
+  --with-libtool \
+  --with-pic \
+  --with-tuning=large \
+  --with-libidn2 \
+  --with-dlopen=yes \
+  --enable-fixed-rrset \
+  --enable-full-report \
+  --disable-static --localstatedir=%{_var} --includedir=%{_includedir}/bind9 \
+  %if %{with GEOIP2}
+  --with-maxminddb \
+  %endif
+  %if %{with PKCS11}
+  --enable-native-pkcs11 \
+    --with-pkcs11=%{_libdir}/pkcs11/libsofthsm2.so \
+  %endif
+  %if %{with GSSTSIG}
+  --with-gssapi=yes \
+  %endif
+  %if %{with LMDB}
+  --with-lmdb=yes \
+  %else
+  --with-lmdb=no \
+  %endif
+  %if %{with JSON}
+  --without-libjson --with-json-c \
+  %endif
+  %if %{with DNSTAP}
+  --enable-dnstap \
+  %endif
+  %if %{with UNITTEST}
+  --with-cmocka \
+  %endif
+  ;
+  %if %{with DNSTAP}
+  pushd lib
+  SRCLIB="../../../lib"
+  (cd dns && ln -s ${SRCLIB}/dns/dnstap.proto)
+  %if %{with PKCS11}
+  (cd dns-pkcs11 && ln -s ${SRCLIB}/dns-pkcs11/dnstap.proto)
+  %endif
+  popd
+  %endif
+
+  %if %{with DOCPDF}
+  # avoid using home for pdf latex files
+  export TEXMFVAR="`pwd`"
+  export TEXMFCONFIG="`pwd`"
+  fmtutil-user --listcfg || :
+  fmtutil-user --missing || :
+  %endif
+
+  %make_build
+
+  pushd bin/dig
+  make man
+  popd
+  pushd bin/python
+  make man
+  popd
+
+  %if %{with DOC}
+  make doc
+  %endif
+
+  %if %{with DLZ}
+  pushd contrib/dlz/modules
+  for DIR in mysql mysqldyn; do
+  sed -e 's/@DLZ_DRIVER_MYSQL_INCLUDES@/$(shell mysql_config --cflags)/' \
+          -e 's/@DLZ_DRIVER_MYSQL_LIBS@/$(shell mysql_config --libs)/' \
+          $DIR/Makefile.in > $DIR/Makefile
+  done
+  for DIR in filesystem ldap mysql mysqldyn sqlite3; do
+  make -C $DIR CFLAGS="-fPIC -I../include $CFLAGS $LDFLAGS"
+  done
+  popd
+  %endif
+  popd # build
+
+  %unit_prepare_build build
+  %systemtest_prepare_build build
+
+phase.check: |+
+  %if %{with PKCS11} && (%{with UNITTEST} || %{with SYSTEMTEST})
+  # Tests require initialization of pkcs11 token
+  eval "$(bash %{SOURCE23} -A "`pwd`/softhsm-tokens")"
+  %endif
+
+  %if %{with TSAN}
+  export TSAN_OPTIONS="log_exe_name=true log_path=ThreadSanitizer exitcode=0"
+  %endif
+
+  %if %{with UNITTEST}
+  pushd build
+  CPUS=$(lscpu -p=cpu,core | grep -v '^#' | wc -l)
+  if [ "$CPUS" -gt 16 ]; then
+  ORIGFILES=$(ulimit -n)
+  ulimit -n 4096 || : # Requires on some machines with many cores
+  fi
+  export ISC_TASK_WORKERS=8
+  make unit
+  e=$?
+  if [ "$e" -ne 0 ]; then
+  echo "ERROR: this build of BIND failed 'make unit'. Aborting."
+  exit $e;
+  fi;
+
+  [ "$CPUS" -gt 16 ] && ulimit -n $ORIGFILES || :
+  popd
+  ## End of UNITTEST
+  %endif
+
+  %if %{with SYSTEMTEST}
+  # Runs system test if ip addresses are already configured
+  # or it is able to configure them
+  if perl bin/tests/system/testsock.pl
+  then
+  CONFIGURED=already
+  else
+  CONFIGURED=
+  sh bin/tests/system/ifconfig.sh up
+  perl bin/tests/system/testsock.pl && CONFIGURED=build
+  fi
+  if [ -n "$CONFIGURED" ]
+  then
+  set -e
+  pushd build/bin/tests
+  chown -R ${USER} . # Can be unknown user
+  %make_build test 2>&1 | tee test.log
+  e=$?
+  popd
+  [ "$CONFIGURED" = build ] && sh bin/tests/system/ifconfig.sh down
+  if [ "$e" -ne 0 ]; then
+  echo "ERROR: this build of BIND failed 'make test'. Aborting."
+  exit $e;
+  fi;
+  else
+  echo 'SKIPPED: tests require root, CAP_NET_ADMIN or already configured test addresses.'
+  fi
+  %endif
+  :
+
+phase.install: |+
+  mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/logrotate.d
+  mkdir -p ${RPM_BUILD_ROOT}%{_libdir}/{bind,named}
+  mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/named/{slaves,data,dynamic}
+  mkdir -p ${RPM_BUILD_ROOT}%{_mandir}/{man1,man5,man8}
+  mkdir -p ${RPM_BUILD_ROOT}/run/named
+  mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/log
+
+  for D in %{chroot_create_directories}
+  do
+  mkdir -p ${RPM_BUILD_ROOT}/%{chroot_prefix}${D}
+  done
+
+  pushd ${RPM_BUILD_ROOT}/%{chroot_prefix}/var
+  ln -s ../run run
+  popd
+
+  touch ${RPM_BUILD_ROOT}/%{chroot_prefix}%{_sysconfdir}/named.conf
+
+  pushd build
+  %make_install
+  popd
+  rpm -E %{_unitdir}
+
+  rm -f ${RPM_BUILD_ROOT}/etc/bind.keys
+
+  mkdir -p ${RPM_BUILD_ROOT}%{_unitdir}
+  install -m 644 %{SOURCE15} ${RPM_BUILD_ROOT}%{_unitdir}
+  install -m 644 %{SOURCE16} ${RPM_BUILD_ROOT}%{_unitdir}
+  install -m 644 %{SOURCE20} ${RPM_BUILD_ROOT}%{_unitdir}
+  install -m 644 %{SOURCE21} ${RPM_BUILD_ROOT}%{_unitdir}
+
+  %if %{with PKCS11}
+  install -m 644 %{SOURCE22} ${RPM_BUILD_ROOT}%{_unitdir}
+  %else
+  # Not packaged without PKCS11
+  find ${RPM_BUILD_ROOT}%{_includedir}/bind9/pk11 ${RPM_BUILD_ROOT}%{_includedir}/bind9/pkcs11 \
+    -name '*.h' \! -name site.h -delete
+
+  %endif
+
+  mkdir -p ${RPM_BUILD_ROOT}%{_libexecdir}
+  install -m 755 %{SOURCE17} ${RPM_BUILD_ROOT}%{_libexecdir}/setup-named-chroot.sh
+  install -m 755 %{SOURCE18} ${RPM_BUILD_ROOT}%{_libexecdir}/generate-rndc-key.sh
+
+  %if %{with PKCS11}
+  install -m 755 %{SOURCE23} ${RPM_BUILD_ROOT}%{_libexecdir}/setup-named-softhsm.sh
+  %endif
+
+  install -m 644 %SOURCE3 ${RPM_BUILD_ROOT}/etc/logrotate.d/named
+  mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
+  install -m 644 %{SOURCE1} ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/named
+  install -m 644 %{SOURCE24} ${RPM_BUILD_ROOT}%{_sysconfdir}/named-chroot.files
+
+  %if %{with DLZ}
+  pushd build
+  pushd contrib/dlz/modules
+  for DIR in filesystem ldap mysql mysqldyn sqlite3; do
+  %make_install -C $DIR libdir=%{_libdir}/named
+  done
+  pushd ${RPM_BUILD_ROOT}/%{_libdir}/bind
+  cp -s ../named/dlz_*.so .
+  popd
+  mkdir -p doc/{mysql,mysqldyn}
+  cp -p mysqldyn/testing/README doc/mysqldyn/README.testing
+  cp -p mysqldyn/testing/* doc/mysqldyn
+  cp -p mysql/testing/* doc/mysql
+  popd
+  popd
+  %endif
+
+  install -m 644 lib/isc/unix/errno2result.h ${RPM_BUILD_ROOT}%{_includedir}/bind9/isc
+
+  find ${RPM_BUILD_ROOT}/%{_libdir} -name '*.la' -exec '/bin/rm' '-f' '{}' ';';
+
+  %if %{with PKCS11}
+  pushd ${RPM_BUILD_ROOT}%{_mandir}/man8
+  ln -s named.8.gz named-pkcs11.8.gz
+  ln -s dnssec-checkds.8.gz dnssec-checkds-pkcs11.8.gz
+  ln -s dnssec-dsfromkey.8.gz dnssec-dsfromkey-pkcs11.8.gz
+  ln -s dnssec-importkey.8.gz dnssec-importkey-pkcs11.8.gz
+  ln -s dnssec-keyfromlabel.8.gz dnssec-keyfromlabel-pkcs11.8.gz
+  ln -s dnssec-keygen.8.gz dnssec-keygen-pkcs11.8.gz
+  ln -s dnssec-revoke.8.gz dnssec-revoke-pkcs11.8.gz
+  ln -s dnssec-settime.8.gz dnssec-settime-pkcs11.8.gz
+  ln -s dnssec-signzone.8.gz dnssec-signzone-pkcs11.8.gz
+  ln -s dnssec-verify.8.gz dnssec-verify-pkcs11.8.gz
+  popd
+  %endif
+
+  %if %{without DNSTAP}
+  rm -f ${RPM_BUILD_ROOT}%{_mandir}/man1/dnstap-read.1* || true
+  %endif
+  %if %{without LMDB}
+  rm -f ${RPM_BUILD_ROOT}%{_mandir}/man8/named-nzd2nzf.8* || true
+  %endif
+
+  pushd ${RPM_BUILD_ROOT}%{_mandir}/man8
+  ln -s ddns-confgen.8.gz tsig-keygen.8.gz
+  ln -s named-checkzone.8.gz named-compilezone.8.gz
+  popd
+
+  %if %{with DOC}
+  mkdir -p ${RPM_BUILD_ROOT}%{_pkgdocdir}
+  cp -a build/doc/arm/_build/html ${RPM_BUILD_ROOT}%{_pkgdocdir}
+  rm -rf ${RPM_BUILD_ROOT}%{_pkgdocdir}/html/.{buildinfo,doctrees}
+  # Backward compatible link to 9.11 documentation
+  (cd ${RPM_BUILD_ROOT}%{_pkgdocdir} && ln -s html/index.html Bv9ARM.html)
+  # Share static data from original sphinx package
+  for DIR in %{python3_sitelib}/sphinx_rtd_theme/static/*
+  do
+  BASE=$(basename -- "$DIR")
+  BINDTHEMEDIR="${RPM_BUILD_ROOT}%{_pkgdocdir}/html/_static/$BASE"
+  if [ -d "$BINDTHEMEDIR" ]; then
+  rm -rf "$BINDTHEMEDIR"
+  ln -s "$DIR" "$BINDTHEMEDIR"
+  fi
+  done
+  %endif
+  %if %{with DOCPDF}
+  cp -a build/doc/arm/Bv9ARM.pdf ${RPM_BUILD_ROOT}%{_pkgdocdir}
+  %endif
+
+  touch ${RPM_BUILD_ROOT}%{_localstatedir}/log/named.log
+
+  install -m 640 %{SOURCE5} ${RPM_BUILD_ROOT}%{_sysconfdir}/named.conf
+  touch ${RPM_BUILD_ROOT}%{_sysconfdir}/rndc.{key,conf}
+  install -m 644 %{SOURCE12} ${RPM_BUILD_ROOT}%{_sysconfdir}/named.root.key
+  install -m 644 %{SOURCE14} ${RPM_BUILD_ROOT}%{_sysconfdir}/trusted-key.key
+  mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/named
+
+  mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/named
+  install -m 640 %{SOURCE6} ${RPM_BUILD_ROOT}%{_localstatedir}/named/named.ca
+  install -m 640 %{SOURCE7} ${RPM_BUILD_ROOT}%{_localstatedir}/named/named.localhost
+  install -m 640 %{SOURCE8} ${RPM_BUILD_ROOT}%{_localstatedir}/named/named.loopback
+  install -m 640 %{SOURCE9} ${RPM_BUILD_ROOT}%{_localstatedir}/named/named.empty
+  install -m 640 %{SOURCE10} ${RPM_BUILD_ROOT}%{_sysconfdir}/named.rfc1912.zones
+
+  mkdir -p sample/etc sample/var/named/{data,slaves}
+  install -m 644 %{SOURCE11} sample/etc/named.conf
+  install -m 644 %{SOURCE5} named.conf.default
+  install -m 644 %{SOURCE10} sample/etc/named.rfc1912.zones
+  install -m 644 %{SOURCE7} %{SOURCE8} %{SOURCE9}  sample/var/named
+  install -m 644 %{SOURCE6} sample/var/named/named.ca
+  for f in my.internal.zone.db slaves/my.slave.internal.zone.db slaves/my.ddns.internal.zone.db my.external.zone.db; do
+  echo '@ in soa localhost. root 1 3H 15M 1W 1D
+  ns localhost.' > sample/var/named/$f;
+  done
+  :;
+
+  mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}
+  install -m 644 %{SOURCE13} ${RPM_BUILD_ROOT}%{_tmpfilesdir}/named.conf
+
+  mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/rwtab.d
+  install -m 644 %{SOURCE19} ${RPM_BUILD_ROOT}%{_sysconfdir}/rwtab.d/named
+
+phase.prep: |+
+  %setup -q
+
+  %patch0 -p1 -b .PIE
+  %patch1 -p1 -b .redhat_doc
+  %patch2 -p1 -b .64bit
+  %patch3 -p1 -b .rh490837
+  %patch4 -p1 -b .rh645544
+  %patch5 -p1 -b .libdb
+  %patch9 -p1 -b .fips-tests
+  %patch10 -p1 -b .rh1666814
+
+  %patch11 -p1
+  %patch12 -p1
+  %patch13 -p1
+
+  %if %{with PKCS11}
+  %patch6 -p1 -b .config-pkcs11
+  cp -r bin/named{,-pkcs11}
+  cp -r bin/dnssec{,-pkcs11}
+  cp -r lib/dns{,-pkcs11}
+  cp -r lib/ns{,-pkcs11}
+  %patch7 -p1 -b .dist_pkcs11
+  %patch8 -p1 -b .kyua-pkcs11
+  %endif
+
+  %ifarch sparcv9 sparc64 s390 s390x
+  for i in bin/named/{,unix}/Makefile.in; do
+  sed -i 's|fpie|fPIE|g' $i
+  done
+  %endif
+
+  sed -e 's|"$TOP/config.guess"|"$TOP_SRCDIR/config.guess"|' -i bin/tests/system/ifconfig.sh
+  :;
+
+
+recommends:
+- bind-utils bind-dnssec-utils
+release: 9
+requires:
+- coreutils
+- shadow-utils
+- glibc-common
+- grep
+- bind-libs%{?_isa} = %{epoch}:%{version}-%{release}
+- systemd
+- policycoreutils-python-utils libselinux-utils
+- selinux-policy selinux-policy-base libuv
+rpmMacros:
+- '%bcond_with    SYSTEMTEST'
+- '%bcond_without GSSTSIG'
+- '%bcond_without PKCS11'
+- '%bcond_without JSON'
+- '%bcond_with    DLZ'
+- '%bcond_with    GEOIP2'
+- '%bcond_without UNITTEST'
+- '%bcond_with    DNSTAP'
+- '%bcond_without LMDB'
+- '%bcond_with    DOC'
+- '%bcond_with    TSAN'
+- '%{?!bind_uid:  %global bind_uid  25}'
+- '%{?!bind_gid:  %global bind_gid  25}'
+- '%{!?_pkgdocdir:%global _pkgdocdir %{_docdir}/bind-9.16.23}'
+- '%global        bind_dir          /var/named'
+- '%global        _unitdir          /usr/lib/systemd/system'
+- '%global        _tmpfilesdir      /usr/lib/tmpfiles.d'
+- '%global        chroot_prefix     %{bind_dir}/chroot'
+- '%global        chroot_create_directories /dev /run/named %{_localstatedir}/{log,named,tmp}
+  \\\{os.linesep}                                         %{_sysconfdir}/{crypto-policies/back-ends,pki/dnssec-keys,named}
+  \\\{os.linesep}                                         %{_libdir}/bind %{_libdir}/named
+  %{_datadir}/GeoIP /proc/sys/net/ipv4'
+- '%global        selinuxbooleans   named_write_master_zones=1'
+- '%define bind_export_libs isc dns isccfg irs'
+- '%{!?_export_dir:%global _export_dir /bind9-export/}'
+- '%undefine _strict_symbol_defs_build'
+- '%{?systemd_ordering}'
+- '%{?python_provide:%python_provide python3-bind}'
+- '%{?python_provide:%python_provide python3-isc}'
+- '%define chroot_fix_devices() \{os.linesep}if [ $1 -gt 1 ]; then \{os.linesep}  for
+  DEV in "%{1}/dev"/{null,random,zero}; do \{os.linesep}    if [ -e "$DEV" -a "$(/bin/stat
+  --printf="%G %a" "$DEV")" = "root 644" ]; \{os.linesep}    then \{os.linesep}      /bin/chmod
+  0664 "$DEV" \{os.linesep}      /bin/chgrp named "$DEV" \{os.linesep}    fi \{os.linesep}  done
+  \{os.linesep}fi'
+runtimePhase.post: |+
+  %?ldconfig
+  if [ -e "%{_sysconfdir}/selinux/config" ]; then
+  %selinux_set_booleans -s targeted %{selinuxbooleans}
+  %selinux_set_booleans -s mls %{selinuxbooleans}
+  fi
+  if [ "$1" -eq 1 ]; then
+  [ -x /sbin/restorecon ] && /sbin/restorecon /etc/rndc.* /etc/named.* >/dev/null 2>&1 ;
+  [ -e /etc/rndc.key ] && chown root:named /etc/rndc.key
+  [ -e /etc/rndc.key ] && chmod 0640 /etc/rndc.key
+  else
+  if getent passwd named | grep ':/bin/false$' >/dev/null; then
+  /sbin/usermod -s /sbin/nologin named
+  fi
+  if /usr/sbin/named-checkconf -p /etc/named.conf 2>/dev/null | grep -q named.iscdlv.key
+  then
+  echo "Replacing obsolete named.iscdlv.key with named.root.key..."
+  if cp -Rf --preserve=all --remove-destination /etc/named.conf /etc/named.conf.rpmbackup; then
+  sed -e 's/named\.iscdlv\.key/named.root.key/' \
+          /etc/named.conf.rpmbackup > /etc/named.conf || \
+        mv /etc/named.conf.rpmbackup /etc/named.conf
+  fi
+  fi
+  fi
+  %systemd_post named.service
+  :;
+
+runtimePhase.postun: |+
+  %?ldconfig
+  %systemd_postun_with_restart named.service
+  if [ -e "%{_sysconfdir}/selinux/config" ]; then
+  %selinux_unset_booleans -s targeted %{selinuxbooleans}
+  %selinux_unset_booleans -s mls %{selinuxbooleans}
+  fi
+
+runtimePhase.pre: |+
+  if [ "$1" -eq 1 ]; then
+  /usr/sbin/groupadd -g %{bind_gid} -f -r named >/dev/null 2>&1 || :;
+  /usr/sbin/useradd  -u %{bind_uid} -r -N -M -g named -s /sbin/nologin -d /var/named -c Named named >/dev/null 2>&1 || :;
+  fi;
+  :;
+
+runtimePhase.preun: |+
+  %systemd_preun named.service
+
+source:
+  '0': https://downloads.isc.org/isc/bind9/%{version}/bind-%{version}.tar.xz
+  '1': named.sysconfig
+  '10': named.rfc1912.zones
+  '11': named.conf.sample
+  '12': named.root.key
+  '13': bind.tmpfiles.d
+  '14': trusted-key.key
+  '15': named.service
+  '16': named-chroot.service
+  '17': setup-named-chroot.sh
+  '18': generate-rndc-key.sh
+  '19': named.rwtab
+  '2': https://downloads.isc.org/isc/bind9/%{version}/bind-%{version}.tar.xz.asc
+  '20': named-chroot-setup.service
+  '21': named-setup-rndc.service
+  '22': named-pkcs11.service
+  '23': setup-named-softhsm.sh
+  '24': named-chroot.files
+  '3': named.logrotate
+  '4': https://downloads.isc.org/isc/pgpkeys/codesign2021.txt
+  '5': named.conf
+  '6': https://www.internic.net/domain/named.root
+  '7': named.localhost
+  '8': named.loopback
+  '9': named.empty
+subpackage:
+  bind-chroot:
+    files: |
+      %config(noreplace) %{_sysconfdir}/named-chroot.files
+      %{_unitdir}/named-chroot.service
+      %{_unitdir}/named-chroot-setup.service
+      %{_libexecdir}/setup-named-chroot.sh
+      %defattr(0664,root,named,-)
+      %ghost %dev(c,1,3) %verify(not mtime) %{chroot_prefix}/dev/null
+      %ghost %dev(c,1,8) %verify(not mtime) %{chroot_prefix}/dev/random
+      %ghost %dev(c,1,9) %verify(not mtime) %{chroot_prefix}/dev/urandom
+      %ghost %dev(c,1,5) %verify(not mtime) %{chroot_prefix}/dev/zero
+      %defattr(0640,root,named,0750)
+      %dir %{chroot_prefix}
+      %dir %{chroot_prefix}/dev
+      %dir %{chroot_prefix}%{_sysconfdir}
+      %dir %{chroot_prefix}%{_sysconfdir}/named
+      %dir %{chroot_prefix}%{_sysconfdir}/pki
+      %dir %{chroot_prefix}%{_sysconfdir}/pki/dnssec-keys
+      %dir %{chroot_prefix}%{_sysconfdir}/crypto-policies
+      %dir %{chroot_prefix}%{_sysconfdir}/crypto-policies/back-ends
+      %dir %{chroot_prefix}%{_localstatedir}
+      %dir %{chroot_prefix}/run
+      %ghost %config(noreplace) %{chroot_prefix}%{_sysconfdir}/named.conf
+      %defattr(-,root,root,-)
+      %dir %{chroot_prefix}/usr
+      %dir %{chroot_prefix}/%{_libdir}
+      %dir %{chroot_prefix}/%{_libdir}/bind
+      %dir %{chroot_prefix}/%{_datadir}/GeoIP
+      %{chroot_prefix}/proc
+      %defattr(0660,root,named,01770)
+      %dir %{chroot_prefix}%{_localstatedir}/named
+      %defattr(0660,named,named,0770)
+      %dir %{chroot_prefix}%{_localstatedir}/tmp
+      %dir %{chroot_prefix}%{_localstatedir}/log
+      %defattr(-,named,named,-)
+      %dir %{chroot_prefix}/run/named
+      %{chroot_prefix}%{_localstatedir}/run
+    meta.description: |
+      This package contains a tree of files which can be used as a
+      chroot(2) jail for the named(8) program from the BIND package.
+      Based on the code from Jan "Yenya" Kasprzak <kas@fi.muni.cz>
+    meta.summary: A chroot runtime environment for the ISC BIND DNS server, named(8)
+    prefix: '%{chroot_prefix}'
+    requires:
+    - grep
+    - bind%{?_isa} = %{epoch}:%{version}-%{release}
+    runtimePhase.post: |
+      %systemd_post named-chroot.service
+      %chroot_fix_devices %{chroot_prefix}
+      :;
+    runtimePhase.posttrans: |
+      if [ -x /usr/sbin/selinuxenabled ] && /usr/sbin/selinuxenabled; then
+      [ -x /sbin/restorecon ] && /sbin/restorecon %{chroot_prefix}/dev/* > /dev/null 2>&1;
+      fi;
+    runtimePhase.postun: |
+      %systemd_postun_with_restart named-chroot.service
+    runtimePhase.preun: |
+      %systemd_preun named-chroot.service named-chroot-setup.service
+      :;
+  bind-devel:
+    files: |
+      %{_libdir}/libbind9.so
+      %{_libdir}/libisccc.so
+      %{_libdir}/libns.so
+      %{_libdir}/libdns.so
+      %{_libdir}/libirs.so
+      %{_libdir}/libisc.so
+      %{_libdir}/libisccfg.so
+      %dir %{_includedir}/bind9
+      %{_includedir}/bind9/bind9
+      %{_includedir}/bind9/isccc
+      %{_includedir}/bind9/ns
+      %{_includedir}/bind9/dns
+      %{_includedir}/bind9/dst
+      %{_includedir}/bind9/irs
+      %{_includedir}/bind9/isc
+      %dir %{_includedir}/bind9/pk11
+      %{_includedir}/bind9/pk11/site.h
+      %{_includedir}/bind9/isccfg
+    meta.description: |
+      The bind-devel package contains full version of the header files and libraries
+      required for building bind-dyndb-ldap. Upstream no longer supports nor recommends
+      bind libraries for third party applications.
+    meta.summary: Header files and libraries needed for bind-dyndb-ldap
+    obsoletes:
+    - bind-lite-devel < 32:9.16.6-3
+    provides:
+    - bind-lite-devel = %{epoch}:%{version}-%{release}
+    requires:
+    - bind-libs%{?_isa} = %{epoch}:%{version}-%{release}
+    - openssl-devel%{?_isa} libxml2-devel%{?_isa}
+    - libcap-devel%{?_isa}
+    - krb5-devel%{?_isa} %if %{with GSSTSIG}
+    - lmdb-devel%{?_isa} %if %{with LMDB}
+    - json-c-devel%{?_isa} %if %{with JSON}
+    - fstrm-devel%{?_isa} protobuf-c-devel%{?_isa} %if %{with DNSTAP}
+    - libmaxminddb-devel%{?_isa} %if %{with GEOIP2}
+  bind-dlz-filesystem rpmWhen %if %{with DLZ}:
+    files: |
+      %{_libdir}/{named,bind}/dlz_filesystem_dynamic.so
+    meta.description: Dynamic Loadable Zones filesystem module for BIND server.
+    meta.summary: BIND server filesystem DLZ module
+    requires:
+    - 'bind%{?_isa} = %{epoch}:%{version}-%{release} '
+  bind-dlz-ldap rpmWhen %if %{with DLZ}:
+    files: |
+      %{_libdir}/{named,bind}/dlz_ldap_dynamic.so
+      %doc contrib/dlz/modules/ldap/testing/*
+    meta.description: Dynamic Loadable Zones LDAP module for BIND server.
+    meta.summary: BIND server ldap DLZ module
+    requires:
+    - 'bind%{?_isa} = %{epoch}:%{version}-%{release} '
+  bind-dlz-mysql rpmWhen %if %{with DLZ}:
+    files: |
+      %{_libdir}/{named,bind}/dlz_mysql_dynamic.so
+      %doc build/contrib/dlz/modules/doc/mysql
+      %{_libdir}/{named,bind}/dlz_mysqldyn_mod.so
+      %doc build/contrib/dlz/modules/doc/mysqldyn
+    meta.description: |
+      Dynamic Loadable Zones MySQL module for BIND server.
+      Contains also mysqldyn module with dynamic DNS updates (DDNS) support.
+    meta.summary: BIND server mysql and mysqldyn DLZ modules
+    obsoletes:
+    - '%{name}-dlz-mysqldyn < 32:9.16.6-3 '
+    provides:
+    - '%{name}-dlz-mysqldyn = %{epoch}:%{version}-%{release} '
+    requires:
+    - 'bind%{?_isa} = %{epoch}:%{version}-%{release} '
+  bind-dlz-sqlite3 rpmWhen %if %{with DLZ}:
+    files: |
+      %{_libdir}/{named,bind}/dlz_sqlite3_dynamic.so
+      %doc contrib/dlz/modules/sqlite3/testing/*
+    meta.description: Dynamic Loadable Zones sqlite3 module for BIND server.
+    meta.summary: BIND server sqlite3 DLZ module
+    requires:
+    - 'bind%{?_isa} = %{epoch}:%{version}-%{release} '
+  bind-dnssec-doc:
+    buildArch: noarch
+    conflicts:
+    - '%{name}-utils < %{epoch}:%{version}-%{release}'
+    files: |
+      %{_mandir}/man8/dnssec*.8*
+      %if %{with PKCS11}
+      %exclude %{_mandir}/man8/dnssec*-pkcs11.8*
+      %endif
+    meta.description: Bind-dnssec-doc contains manual pages for bind-dnssec-utils.
+    meta.summary: Manual pages of DNSSEC utilities
+    requires:
+    - bind-license = %{epoch}:%{version}-%{release}
+  bind-dnssec-utils:
+    files: |
+      %{_sbindir}/dnssec*
+      %if %{with PKCS11}
+      %exclude %{_sbindir}/dnssec*pkcs11
+      %endif
+    meta.description: |
+      Bind-dnssec-utils contains a collection of utilities for editing
+      DNSSEC keys and BIND zone files. These tools provide generation,
+      revocation and verification of keys and DNSSEC signatures in zone files.
+
+      You should install bind-dnssec-utils if you need to sign a DNS zone
+      or maintain keys for it.
+    meta.summary: DNSSEC keys and zones management utilities
+    recommends:
+    - bind-utils
+    requires:
+    - bind-libs%{?_isa} = %{epoch}:%{version}-%{release}
+    - python3-bind = %{epoch}:%{version}-%{release}
+    - bind-dnssec-doc = %{epoch}:%{version}-%{release}
+  bind-doc rpmWhen %if %{with DOC}:
+    buildArch: noarch
+    files: |
+      %dir %{_pkgdocdir}
+      %doc %{_pkgdocdir}/Bv9ARM.html
+      %doc %{_pkgdocdir}/html
+    meta.description: |
+      BIND (Berkeley Internet Name Domain) is an implementation of the DNS
+      (Domain Name System) protocols. BIND includes a DNS server (named),
+      which resolves host names to IP addresses; a resolver library
+      (routines for applications to use when interfacing with DNS); and
+      tools for verifying that the DNS server is operating properly.
+
+      This package contains BIND 9 Administrator Reference Manual
+      in HTML and PDF format.
+      %end
+    meta.summary: BIND 9 Administrator Reference Manual
+    requires:
+    - 'bind-license = %{epoch}:%{version}-%{release} '
+    - 'python3-sphinx_rtd_theme '
+  bind-libs:
+    files: |
+      %{_libdir}/libbind9-%{version}*.so
+      %{_libdir}/libisccc-%{version}*.so
+      %{_libdir}/libns-%{version}*.so
+      %{_libdir}/libdns-%{version}*.so
+      %{_libdir}/libirs-%{version}*.so
+      %{_libdir}/libisc-%{version}*.so
+      %{_libdir}/libisccfg-%{version}*.so
+    meta.description: |
+      Contains heavyweight version of BIND suite libraries used by both named DNS
+      server and utilities in bind-utils package.
+    meta.summary: Libraries used by the BIND DNS packages
+    obsoletes:
+    - bind-libs-lite < 32:9.16.13
+    provides:
+    - bind-libs-lite = %{epoch}:%{version}-%{release}
+    requires:
+    - bind-license = %{epoch}:%{version}-%{release}
+  bind-license:
+    buildArch: noarch
+    files: |
+      %{!?_licensedir:%global license None
+      %license COPYRIGHT
+    meta.description: Contains license of the BIND DNS suite.
+    meta.summary: License of the BIND DNS suite
+  bind-pkcs11 rpmWhen %if %{with PKCS11}:
+    files: |
+      %{_sbindir}/named-pkcs11
+      %{_unitdir}/named-pkcs11.service
+      %{_mandir}/man8/named-pkcs11.8*
+      %{_libexecdir}/setup-named-softhsm.sh
+    meta.description: |
+      This is a version of BIND server built with native PKCS#11 functionality.
+      It is important to have SoftHSM v2+ installed and some token initialized.
+      For other supported HSM modules please check the BIND documentation.
+    meta.summary: Bind with native PKCS#11 functionality for crypto
+    recommends:
+    - softhsm
+    requires:
+    - 'bind%{?_isa} = %{epoch}:%{version}-%{release} '
+    - 'bind-libs%{?_isa} = %{epoch}:%{version}-%{release} '
+    - 'bind-pkcs11-libs%{?_isa} = %{epoch}:%{version}-%{release} '
+    runtimePhase.post: |
+      %systemd_post named-pkcs11.service
+    runtimePhase.postun: |
+      %systemd_postun_with_restart named-pkcs11.service
+    runtimePhase.preun: |
+      %systemd_preun named-pkcs11.service
+  bind-pkcs11-devel rpmWhen %if %{with PKCS11}:
+    files: |
+      %{_includedir}/bind9/pk11/*.h
+      %exclude %{_includedir}/bind9/pk11/site.h
+      %{_includedir}/bind9/pkcs11
+      %{_libdir}/libdns-pkcs11.so
+      %{_libdir}/libns-pkcs11.so
+    meta.description: |
+      This a set of development files for BIND libraries (dns, isc) compiled
+      with native PKCS#11 functionality.
+    meta.summary: Development files for Bind libraries compiled with native PKCS#11
+    requires:
+    - 'bind-pkcs11-libs%{?_isa} = %{epoch}:%{version}-%{release} '
+    - 'bind-devel%{?_isa} = %{epoch}:%{version}-%{release} '
+  bind-pkcs11-libs rpmWhen %if %{with PKCS11}:
+    files: |
+      %{_libdir}/libdns-pkcs11-%{version}*.so
+      %{_libdir}/libns-pkcs11-%{version}*.so
+    meta.description: |
+      This is a set of BIND libraries (dns, isc) compiled with native PKCS#11
+      functionality.
+    meta.summary: Bind libraries compiled with native PKCS#11
+    requires:
+    - 'bind-license = %{epoch}:%{version}-%{release} '
+    - 'bind-libs%{?_isa} = %{epoch}:%{version}-%{release} '
+  bind-pkcs11-utils rpmWhen %if %{with PKCS11}:
+    files: |
+      %{_sbindir}/dnssec*pkcs11
+      %{_sbindir}/pkcs11-destroy
+      %{_sbindir}/pkcs11-keygen
+      %{_sbindir}/pkcs11-list
+      %{_sbindir}/pkcs11-tokens
+      %{_mandir}/man8/pkcs11*.8*
+      %{_mandir}/man8/dnssec*-pkcs11.8*
+    meta.description: |
+      This is a set of PKCS#11 utilities that when used together create rsa
+      keys in a PKCS11 keystore. Also utilities for working with DNSSEC
+      compiled with native PKCS#11 functionality are included.
+    meta.summary: Bind tools with native PKCS#11 for using DNSSEC
+    obsoletes:
+    - 'bind-pkcs11 < 32:9.9.4-16.P2 '
+    requires:
+    - 'bind-pkcs11-libs%{?_isa} = %{epoch}:%{version}-%{release} '
+    - 'bind-dnssec-doc = %{epoch}:%{version}-%{release} '
+  bind-utils:
+    files: |
+      %{_bindir}/dig
+      %{_bindir}/delv
+      %{_bindir}/host
+      %{_bindir}/nslookup
+      %{_bindir}/nsupdate
+      %{_bindir}/arpaname
+      %{_sbindir}/ddns-confgen
+      %{_sbindir}/tsig-keygen
+      %{_sbindir}/nsec3hash
+      %{_sbindir}/named-checkzone
+      %{_sbindir}/named-compilezone
+      %if %{with DNSTAP}
+      %{_bindir}/dnstap-read
+      %{_mandir}/man1/dnstap-read.1*
+      %endif
+      %if %{with LMDB}
+      %{_sbindir}/named-nzd2nzf
+      %{_mandir}/man8/named-nzd2nzf.8*
+      %endif
+      %{_mandir}/man1/host.1*
+      %{_mandir}/man1/nsupdate.1*
+      %{_mandir}/man1/dig.1*
+      %{_mandir}/man1/delv.1*
+      %{_mandir}/man1/nslookup.1*
+      %{_mandir}/man1/arpaname.1*
+      %{_mandir}/man8/ddns-confgen.8*
+      %{_mandir}/man8/tsig-keygen.8*
+      %{_mandir}/man8/nsec3hash.8*
+      %{_mandir}/man8/named-checkzone.8*
+      %{_mandir}/man8/named-compilezone.8*
+      %{_sysconfdir}/trusted-key.key
+    meta.description: Bind-utils contains a collection of utilities for querying DNS
+      (Domain
+    meta.summary: Utilities for querying DNS name servers
+    provides:
+    - dnsutils = %{epoch}:%{version}-%{release}
+    requires:
+    - bind-libs%{?_isa} = %{epoch}:%{version}-%{release}
+  python3-bind:
+    buildArch: noarch
+    files: |
+      %{python3_sitelib}/*.egg-info
+      %{python3_sitelib}/isc/
+    meta.description: This package provides a module which allows commands to be sent
+      to rndc directly from Python programs.
+    meta.summary: A module allowing rndc commands to be sent from Python programs
+    requires:
+    - bind-license = %{epoch}:%{version}-%{release}
+    - python3 python3-ply %{?py3_dist:%py3_dist ply}
+version: 9.16.23

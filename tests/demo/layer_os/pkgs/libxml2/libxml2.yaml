@@ -1,0 +1,78 @@
+name: libxml2
+meta.summary: Library providing XML and HTML support
+version: 2.9.14
+release: 2
+group: Development/Libraries
+meta.license: MIT
+meta.homepage: "http://xmlsoft.org/"
+source:
+    "0": https://download.gnome.org/sources/%{name}/2.9/%{name}-%{version}.tar.xz
+patchset:
+    "0": libxml2-multilib.patch
+    "1": Fix-memleaks-in-xmlXIncludeProcessFlags.patch
+    "2": Fix-memory-leaks-for-xmlACatalogAdd.patch
+    "3": Fix-memory-leaks-in-xmlACatalogAdd-when-xmlHashAddEntry-failed.patch
+meta.description: |
+    This library allows to manipulate XML files. It includes support
+    to read, modify and write XML and HTML files. There is DTDs support
+    this includes parsing and validation even with complex DtDs, either
+    at parse time or later once the document has been modified. The output
+    can be a simple SAX stream or and in-memory DOM like representations.
+    In this case one can use the built-in XPath and XPointer implementation
+    to select sub nodes or ranges. A flexible Input/Output mechanism is
+    available, with existing HTTP and FTP modules and combined to an
+    URI library.
+buildRequires:
+    - "python3-devel"
+    - "zlib-devel"
+    - "pkgconfig"
+    - "xz-devel"
+    - "libtool"
+buildRoot:
+    - "%{_tmppath}/%{name}-%{version}-root"
+subpackage:
+    libxml2-devel:
+        meta.summary: Libraries, includes, etc. to develop XML and HTML applications
+        group: Development/Libraries
+        meta.description: |
+            Libraries, include files, etc you can use to develop XML applications.
+            This library allows to manipulate XML files. It includes support
+            to read, modify and write XML and HTML files. There is DTDs support
+            this includes parsing and validation even with complex DtDs, either
+            at parse time or later once the document has been modified. The output
+            can be a simple SAX stream or and in-memory DOM like representations.
+            In this case one can use the built-in XPath and XPointer implementation
+            to select sub nodes or ranges. A flexible Input/Output mechanism is
+            available, with existing HTTP and FTP modules and combined to an
+            URI library.
+        requires:
+            - "libxml2 = %{version}-%{release}"
+            - "zlib-devel"
+            - "xz-devel"
+            - "pkgconfig"
+        provides:
+            - "%{name}-static"
+        obsoletes:
+            - "%{name}-static < %{version}-%{release}"
+    python3-%{name}:
+        meta.summary: Python 3 bindings for the libxml2 library
+        group: Development/Libraries
+        meta.description: |
+            The libxml2-python3 package contains a Python 3 module that permits
+            applications written in the Python programming language, version 3, to use the
+            interface supplied by the libxml2 library to manipulate XML files.
+            
+            This library allows to manipulate XML files. It includes support
+            to read, modify and write XML and HTML files. There is DTDs support
+            this includes parsing and validation even with complex DTDs, either
+            at parse time or later once the document has been modified.
+        requires:
+            - "libxml2 = %{version}-%{release}"
+        provides:
+            - "%{name}-python3 = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-python3 < %{version}-%{release}"
+    libxml2-help:
+        meta.summary: Man page for libxml2
+        meta.description: "%{summary}."
+        buildArch: noarch

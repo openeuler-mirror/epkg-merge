@@ -1,0 +1,43 @@
+subpackage.libarchive-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/*.h
+    %{_libdir}/%{name}.so
+    %{_libdir}/pkgconfig/%{name}.pc
+    
+    
+subpackage.libarchive-help.files: |
+    %defattr(-,root,root)
+    %doc NEWS README.md
+    %{_mandir}/man1/*
+    %{_mandir}/man3/*
+    %{_mandir}/man5/*
+    
+    
+subpackage.bsdtar.files: |
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING
+    %doc NEWS README.md
+    %{_bindir}/bsdtar
+    
+    
+subpackage.bsdcpio.files: |
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING
+    %doc NEWS README.md
+    %{_bindir}/bsdcpio
+    
+    
+subpackage.bsdcat.files: |
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING
+    %doc NEWS README.md
+    %{_bindir}/bsdcat
+    
+    
+files: |
+    %defattr(-,root,root)
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING
+    %{_libdir}/%{name}.so.13*
+    
+    

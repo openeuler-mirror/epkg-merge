@@ -1,0 +1,65 @@
+buildRequires:
+- sed,autoconf,automake,gcc-c++,libtool,xmlto
+files: |
+  %defattr(-,root,root)
+  %license COPYING AUTHORS
+  %{_bindir}/*
+  %{_libdir}/libexpat.so.1*
+  %exclude %{_docdir}/%{name}/AUTHORS
+meta.description: |
+  expat is a stream-oriented XML parser library written in C.
+  expat excels with files too large to fit RAM, and where
+  performance and flexibility are crucial.
+meta.homepage: https://libexpat.github.io/
+meta.license: MIT
+meta.summary: An XML parser library
+name: expat
+patchset:
+  '0': backport-0001-CVE-2022-40674.patch
+  '1': backport-0002-CVE-2022-40674.patch
+phase.build: |+
+  %configure CFLAGS="$RPM_OPT_FLAGS -fPIC" DOCBOOK_TO_MAN="xmlto man --skip-validation"
+  %make_build
+
+phase.check: |+
+  make check
+
+  %ldconfig_scriptlets
+
+phase.install: |+
+  %makeinstall
+  find %{buildroot} -type f -name changelog -delete
+
+phase.prep: |
+  %autosetup -p1
+
+  autoreconf -fiv
+release: 3
+rpmMacros:
+- '%define Rversion %(echo %{version} | sed -e ''s/\\./_/g'' -e ''s/^/R_/'')'
+source:
+  '0': https://github.com/libexpat/libexpat/releases/download/%{Rversion}/expat-%{version}.tar.gz
+subpackage:
+  expat-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/*
+      %{_libdir}/{libexpat.*a,libexpat.so}
+      %{_libdir}/cmake/expat-%{version}
+      %{_libdir}/pkgconfig/expat.pc
+    meta.description: This package provides with static libraries and  header files
+      for developing with expat.
+    meta.summary: Development files
+    requires:
+    - '%{name} = %{version}-%{release}'
+  expat-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc README.md
+      %{_mandir}/man1/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 2.4.8

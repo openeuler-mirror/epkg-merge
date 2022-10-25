@@ -1,0 +1,83 @@
+buildRequires:
+- gcc meson
+files: |
+  %defattr(-,root,root)
+  %license LICENSE*
+  %{_libdir}/*.so.*
+meta.description: |
+  http-parser parses the HTTP request headers and body. As such, it acts as
+  a barrier in the policy to guarantee that the entire content has been received
+  before any other filters are invoked.The parser filter forces the server
+  to do "store-and-forward" routing instead of the default "cut-through" routing,
+  where the request is only parsed on-demand. This filter can be used as a simple test
+  to ensure that the message is XML, for example.
+
+  Features:
+
+  * No dependencies
+  * Handles persistent streams (keep-alive)
+  * Decodes chunked encoding
+  * Upgrade support
+  * Defends against buffer overflow attacks
+meta.homepage: https://github.com/nodejs/%{name}
+meta.license: MIT
+meta.summary: HTTP request/response parser for C
+name: http-parser
+patchset:
+  '0': backport-url-treat-empty-port-as-default.patch
+phase.build: |+
+  %meson
+  %meson_build
+
+phase.check: |+
+  %meson_test
+  %ldconfig_scriptlets
+
+phase.install: |+
+  %meson_install
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+  cat > meson.build << EOF
+  project('%{name}', 'c',
+          version : '%{version}',
+          license: 'MIT')
+
+  install_headers('http_parser.h')
+  foreach x : [['http_parser',        ['-DHTTP_PARSER_STRICT=0']],
+               ['http_parser_strict', ['-DHTTP_PARSER_STRICT=1']]]
+
+    lib = library(x.get(0), 'http_parser.c', c_args : x.get(1),
+                  version : '%{version}', install : true)
+
+    test('test-@0@'.format(x.get(0)),
+         executable('test-@0@'.format(x.get(0)), 'test.c',
+                    c_args : x.get(1), link_with : lib),
+                    timeout : 60)
+  endforeach
+  EOF
+
+release: 2
+source:
+  '0': https://github.com/nodejs/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
+subpackage:
+  http-parser-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/*.h
+      %{_libdir}/*.so
+    meta.description: Development headers and static libraries for http-parser.
+    meta.summary: Development headers and static libraries
+    requires:
+    - '%{name} = %{version}-%{release}'
+  http-parser-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc AUTHORS README.md
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 2.9.4

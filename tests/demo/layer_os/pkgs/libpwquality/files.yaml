@@ -1,0 +1,29 @@
+subpackage.libpwquality-devel.files: |
+    %{_includedir}/pwquality.h
+    %{_libdir}/libpwquality.so
+    %{_libdir}/pkgconfig/*.pc
+    
+    
+subpackage.python3-pwquality.files: |
+    %{python3_sitearch}/*.so
+    %{python3_sitearch}/*.egg-info
+    
+    
+subpackage.libpwquality-help.files: |
+    %{_mandir}/man1/*
+    %{_mandir}/man5/*
+    %{_mandir}/man3/*
+    %{_mandir}/man8/*
+    
+    
+files: |
+    %license COPYING
+    %doc README NEWS AUTHORS
+    %{_bindir}/pwmake
+    %{_bindir}/pwscore
+    %{_moduledir}/pam_pwquality.so
+    %{_libdir}/libpwquality.so.*
+    %config(noreplace) %{_secconfdir}/pwquality.conf
+    %{_secconfdir}/pwquality.conf.d
+    
+    

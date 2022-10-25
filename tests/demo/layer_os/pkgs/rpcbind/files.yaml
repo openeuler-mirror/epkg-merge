@@ -1,0 +1,18 @@
+subpackage.rpcbind-help.files: |
+    %defattr(-,root,root)
+    %doc ChangeLog README
+    %{_mandir}/man8/*.8.gz
+    
+    
+files: |
+    %defattr(-,root,root)
+    %config(noreplace) /etc/sysconfig/%{name}
+    %doc AUTHORS
+    %license COPYING
+    %{_sbindir}/*
+    %{_bindir}/*
+    %{_unitdir}/%{name}.*
+    %{_tmpfilesdir}/%{name}.conf
+    %attr(0700, %{rpcbind_user_group}, %{rpcbind_user_group}) %dir %{rpcbind_state_dir}
+    
+    

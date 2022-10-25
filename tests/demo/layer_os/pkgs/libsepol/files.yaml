@@ -1,0 +1,22 @@
+subpackage.libsepol-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/*
+    %{_libdir}/*.so
+    %{_libdir}/pkgconfig/libsepol.pc
+    %{_libdir}/*.a
+    %exclude %{_bindir}/chkcon
+    
+    
+subpackage.libsepol-help.files: |
+    %defattr(-,root,root)
+    %{_mandir}/man8/*
+    %{_mandir}/ru/man8/*
+    %{_mandir}/man3/*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license COPYING
+    %{_libdir}/libsepol.so.*
+    
+    

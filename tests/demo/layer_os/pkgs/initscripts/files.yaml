@@ -1,0 +1,89 @@
+subpackage.initscripts-service.files: |
+    
+    %dir %{_libexecdir}/%{name}
+    %dir %{_libexecdir}/%{name}/legacy-actions
+    
+    %{_sbindir}/service
+    
+    %{_mandir}/man8/service.*
+    
+    
+    
+subpackage.network-scripts.files: |
+    %doc doc/examples/
+    %dir %{_sysconfdir}/sysconfig/network-scripts
+    
+    %{_sysconfdir}/rc.d/init.d/network
+    %{_sysconfdir}/sysconfig/network-scripts/*
+    
+    %config(noreplace)    %{_sysconfdir}/sysconfig/network-scripts/ifcfg-lo
+    
+    %ghost                %{_sbindir}/ifup
+    %ghost                %{_sbindir}/ifdown
+    %attr(4755,root,root) %{_sbindir}/usernetctl
+    
+    %{_mandir}/man8/ifup.*
+    %{_mandir}/man8/ifdown.*
+    %{_mandir}/man8/usernetctl.*
+    %{_docdir}/network-scripts/*
+    
+    
+    
+subpackage.netconsole-service.files: |
+    %config(noreplace) %{_sysconfdir}/sysconfig/netconsole
+    
+    %{_libexecdir}/netconsole
+    %{_prefix}/lib/systemd/system/netconsole.service
+    
+    
+    
+subpackage.readonly-root.files: |
+    %dir %{_sharedstatedir}/stateless
+    %dir %{_sharedstatedir}/stateless/state
+    %dir %{_sharedstatedir}/stateless/writable
+    
+    %config(noreplace) %{_sysconfdir}/rwtab
+    %config(noreplace) %{_sysconfdir}/statetab
+    %config(noreplace) %{_sysconfdir}/sysconfig/readonly-root
+    
+    %{_libexecdir}/readonly-root
+    %{_prefix}/lib/systemd/system/readonly-root.service
+    
+    
+    
+files: |
+    %license COPYING
+    %doc doc/sysconfig.txt
+    
+    %dir %{_sysconfdir}/rc.d
+    %dir %{_sysconfdir}/rc.d/init.d
+    %dir %{_sysconfdir}/rc.d/rc[0-6].d
+    %dir %{_sysconfdir}/sysconfig/console
+    %dir %{_sysconfdir}/sysconfig/modules
+    %dir %{_libexecdir}/%{name}
+    %dir %{_libexecdir}/%{name}/legacy-actions
+    
+    
+    %{_sysconfdir}/rc.d/init.d/functions
+    
+    %{_sysconfdir}/rc[0-6].d
+    %{_sysconfdir}/init.d
+    
+    
+    %{_bindir}/*
+    %{_sbindir}/consoletype
+    %{_sbindir}/genhostid
+    
+    %{_libexecdir}/import-state
+    %{_libexecdir}/loadmodules
+    
+    %{_prefix}/lib/systemd/system/import-state.service
+    %{_prefix}/lib/systemd/system/loadmodules.service
+    %{_prefix}/lib/udev/rename_device
+    
+    %{_udevrulesdir}/*
+    
+    %{_mandir}/man1/*
+    
+    
+    

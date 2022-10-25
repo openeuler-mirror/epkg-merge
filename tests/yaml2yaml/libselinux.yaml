@@ -1,0 +1,136 @@
+buildRequires:
+- gcc python3-devel systemd swig pcre2-devel xz-devel
+- ruby-devel libsepol-static
+conflicts:
+- filesystem < 3, selinux-policy-base < 3.13.1-138
+files: |
+  %license LICENSE
+  %{_libdir}/libselinux.so.*
+  %{_sbindir}/{selabel_lookup_best_match,selabel_partial_match,selinux_check_access}
+  %{_sbindir}/{avcstat,getenforce,getsebool,matchpathcon,sefcontext_compile,selinuxconlist}
+  %{_sbindir}/{selinuxdefcon,selinuxexeccon,selinuxenabled,setenforce,selabel_digest,selabel_lookup}
+  %{_sbindir}/{selabel_get_digests_all_partial_matches,validatetrans}
+  %dir %{_rundir}/setrans/
+  %{_tmpfilesdir}/libselinux.conf
+meta.description: |
+  libselinux provides an interface to get and set process and file
+  security contexts and to obtain security policy decisions.
+meta.homepage: https://github.com/SELinuxProject/selinux/wiki
+meta.license: Public Domain
+meta.summary: SELinux library and simple utilities
+name: libselinux
+obsoletes:
+- '%{name}-utils < %{version}-%{release}'
+patchset:
+  '0': backport-libselinux-Close-leaked-FILEs.patch
+  '1': backport-libselinux-free-memory-on-selabel_open-3-failure.patch
+  '2': backport-libselinux-restorecon-misc-tweaks.patch
+  '3': backport-libselinux-free-memory-in-error-branch.patch
+  '4': backport-libselinux-restorecon-avoid-printing-NULL-pointer.patch
+  '5': do-malloc-trim-after-load-policy.patch
+phase.build: |+
+  export LDFLAGS="%{?__global_ldflags}"
+  export DISABLE_RPM="y"
+  export USE_PCRE2="y"
+
+  make clean
+  %make_build LIBDIR="%{_libdir}" CFLAGS="-g %{optflags}" swigify
+  %make_build LIBDIR="%{_libdir}" CFLAGS="-g %{optflags}" all
+  %make_build %{__python3} LIBDIR="%{_libdir}" CFLAGS="-g %{optflags}" pywrap
+  %make_build RUBYINC="%{ruby_inc}" SHLIBDIR="%{_libdir}" LIBDIR="%{_libdir}" LIBSEPOLA="%{_libdir}/libsepol.a" CFLAGS="-g %{optflags}" rubywrap
+
+phase.install: |+
+  rm -rf   %{buildroot}
+  mkdir -p %{buildroot}%{_tmpfilesdir}
+  mkdir -p %{buildroot}%{_libdir}
+  mkdir -p %{buildroot}%{_includedir}
+  mkdir -p %{buildroot}%{_sbindir}
+
+  install -d -m 0755 %{buildroot}%{_rundir}/setrans
+  echo "d %{_rundir}/setrans 0755 root root" > %{buildroot}%{_tmpfilesdir}/libselinux.conf
+
+  make PYTHON=%{__python3} DESTDIR="%{buildroot}" LIBDIR="%{_libdir}" \
+  SHLIBDIR="%{_lib}" BINDIR="%{_bindir}" SBINDIR="%{_sbindir}" LIBSEPOLA="%{_libdir}/libsepol.a" install-pywrap
+
+  make DESTDIR="%{buildroot}" LIBDIR="%{_libdir}" SHLIBDIR="%{_libdir}" \
+  BINDIR="%{_bindir}" SBINDIR="%{_sbindir}" RUBYINSTALL=%{ruby_vendorarchdir} install install-rubywrap
+
+  rm -f %{buildroot}%{_sbindir}/{deftype,execcon,getenforcemode,getfilecon,getpidcon}
+  rm -f %{buildroot}%{_sbindir}/{mkdircon,policyvers,setfilecon,selinuxconfig,getseuser}
+  rm -f %{buildroot}%{_sbindir}/{compute_*,selinuxdisable,togglesebool,selinux_check_securetty_context}
+
+  mv %{buildroot}%{_sbindir}/getdefaultcon %{buildroot}%{_sbindir}/selinuxdefcon
+  mv %{buildroot}%{_sbindir}/getconlist %{buildroot}%{_sbindir}/selinuxconlist
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -p 1 -n libselinux-%{version}
+
+provides:
+- '%{name}-utils = %{version}-%{release}'
+release: 2
+requires:
+- libsepol >= %{libsepol_version} pcre2
+rpmMacros:
+- '%global ruby_inc %(pkg-config --cflags ruby)'
+- '%global libsepol_version 3.3'
+source:
+  '0': https://github.com/SELinuxProject/selinux/releases/download/3.3/libselinux-3.3.tar.gz
+subpackage:
+  libselinux-devel:
+    files: |
+      %{_libdir}/libselinux.a
+      %{_libdir}/libselinux.so
+      %{_libdir}/pkgconfig/libselinux.pc
+      %{_includedir}/selinux/
+    meta.description: |
+      libselinux provides an interface to get and set process and file
+      security contexts and to obtain security policy decisions.
+    meta.summary: Header files and libraries used to build SELinux
+    obsoletes:
+    - '%{name}-static < %{version}-%{release}'
+    provides:
+    - '%{name}-static = %{version}-%{release}'
+    requires:
+    - '%{name} = %{version}-%{release}'
+    - libsepol-devel >= %{libsepol_version}
+  libselinux-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/man3/*
+      %{_mandir}/man5/*
+      %{_mandir}/man8/*
+      %{_mandir}/ru/man5/*
+      %{_mandir}/ru/man8/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  libselinux-ruby:
+    files: |
+      %{ruby_vendorarchdir}/selinux.so
+    meta.description: |
+      The libselinux-ruby package contains the ruby bindings for developing
+      SELinux applications.
+    meta.summary: SELinux ruby bindings for libselinux
+    provides:
+    - ruby(selinux)
+    requires:
+    - '%{name} = %{version}-%{release}'
+  python3-libselinux:
+    files: |
+      %{python3_sitearch}/selinux/
+      %{python3_sitearch}/selinux-%{version}-*
+      %{python3_sitearch}/_selinux.*.so
+    meta.description: |
+      The libselinux-python3 package contains the python bindings for developing
+      SELinux applications.
+    meta.summary: SELinux python3 bindings for libselinux
+    obsoletes:
+    - '%{name}-python3 < %{version}-%{release}'
+    provides:
+    - '%{name}-python3 = %{version}-%{release}'
+    requires:
+    - '%{name} = %{version}-%{release}'
+version: 3.3

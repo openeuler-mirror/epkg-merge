@@ -1,0 +1,57 @@
+name: pcre
+meta.summary: Perl Compatible Regular Expressions
+version: 8.45
+release: 2
+meta.license: BSD
+meta.homepage: "http://www.pcre.org/"
+source:
+    "0": https://ftp.pcre.org/pub/pcre/%{name}-%{version}.tar.bz2
+meta.description: |
+    The PCRE library is a set of functions that implement regular expression
+    pattern matching using the same syntax and semantics as Perl 5. PCRE has
+    its own native API, as well as a set of wrapper functions that correspond
+    to the POSIX regular expression API. The PCRE library is free, even for
+    building proprietary software.
+    
+    PCRE was originally written for the Exim MTA, but is now used by many
+    high-profile open source projects, including Apache, PHP, KDE, Postfix,
+    and Nmap. PCRE has also found its way into some well known commercial
+    products, like Apple Safari. Some other interesting projects using PCRE
+    include Chicken, Ferite, Onyx, Hypermail, Leafnode, Askemos, Wenlin, and
+    8th.
+buildRequires:
+    - "readline-devel autoconf automake coreutils"
+    - "gcc gcc-c++ glibc-common libtool make"
+    - "bash diffutils grep"
+provides:
+    - "%{name}-utf16 = %{version}-%{release} %{name}-utf32 = %{version}-%{release}"
+    - "%{name}-cpp = %{version}-%{release} %{name}-tools = %{version}-%{release}"
+obsoletes:
+    - "%{name}-utf16 < %{version}-%{release} %{name}-utf32 < %{version}-%{release}"
+    - "%{name}-cpp < %{version}-%{release} %{name}-tools < %{version}-%{release}"
+subpackage:
+    pcre-devel:
+        meta.summary: Development files for %{name}
+        meta.description: |
+            The %{name}-devel package contains libraries and header files for
+            developing applications that use %{name}.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "%{name}-static = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-static < %{version}-%{release}"
+    pcre-help:
+        meta.summary: Doc files for %{name}
+        meta.description: The %{name}-help package contains doc files for %{name}.
+        requires:
+            - "man"
+        buildArch: noarch
+env.configureFlags: |
+    --enable-pcretest-libreadline
+    --enable-utf
+    --enable-unicode-properties
+    --enable-pcre8
+    --enable-pcre16
+    --enable-pcre32
+    --disable-silent-rules

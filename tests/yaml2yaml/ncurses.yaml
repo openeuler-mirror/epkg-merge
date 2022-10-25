@@ -1,0 +1,229 @@
+buildRequires:
+- gcc gcc-c++ gpm-devel pkgconfig
+files: |
+  %doc ANNOUNCE AUTHORS
+  %doc c++/README*
+  %{!?_licensedir:%global license None
+  %license COPYING
+  %{_bindir}/[cirt]*
+  %{_libdir}/libncurses++*.so.6*
+filesInput: terms.term
+meta.description: |
+  The ncurses (new curses) library is a free software emulation of
+  curses in System V Release 4.0 (SVr4), and more. It uses terminfo
+  format, supports pads and color and multiple highlights and forms
+  characters and function-key mapping, and has all the other SVr4-curses
+  enhancements over BSD curses. SVr4 curses became the basis of X/Open Curses.
+meta.homepage: https://invisible-island.net/ncurses/ncurses.html
+meta.license: MIT
+meta.summary: Terminal control library
+name: ncurses
+obsoletes:
+- rxvt-unicode-terminfo < 9.22-18
+- '%{name}-c++-libs < %{version}-%{release}'
+- '%{name}-term < %{version}-%{release}'
+patchset:
+  '0': ncurses-config.patch
+  '1': ncurses-libs.patch
+  '2': ncurses-urxvt.patch
+  '3': ncurses-kbs.patch
+  '4': backport-CVE-2022-29458.patch
+phase.build: |+
+  abi5_options="--with-chtype=long"
+
+  for abi in 5 6; do
+  for char in narrowc widec; do
+  mkdir $char$abi
+  pushd $char$abi
+  ln -s ../configure .
+
+  [ $abi = 6 -a $char = widec ] && progs=yes || progs=no
+
+  %configure --enable-colorfgbg \
+  --enable-hard-tabs \
+  --enable-overwrite \
+  --enable-pc-files \
+  --enable-xmc-glitch \
+  --disable-wattr-macros \
+  --with-cxx-shared \
+  --with-ospeed=unsigned \
+  --with-pkg-config-libdir=%{_libdir}/pkgconfig \
+  --with-shared \
+  --with-terminfo-dirs=%{_sysconfdir}/terminfo:%{_datadir}/terminfo \
+  --with-termlib=tinfo \
+  --with-ticlib=tic \
+  --with-xterm-kbs=DEL \
+   $(
+  echo --with-abi-version=$abi
+  [ $abi = 5 ] && echo $abi5_options
+  [ $char = widec ] && echo --enable-widec
+  [ $progs = yes ] || echo --without-progs
+  )
+
+  make %{?_smp_mflags} libs
+  [ $progs = yes ] && make %{?_smp_mflags} -C progs
+
+  popd
+  done
+  done
+
+phase.install: |+
+  make -C narrowc5 DESTDIR=$RPM_BUILD_ROOT install.libs
+  rm ${RPM_BUILD_ROOT}%{_libdir}/lib{tic,tinfo}.so.5*
+  make -C widec5 DESTDIR=$RPM_BUILD_ROOT install.libs
+  make -C narrowc6 DESTDIR=$RPM_BUILD_ROOT install.libs
+  rm ${RPM_BUILD_ROOT}%{_libdir}/lib{tic,tinfo}.so.6*
+  make -C widec6 DESTDIR=$RPM_BUILD_ROOT install.{libs,progs,data,includes,man}
+
+  chmod 755 ${RPM_BUILD_ROOT}%{_libdir}/lib*.so.*.*
+  chmod 644 ${RPM_BUILD_ROOT}%{_libdir}/lib*.a
+
+  mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/terminfo
+
+  baseterms=
+
+  for termname in \
+      ansi dumb linux vt100 vt100-nav vt102 vt220 vt52 \
+      Eterm\* aterm bterm cons25 cygwin eterm\* gnome gnome-256color hurd jfbterm \
+      konsole konsole-256color mach\* mlterm mrxvt nsterm putty{,-256color} pcansi \
+      rxvt{,-\*} screen{,-\*color,.[^mlp]\*,.linux,.mlterm\*,.putty{,-256color},.mrxvt} \
+      st{,-\*color} sun teraterm teraterm2.3 tmux{,-\*} vte vte-256color vwmterm \
+      wsvt25\* xfce xterm xterm-\*
+  do
+  for i in $RPM_BUILD_ROOT%{_datadir}/terminfo/?/$termname; do
+  for t in $(find $RPM_BUILD_ROOT%{_datadir}/terminfo -samefile $i); do
+  baseterms="$baseterms $(basename $t)"
+  done
+  done
+  done 2> /dev/null
+  for t in $baseterms; do
+  echo "%dir %{_datadir}/terminfo/${t::1}"
+  echo %{_datadir}/terminfo/${t::1}/$t
+  done 2> /dev/null | sort -u > terms.base
+  find $RPM_BUILD_ROOT%{_datadir}/terminfo \! -type d | \
+      sed "s|^$RPM_BUILD_ROOT||" | while read t
+  do
+  echo "%dir $(dirname $t)"
+  echo $t
+  done 2> /dev/null | sort -u | comm -2 -3 - terms.base > terms.term
+
+  mkdir $RPM_BUILD_ROOT%{_includedir}/ncurses{,w}
+  for l in $RPM_BUILD_ROOT%{_includedir}/*.h; do
+  ln -s ../$(basename $l) $RPM_BUILD_ROOT%{_includedir}/ncurses
+  ln -s ../$(basename $l) $RPM_BUILD_ROOT%{_includedir}/ncursesw
+  done
+
+  for l in $RPM_BUILD_ROOT%{_libdir}/libncurses{,w}.so; do
+  soname=$(basename $(readlink $l))
+  rm -f $l
+  echo "INPUT($soname -ltinfo)" > $l
+  done
+
+  rm -f $RPM_BUILD_ROOT%{_libdir}/libcurses{,w}.so
+  echo "INPUT(-lncurses)" > $RPM_BUILD_ROOT%{_libdir}/libcurses.so
+  echo "INPUT(-lncursesw)" > $RPM_BUILD_ROOT%{_libdir}/libcursesw.so
+
+  echo "INPUT(-ltinfo)" > $RPM_BUILD_ROOT%{_libdir}/libtermcap.so
+
+  rm -f $RPM_BUILD_ROOT%{_bindir}/ncurses*5-config
+  rm -f $RPM_BUILD_ROOT%{_libdir}/terminfo
+  rm -f $RPM_BUILD_ROOT%{_libdir}/pkgconfig/*_g.pc
+
+  xz NEWS
+
+  %ldconfig_scriptlets
+  %ldconfig_scriptlets libs
+  %ldconfig_scriptlets compat-libs
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+  for f in ANNOUNCE; do
+  iconv -f iso8859-1 -t utf8 -o ${f}{_,} &&
+  touch -r ${f}{,_} && mv -f ${f}{_,}
+  done
+
+provides:
+- '%{name}-c++-libs = %{version}-%{release}'
+- '%{name}-term = %{version}-%{release}'
+release: 4
+requires:
+- '%{name}-base = %{version}-%{release}'
+- '%{name}-libs = %{version}-%{release}'
+source:
+  '0': https://invisible-mirror.net/archives/ncurses/ncurses-%{version}.tar.gz
+subpackage:
+  ncurses-base:
+    buildArch: noarch
+    files: |
+      %dir %{_sysconfdir}/terminfo
+      %{_datadir}/tabset
+      %dir %{_datadir}/terminfo
+    filesInput: terms.base
+    meta.description: This package contains descriptions of common terminals.
+    meta.summary: Descriptions of common terminals
+  ncurses-compat-libs:
+    files: |
+      %{_libdir}/lib*.so.5*
+    group: System Environment/Libraries
+    meta.description: |
+      The curses library routines are a terminal-independent method of
+      updating character screens with reasonable optimization.  The ncurses
+      (new curses) library is a freely distributable replacement for the
+      discontinued 4.4 BSD classic curses library.
+
+      This package contains the ABI version 5 of the ncurses libraries for
+      compatibility.
+    meta.summary: Ncurses compatibility libraries
+    requires:
+    - '%{name}-base = %{version}-%{release}'
+  ncurses-devel:
+    files: |
+      %{_bindir}/ncurses*-config
+      %{_libdir}/lib*.so
+      %{_libdir}/lib*.a
+      %{_libdir}/pkgconfig/*.pc
+      %{_includedir}/ncurses/*.h
+      %{_includedir}/ncursesw/*.h
+      %{_includedir}/*.h
+    meta.description: |
+      The header files and libraries for developing applications that use
+      the ncurses terminal handling library.a, including static libraries
+      of the ncurses library.
+    meta.summary: Development files for the ncurses library
+    obsoletes:
+    - '%{name}-static < %{version}-%{release}'
+    - libtermcap-devel < 2.0.8-48
+    provides:
+    - '%{name}-static = %{version}-%{release}'
+    - libtermcap-devel = 2.0.8-48
+    requires:
+    - '%{name}-libs = %{version}-%{release}'
+    - '%{name}-c++-libs = %{version}-%{release}'
+    - pkgconfig
+  ncurses-help:
+    files: |
+      %doc NEWS.xz README TO-DO
+      %doc doc/html/hackguide.html
+      %doc doc/html/ncurses-intro.html
+      %doc misc/ncurses.supp
+      %{_mandir}/man1/ncurses*-config*
+      %{_mandir}/man3/*
+      %{_mandir}/man1/[cirt]*
+      %{_mandir}/man5/*
+      %{_mandir}/man7/*
+    meta.description: |
+      This package contains development documentation, manuals
+      for interface function, and related documents.
+    meta.summary: Ncurse help document
+    requires:
+    - '%{name} = %{version}-%{release}'
+  ncurses-libs:
+    files: |
+      %{_libdir}/lib*.so.6*
+      %exclude %{_libdir}/libncurses++*.so.6*
+    meta.description: Libraries for %{name}.
+    meta.summary: Libraries for %{name}
+    requires:
+    - '%{name}-base = %{version}-%{release}'
+version: 6.3

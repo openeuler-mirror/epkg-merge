@@ -1,0 +1,29 @@
+subpackage.procps-ng-devel.files: |
+    %doc COPYING COPYING.LIB
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING COPYING.LIB
+    %{_libdir}/libprocps.so
+    %{_libdir}/pkgconfig/libprocps.pc
+    %{_includedir}/proc
+    
+    
+subpackage.procps-ng-i18n.files: |
+    
+    
+subpackage.procps-ng-help.files: |
+    %doc AUTHORS Documentation/bugs.md Documentation/FAQ NEWS README.md top/README.top Documentation/TODO
+    %{_mandir}/man*
+    
+    
+files: |
+    %doc COPYING COPYING.LIB
+    %{!?_licensedir:%global license %%doc}
+    %license COPYING COPYING.LIB
+    %{_libdir}/libprocps.so.*
+    %{_bindir}/*
+    %{_sbindir}/*
+    %exclude %{_libdir}/libprocps.la
+    %exclude /unwanted/*
+    %exclude %{_libdir}/*.a
+    
+    

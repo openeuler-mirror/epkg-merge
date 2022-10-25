@@ -1,0 +1,60 @@
+name: rpcbind
+meta.summary: Universal addresses to RPC program number mapper
+version: 1.2.6
+release: 4
+meta.license: BSD
+meta.homepage: "https://nfsv4.bullopensource.org"
+source:
+    "0": "https://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.bz2"
+    "1": "%{name}.sysconfig"
+patchset:
+    "0": "%{name}-0.2.3-systemd-envfile.patch"
+    "1": "%{name}-0.2.3-systemd-tmpfiles.patch"
+    "2": "%{name}-0.2.4-runstatdir.patch"
+    "3": "%{name}-0.2.4-systemd-service.patch"
+    "4": "%{name}-0.2.4-systemd-rundir.patch"
+    "5": "bugfix-rpcbind-GETADDR-return-client-ip.patch"
+    "6": "CVE-2017-8779.patch"
+    "7": "backport-fix-double-free-in-init_transport.patch"
+    "8": "backport-debian-enable-rmt-calls-with-r.patch"
+    "9": "bugfix-listen-tcp-port-111.patch"
+meta.description: |
+    The %{name} utility is a server that converts RPC program
+    numbers into universal addresses. It must be running on the
+    host to be able to make RPC calls on a server on that machine.
+requires:
+    - "glibc-common setup"
+requiresPre:
+    - "coreutils shadow-utils"
+requiresPreUn:
+    - "systemd"
+requiresPost:
+    - "chkconfig systemd"
+requiresPostUn:
+    - "systemd coreutils"
+buildRequires:
+    - "automake autoconf libtool systemd-devel"
+    - "libtirpc-devel quota-devel systemd"
+provides:
+    - "portmap = %{version}-%{release}"
+obsoletes:
+    - "portmap <= 4.0-65.3"
+conflicts:
+    - "man-pages < 2.43-12"
+rpmMacros:
+    - "%global rpcbind_user_group rpc"
+    - "%global rpcbind_state_dir %{_rundir}/rpcbind"
+
+subpackage:
+    rpcbind-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch
+env.configureFlags: |
+    --enable-warmstarts
+    --with-statedir="%rpcbind_state_dir"
+    --with-rpcuser="%rpcbind_user_group"
+    --with-nss-modules="files altfiles"
+    --enable-debug --enable-rmtcalls

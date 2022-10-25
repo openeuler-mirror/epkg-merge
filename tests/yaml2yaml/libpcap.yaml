@@ -1,0 +1,60 @@
+buildRequires:
+- bison flex gcc glibc-kernheaders >= 2.2.0
+- bluez-libs-devel %ifnarch i686
+epoch: null
+files: |
+  %defattr(-,root,root)
+  %license LICENSE
+  %{_libdir}/libpcap.so.*
+meta.description: |
+  This is the official web site of tcpdump, a powerful command-line
+  packet analyzer; and libpcap, a portable C/C++ library for
+  network traffic capture.
+meta.homepage: http://www.tcpdump.org
+meta.license: BSD
+meta.summary: A system-independent interface for user-level packet capture
+name: libpcap
+patchset:
+  '0': 0003-pcap-linux-apparently-ctc-interfaces-on-s390-has-eth.patch
+  '1': pcap-config-mitigate-multilib-conflict.patch
+phase.build: |+
+  export CFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing"
+  %configure
+  %make_build
+
+phase.install: |+
+  %make_install
+
+  %delete_la_and_a
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 2
+source:
+  '0': http://www.tcpdump.org/release/%{name}-%{version}.tar.gz
+subpackage:
+  libpcap-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_bindir}/pcap-config
+      %{_includedir}/*
+      %{_libdir}/libpcap.so
+      %{_libdir}/pkgconfig/libpcap.pc
+    meta.description: header files for libpcap
+    meta.summary: header files for libpcap
+    requires:
+    - '%{name} = %{epoch}:%{version}-%{release}'
+  libpcap-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc README.md CHANGES CREDITS
+      %{_mandir}/man*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 1.10.1

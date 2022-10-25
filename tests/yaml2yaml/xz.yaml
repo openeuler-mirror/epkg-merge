@@ -1,0 +1,104 @@
+buildRequires:
+- perl-interpreter gcc
+files: |
+  %defattr(-,root,root)
+  %doc %{_pkgdocdir}
+  %license %{_pkgdocdir}/COPYING*
+  %{_bindir}/*xz*
+  %{profiledir}/*
+
+  %exclude %_pkgdocdir/examples*
+  %exclude %{_libdir}/*.la
+filesInput: '%{name}.lang'
+meta.description: |
+  XZ Utils is free general-purpose data compression software with a high compression ratio.
+  XZ Utils were written for POSIX-like systems, but also work on some not-so-POSIX systems. XZ Utils are the successor to LZMA Utils.
+
+  The core of the XZ Utils compression code is based on LZMA SDK, but it has been modified quite a lot to be suitable for XZ Utils.
+  The primary compression algorithm is currently LZMA2, which is used inside the .xz container format. With typical files, XZ Utils create 30% smaller output than gzip and 15% smaller output than bzip2.
+meta.homepage: http://tukaani.org/xz
+meta.license: Public Domain, LGPLv2.1 and GPLv2+
+meta.summary: A free general-purpose data compreession software with LZMA2 algorithm
+name: xz
+patchset:
+  '0': backport-CVE-2022-1271.patch
+phase.build: |+
+  %configure
+  sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+  sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+  %make_build
+
+phase.check: |+
+  LD_LIBRARY_PATH=$PWD/src/liblzma/.libs make check
+
+phase.install: |+
+  %make_install
+
+  %global profiledir %{_sysconfdir}/profile.d
+  mkdir -p %{buildroot}%{profiledir}
+  install -p -m 644 %{SOURCE1} %{buildroot}%{profiledir}
+  install -p -m 644 %{SOURCE2} %{buildroot}%{profiledir}
+
+  %find_lang %name
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 3
+requires:
+- '%{name} = %{version}-%{release}'
+- grep >= 2.20-5
+source:
+  '0': http://tukaani.org/%{name}/%{name}-%{version}.tar.xz
+  '1': colorxzgrep.sh
+  '2': colorxzgrep.csh
+subpackage:
+  xz-devel:
+    files: |
+      %dir %{_includedir}/lzma
+      %doc %_pkgdocdir/examples*
+      %{_includedir}/lzma/*.h
+      %{_includedir}/lzma.h
+
+      %{_libdir}/pkgconfig/liblzma.pc
+      %{_libdir}/liblzma.a
+      %{_libdir}/*.so
+    meta.description: |
+      This package mainly includes the following contents: static library,
+      the header file, example, tests use case, other development and use of content.
+    meta.summary: Libraries & headers for xz
+    obsoletes:
+    - xz-static
+    provides:
+    - xz-static
+    requires:
+    - '%{name} = %{version}-%{release}'
+  xz-help:
+    buildArch: noarch
+    files: |
+      %{_mandir}/man1/*lz*
+      %{_mandir}/man1/*xz*
+      %{_mandir}/de/man1/*lz*
+      %{_mandir}/de/man1/*xz*
+    meta.description: This package includes help documentation and manuals related
+      to xz.
+    meta.summary: Help documentation related to xz
+  xz-libs:
+    files: |
+      %{_libdir}/lib*.so.5*
+    meta.description: Libraries for decoding files compressed with LZMA or XZ utils.
+    meta.summary: Libraries for xz
+    obsoletes:
+    - '%{name}-compat-libs < %{version}-%{release}'
+  xz-lzma-compat:
+    files: |
+      %{_bindir}/*lz*
+    meta.description: This package contains the compatibility binaries for older LZMA.
+    meta.summary: Old LZMA format compatibility binaries
+    obsoletes:
+    - lzma < %{version}
+    provides:
+    - lzma = %{version}
+    requires:
+    - '%{name} = %{version}-%{release}'
+version: 5.2.5

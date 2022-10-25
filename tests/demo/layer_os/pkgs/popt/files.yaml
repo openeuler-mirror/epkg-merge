@@ -1,0 +1,17 @@
+subpackage.popt-devel.files: |
+    %{_includedir}/%{name}.h
+    %{_libdir}/pkgconfig/%{name}.pc
+    %{_libdir}/lib%{name}.a
+    
+    
+subpackage.popt-help.files: |
+    %doc CHANGES README
+    %{_mandir}/man3/%{name}.3.gz
+    
+    
+files: |
+    %license COPYING
+    %{_sysconfdir}/%{name}.d
+    %{_libdir}/lib%{name}.so*
+    
+    

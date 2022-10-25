@@ -32,19 +32,31 @@ def eval_python(val: str):
         raise Exception("pycode parse failed, {}".format(val))
 
 
-def format_subpackage(k, v, format_json):
+def format_subpackage(k, v, format_json, raw_json):
+    if ":rpmWhen" in k:
+        return
+    if len(k.split(".")) < 3:
+        return
     subpackage, name, key = k.split(".", 2)
+    rpm_when_name = "{}.{}:rpmWhen".format(subpackage, name)
+    if raw_json.get(rpm_when_name):
+        name = "{} rpmWhen {}".format(name, raw_json.get(rpm_when_name))
+
+    rpm_when_key = "{}.{}.{}:rpmWhen".format(subpackage, name, key)
+    if raw_json.get(rpm_when_key):
+        key = "{} rpmWhen {}".format(key, raw_json.get(rpm_when_key))
+
     format_json.setdefault(subpackage, {}).setdefault(name, {}) \
         .setdefault(key, v)
 
 
-def format_patchset(k, v, format_json):
+def format_patchset(k, v, format_json, raw_json):
     patchset, key = k.split(".", 1)
     format_json.setdefault(patchset, {}) \
         .setdefault(key, v)
 
 
-def format_source(k, v, format_json):
+def format_source(k, v, format_json, raw_json):
     source, key = k.split(".", 1)
     format_json.setdefault(source, {}) \
         .setdefault(key, v)
@@ -60,11 +72,14 @@ format_funcs = {
 def format_package_json(package_json):
     # for handle subpackage, patchset, source
     format_json = {}
+    filter = ["env.configureFlags"]
     for k, v in package_json.items():
+        if k in filter:
+            continue
         first_key = k.split(".", 1)[0]
         func = format_funcs.get(first_key)
         if func is None:
             format_json[k] = v
             continue
-        func(k, v, format_json)
+        func(k, v, format_json, package_json)
     return format_json

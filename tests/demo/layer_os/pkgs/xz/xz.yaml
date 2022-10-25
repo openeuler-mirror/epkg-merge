@@ -1,0 +1,54 @@
+name: xz
+meta.summary: A free general-purpose data compreession software with LZMA2 algorithm
+version: 5.2.5
+release: 3
+meta.license: Public Domain, LGPLv2.1 and GPLv2+
+meta.homepage: "http://tukaani.org/xz"
+source:
+    "0": http://tukaani.org/%{name}/%{name}-%{version}.tar.xz
+    "1": colorxzgrep.sh
+    "2": colorxzgrep.csh
+patchset:
+    "0": backport-CVE-2022-1271.patch
+meta.description: |
+    XZ Utils is free general-purpose data compression software with a high compression ratio.
+    XZ Utils were written for POSIX-like systems, but also work on some not-so-POSIX systems. XZ Utils are the successor to LZMA Utils.
+    
+    The core of the XZ Utils compression code is based on LZMA SDK, but it has been modified quite a lot to be suitable for XZ Utils.
+    The primary compression algorithm is currently LZMA2, which is used inside the .xz container format. With typical files, XZ Utils create 30% smaller output than gzip and 15% smaller output than bzip2.
+requires:
+    - "%{name} = %{version}-%{release}"
+    - "grep >= 2.20-5"
+buildRequires:
+    - "perl-interpreter gcc"
+filesInput: "%{name}.lang"
+subpackage:
+    xz-devel:
+        meta.summary: Libraries & headers for xz
+        meta.description: |
+            This package mainly includes the following contents: static library,
+            the header file, example, tests use case, other development and use of content.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "xz-static"
+        obsoletes:
+            - "xz-static"
+    xz-lzma-compat:
+        meta.summary: Old LZMA format compatibility binaries
+        meta.description: This package contains the compatibility binaries for older LZMA.
+        requires:
+            - "%{name} = %{version}-%{release}"
+        provides:
+            - "lzma = %{version}"
+        obsoletes:
+            - "lzma < %{version}"
+    xz-libs:
+        meta.summary: Libraries for xz
+        meta.description: Libraries for decoding files compressed with LZMA or XZ utils.
+        obsoletes:
+            - "%{name}-compat-libs < %{version}-%{release}"
+    xz-help:
+        meta.summary: Help documentation related to xz
+        meta.description: This package includes help documentation and manuals related to xz.
+        buildArch: noarch

@@ -1,0 +1,143 @@
+buildRequires:
+- gcc bison sharutils zlib-devel bzip2-devel xz-devel
+- lzo-devel e2fsprogs-devel libacl-devel libattr-devel
+- openssl-devel libxml2-devel lz4-devel automake libzstd-devel
+- autoconf libtool make
+files: |
+  %defattr(-,root,root)
+  %{!?_licensedir:%global license None
+  %license COPYING
+  %{_libdir}/%{name}.so.13*
+meta.description: |
+  %{name} is an open-source BSD-licensed C programming library that
+  provides streaming access to a variety of different archive formats,
+  including tar, cpio, pax, zip, and ISO9660 images. The distribution
+  also includes bsdtar and bsdcpio, full-featured implementations of
+  tar and cpio that use %{name}.
+meta.homepage: https://www.libarchive.org/
+meta.license: BSD
+meta.summary: Multi-format archive and compression library
+name: libarchive
+patchset:
+  '0': 0001-Drop-rmd160-from-OpenSSL.patch
+  '1': libarchive-uninitialized-value.patch
+phase.build: |+
+  autoreconf -ifv
+  %configure --disable-rpath \
+  --disable-static LT_SYS_LIBRARY_PATH=%_libdir
+  %disable_rpath
+
+  %make_build
+
+phase.cat_logs: |
+  for i in `logfiles`
+  do
+  echo "=== $i ==="
+  cat "$i"
+  done
+phase.check: |
+  %if %{with check}
+  logfiles ()
+  find -name '*_test.log' -or -name test-suite.log
+phase.install: |
+  %make_install
+  %delete_la
+
+  replace ()
+  filename=$1
+  file=`basename "$filename"`
+  binary=${fileNone
+  pattern=${binary##bsd}
+
+  awk "
+  /^.Dt ${pattern^^} 1/ {
+  print \".Dt ${binary^^} 1\";
+  next;
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+phase.run_testsuite: |
+  rc=0
+  %make_build check -j1 || {
+  # error happened - try to extract in koji as much info as possible
+  cat_logs
+
+  for i in `tempdirs`; do
+  if test -d "$i" ; then
+  find $i -printf "%p\n    ~> a: %a\n    ~> c: %c\n    ~> t: %t\n    ~> %s B\n"
+  cat $i/*.log
+  fi
+  done
+  return 1
+phase.tempdirs: |
+  cat `logfiles` \
+          | awk "match(\$0, /[^[:space:]]*`date -I`[^[:space:]]*/) { print substr(\$0, RSTART, RLENGTH); }" \
+          | sort | uniq
+release: 1
+rpmMacros:
+- '%bcond_without check'
+source:
+  '0': https://libarchive.org/downloads/%{name}-%{version}.tar.gz
+subpackage:
+  bsdcat:
+    files: |
+      %{!?_licensedir:%global license None
+      %license COPYING
+      %doc NEWS README.md
+      %{_bindir}/bsdcat
+    meta.description: |
+      The bsdcat program typically takes a filename as an argument or reads standard
+      input when used in a pipe.  In both cases decompressed data it written to
+      standard output.
+    meta.summary: Expand files to standard output
+    requires:
+    - '%{name}%{?_isa} = %{version}-%{release}'
+  bsdcpio:
+    files: |
+      %{!?_licensedir:%global license None
+      %license COPYING
+      %doc NEWS README.md
+      %{_bindir}/bsdcpio
+    meta.description: |
+      The bsdcpio package contains standalone bsdcpio utility split off regular
+      libarchive packages.
+    meta.summary: Copy files to and from archives
+    requires:
+    - '%{name}%{?_isa} = %{version}-%{release}'
+  bsdtar:
+    files: |
+      %{!?_licensedir:%global license None
+      %license COPYING
+      %doc NEWS README.md
+      %{_bindir}/bsdtar
+    meta.description: |
+      The bsdtar package contains standalone bsdtar utility split off regular
+      libarchive packages.
+    meta.summary: Manipulate tape archives
+    requires:
+    - '%{name}%{?_isa} = %{version}-%{release}'
+  libarchive-devel:
+    files: |
+      %defattr(-,root,root)
+      %{_includedir}/*.h
+      %{_libdir}/%{name}.so
+      %{_libdir}/pkgconfig/%{name}.pc
+    meta.description: |
+      %{name}-devel contains the header files for developing
+      applications that want to make use of %{name}.
+    meta.summary: Development files for %{name}
+    requires:
+    - '%{name} = %{version}-%{release}'
+  libarchive-help:
+    buildArch: noarch
+    files: |
+      %defattr(-,root,root)
+      %doc NEWS README.md
+      %{_mandir}/man1/*
+      %{_mandir}/man3/*
+      %{_mandir}/man5/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 3.6.1

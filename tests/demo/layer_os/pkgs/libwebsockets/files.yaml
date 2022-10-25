@@ -1,0 +1,22 @@
+subpackage.libwebsockets-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/*.h
+    %{_includedir}/%{name}
+    %{_libdir}/*.so
+    %{_libdir}/pkgconfig/*.pc
+    %{_bindir}/%{name}-test-*
+    %{_datadir}/%{name}-test-server/
+    
+    
+    
+subpackage.libwebsockets-help.files: |
+    %defattr(-,root,root)
+    %doc changelog README.md READMEs/
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license LICENSE
+    %{_libdir}/%{name}.so.*
+    
+    

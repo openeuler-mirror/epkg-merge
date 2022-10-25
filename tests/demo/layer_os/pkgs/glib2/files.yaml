@@ -1,0 +1,58 @@
+subpackage.glib2-devel.files: |
+    %{_libdir}/lib*.so
+    %{_libdir}/glib-2.0
+    %{_libdir}/pkgconfig/*
+    %{_libdir}/*.a
+    %{_includedir}/*
+    %{_libexecdir}/installed-tests
+    %exclude %{_libexecdir}/installed-tests/glib/cert-tests
+    %exclude %{_libexecdir}/installed-tests/glib/tls-certificate
+    
+    %{_datadir}/aclocal/*
+    %{_datadir}/glib-2.0/*
+    %{_datadir}/bash-completion/completions/gresource
+    %{_datadir}/gdb/auto-load/%{_libdir}/*-gdb.py
+    %{_datadir}/gettext/
+    %{_datadir}/systemtap/
+    %{_datadir}/installed-tests
+    %exclude %{_datadir}/installed-tests/glib/tls-certificate.test
+    
+    %{_bindir}/glib-genmarshal
+    %{_bindir}/glib-gettextize
+    %{_bindir}/glib-mkenums
+    %{_bindir}/gobject-query
+    %{_bindir}/gtester
+    %{_bindir}/gdbus-codegen
+    %{_bindir}/glib-compile-resources
+    %{_bindir}/gresource
+    %attr (0755, root, root) %{_bindir}/gtester-report
+    
+    
+subpackage.glib2-help.files: |
+    %defattr(-,root,root)
+    %{_mandir}/man1/*
+    %doc %{_datadir}/gtk-doc/html/*
+    
+files: |
+    %defattr(-,root,root)
+    %doc AUTHORS NEWS README
+    %license COPYING
+    %{_libdir}/*.so.*
+    %dir %{_libdir}/gio
+    %ghost %{_libdir}/gio/modules/giomodule.cache
+    
+    %dir %{_datadir}/glib-2.0
+    %dir %{_datadir}/bash-completion
+    %{_datadir}/bash-completion/completions/gapplication
+    %{_datadir}/bash-completion/completions/gdbus
+    %{_datadir}/bash-completion/completions/gio
+    %{_datadir}/bash-completion/completions/gsettings
+    
+    %{_bindir}/gio
+    %{_bindir}/gio-querymodules*
+    %{_bindir}/glib-compile-schemas
+    %{_bindir}/gsettings
+    %{_bindir}/gdbus
+    %{_bindir}/gapplication
+    
+    

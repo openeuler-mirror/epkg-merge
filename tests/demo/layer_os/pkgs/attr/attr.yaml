@@ -1,0 +1,51 @@
+name: attr
+meta.summary: Commands for Manipulating Filesystem Extended Attributes
+version: 2.5.1
+release: 2
+meta.license: GPLv2+ AND LGPLv2+
+meta.homepage: "https://savannah.nongnu.org/projects/attr"
+source:
+    "0": https://download-mirror.savannah.gnu.org/releases/attr/attr-%{version}.tar.gz
+patchset:
+    "0": 0001-bypass-wrong-output-when-enabled-selinux.patch
+    "1": 0002-dont-skip-security.evm-when-copy-xattr.patch
+meta.description: |
+    A set of tools for manipulating extended attributes on filesystem
+    objects, in particular getfattr(1) and setfattr(1).
+    An attr(1) command is also provided which is largely compatible
+    with the SGI IRIX tool of the same name.
+buildRequires:
+    - "gettext, libtool, chrpath, gcc,"
+provides:
+    - "libattr"
+obsoletes:
+    - "libattr"
+conflicts:
+    - "xfsdump < 3.1.8"
+    - "filesystem < 3"
+rpmMacros:
+    - "%{!?_licensedir:%global license %%doc}"
+
+subpackage:
+    libattr-devel:
+        meta.summary: Header files for libattr
+        meta.license: LGPLv2+
+        meta.description: |
+            This package contains header files and documentation needed to
+            develop programs which make use of extended attributes.
+            For Linux programs, the documented system call API is the
+            recommended interface, but an SGI IRIX compatibility interface
+            is also provided.
+        requires:
+            - "glibc-headers"
+        obsoletes:
+            - "libattr"
+    attr-help:
+        meta.summary: Including man files for attr
+        meta.description: This contains man files for the using of attr
+        requires:
+            - "man"
+    "%{name}":
+        filesInput: "%{name}.lang"
+env.configureFlags: |
+    --disable-silent-rules

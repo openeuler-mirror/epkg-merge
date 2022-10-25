@@ -1,0 +1,68 @@
+name: cracklib
+meta.summary: A password-checking library
+version: 2.9.7
+release: 8
+meta.license: LGPLv2+
+meta.homepage: "http://sourceforge.net/projects/cracklib/"
+source:
+    "0": https://github.com/cracklib/cracklib/releases/download/v%{version}/cracklib-%{version}.tar.gz
+    "1": https://github.com/cracklib/cracklib/releases/download/v%{version}/cracklib-words-%{version}.gz
+patchset:
+    "0": fix-problem-of-error-message-about-simplistic-passwo.patch
+    "1": backport-cracklib-2.9.6-lookup.patch
+    "2": fix-error-length-about-simplistic-password.patch
+    "3": fix-truncating-dict-file-without-input-data.patch
+meta.description: |
+    CrackLib tests passwords to determine whether they match certain
+    security-oriented characteristics, with the purpose of preventing users
+    from choosing passwords that could easily be guessed.
+    
+    CrackLib is a library containing a C function which may be used in a
+    "passwd"-like program. If you install CrackLib, you will also want to
+    install the cracklib-dicts package.
+requires:
+    - "gzip"
+buildRequires:
+    - "gcc, words, gettext, gettext-autopoint, zlib-devel"
+    - "python3-devel %if %{with python3}"
+provides:
+    - "cracklib-dicts"
+    - "%{name}-python = %{version}-%{release}"
+    - "%{name}-python%{?_isa} = %{version}-%{release}"
+obsoletes:
+    - "cracklib-dicts"
+    - "%{name}-python < %{version}-%{release}"
+conflicts:
+    - "cracklib-dicts < 2.8"
+filesInput: "%{name}.lang"
+rpmMacros:
+    - "%bcond_without python3"
+    - "%define dictdir %{_datadir}/cracklib"
+    - "%define dictpath %{dictdir}/pw_dict"
+
+subpackage:
+    cracklib-devel:
+        meta.summary: Development files for %{name}
+        meta.description: |
+            The cracklib-devel package contains the header files and libraries needed
+            for compiling applications which use cracklib.
+        requires:
+            - "%{name} = %{version}-%{release}"
+    cracklib-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch
+    python3-cracklib rpmWhen %if %{with python3}:
+        meta.summary: Python 3 bindings for applications which use cracklib 
+        meta.description: |
+            The python3-cracklib package contains a module which permits applications
+            written in the Python 3 programming language to use cracklib.
+        requires:
+            - "%{name} = %{version}-%{release} "
+env.configureFlags: |
+    --disable-static
+    --with-pic
+    --with-python
+    --with-default-dict=%{dictpath}

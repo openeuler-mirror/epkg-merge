@@ -1,0 +1,59 @@
+subpackage.lxc-libs.files: |
+    %defattr(-,root,root)
+    %{_libdir}/liblxc.so
+    %{_libdir}/liblxc.so.*
+    %{_libdir}/%{name}
+    %{_libexecdir}/%{name}
+    %{_sbindir}/init.%{name}
+    %{_sharedstatedir}/%{name}
+    %dir %{_sysconfdir}/%{name}
+    %config(noreplace) %{_sysconfdir}/%{name}/default.conf
+    %config(noreplace) %{_sysconfdir}/lxc/*
+    %config(noreplace) %{_sysconfdir}/sysconfig/*
+    
+    %dir %{_pkgdocdir}
+    %{_pkgdocdir}/AUTHORS
+    %{_pkgdocdir}/README
+    %license COPYING
+    %{_unitdir}/%{name}.service
+    %{_unitdir}/%{name}@.service
+    %{_unitdir}/%{name}-net.service
+    %dir %{_localstatedir}/cache/%{name}
+    
+    
+subpackage.lxc-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/%{name}/*
+    %{_libdir}/pkgconfig/%{name}.pc
+    %dir %{_datadir}/%{name}
+    %{_datadir}/%{name}/hooks
+    %{_datadir}/%{name}/lxc-patch.py*
+    %{_datadir}/%{name}/selinux
+    %dir %{_datadir}/%{name}/templates
+    %{_datadir}/%{name}/templates/lxc-*
+    %dir %{_datadir}/%{name}/config
+    %{_datadir}/%{name}/config/*
+    %dir %{_datadir}/%{name}/__pycache__
+    %{_datadir}/%{name}/__pycache__/*
+    
+    
+    
+subpackage.lxc-help.files: |
+    %dir %{_pkgdocdir}
+    %{_pkgdocdir}/*
+    %{_mandir}/man1/%{name}*
+    %{_mandir}/*/man1/%{name}*
+    %{_mandir}/man5/%{name}*
+    %{_mandir}/man7/%{name}*
+    %{_mandir}/*/man5/%{name}*
+    %{_mandir}/*/man7/%{name}*
+    
+    
+files: |
+    %defattr(-,root,root)
+    %{_bindir}/%{name}-*
+    %{_datadir}/%{name}/%{name}.functions
+    %dir %{_datadir}/bash-completion
+    %dir %{_datadir}/bash-completion/completions
+    %{_datadir}/bash-completion/completions/lxc
+    

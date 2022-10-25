@@ -1,0 +1,152 @@
+subpackage.rsyslog-hiredis.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/omhiredis.so
+    
+    
+subpackage.rsyslog-kafka.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/omkafka.so
+    
+    
+subpackage.rsyslog-mmnormalize.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/mmnormalize.so
+    
+    
+subpackage.rsyslog-mmkubernetes.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/mmkubernetes.so
+    
+    
+subpackage.rsyslog-mongodb.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_bindir}/logctl
+    %{_libdir}/rsyslog/ommongodb.so
+    
+    
+subpackage.rsyslog-omamqp1.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/omamqp1.so
+    
+    
+subpackage.rsyslog-pgsql.files rpmWhen %if %{systemd_lived} == 1: |
+    %doc %{rsyslog_docdir}/pgsql-createDB.sql
+    %{_libdir}/rsyslog/ompgsql.so
+    
+    
+subpackage.rsyslog-rabbitmq.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/omrabbitmq.so
+    
+    
+subpackage.rsyslog-relp.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/imrelp.so
+    %{_libdir}/rsyslog/omrelp.so
+    
+    
+subpackage.rsyslog-snmp.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/omsnmp.so
+    
+    
+subpackage.rsyslog-crypto.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_bindir}/rscryutil
+    %{_libdir}/rsyslog/lmcry_gcry.so
+    
+    
+subpackage.rsyslog-doc.files rpmWhen %if %{systemd_lived} == 1: |
+    %doc %{rsyslog_docdir}/html
+    
+    
+subpackage.rsyslog-elasticsearch.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/omelasticsearch.so
+    
+    
+subpackage.rsyslog-mmjsonparse.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/mmjsonparse.so
+    
+    
+subpackage.rsyslog-mysql.files rpmWhen %if %{systemd_lived} == 1: |
+    %doc %{rsyslog_docdir}/mysql-createDB.sql
+    %{_libdir}/rsyslog/ommysql.so
+    
+    
+subpackage.rsyslog-mmsnmptrapd.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/mmsnmptrapd.so
+    
+    
+subpackage.rsyslog-mmaudit.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/mmaudit.so
+    
+    
+subpackage.rsyslog-gssapi.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/lmgssutil.so
+    %{_libdir}/rsyslog/imgssapi.so
+    %{_libdir}/rsyslog/omgssapi.so
+    
+    
+subpackage.rsyslog-gnutls.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/lmnsd_gtls.so
+    
+    
+subpackage.rsyslog-udpspoof.files rpmWhen %if %{systemd_lived} == 1: |
+    %{_libdir}/rsyslog/omudpspoof.so
+    
+    
+subpackage.rsyslog-help.files rpmWhen %if %{systemd_lived} == 1: |
+    %doc %{rsyslog_docdir}/html
+    %{_mandir}/man5/rsyslog.conf.5.gz
+    %{_mandir}/man8/rsyslogd.8.gz
+    %{_mandir}/man1/rscryutil.1.gz
+    
+    
+files: |
+    %defattr(-,root,root,-)
+    %doc ChangeLog README.md
+    %license AUTHORS
+    %doc %{rsyslog_docdir}/pgsql-createDB.sql
+    %license COPYING*
+    %{rsyslog_docdir}
+    %dir %{_libdir}/rsyslog
+    %dir %{_sysconfdir}/rsyslog.d
+    %dir %{rsyslog_statedir}
+    %dir %{rsyslog_pkidir}
+    %{_sbindir}/rsyslogd
+    %attr(500,root,root) %{_bindir}/os_rotate_and_save_log.sh
+    %attr(500,root,root) %{_bindir}/os_check_timezone_for_rsyslog.sh
+    %attr(500,root,root) %{_bindir}/timezone_update.sh
+    /etc/cron.d/timezone.cron
+    %{_unitdir}/rsyslog.service
+    %config(noreplace) %{_sysconfdir}/rsyslog.conf
+    %config(noreplace) %{_sysconfdir}/sysconfig/rsyslog
+    %config(noreplace) %{_sysconfdir}/logrotate.d/rsyslog
+    %{_libdir}/rsyslog/fmhttp.so
+    %{_libdir}/rsyslog/fmhash.so
+    %{_libdir}/rsyslog/imfile.so
+    %if %{systemd_lived} == 1
+    %{_libdir}/rsyslog/omjournal.so
+    %{_libdir}/rsyslog/imjournal.so
+    %endif
+    %{_libdir}/rsyslog/imklog.so
+    %{_libdir}/rsyslog/immark.so
+    %{_libdir}/rsyslog/impstats.so
+    %{_libdir}/rsyslog/imptcp.so
+    %{_libdir}/rsyslog/imtcp.so
+    %{_libdir}/rsyslog/imudp.so
+    %{_libdir}/rsyslog/imuxsock.so
+    %{_libdir}/rsyslog/lmnet.so
+    %{_libdir}/rsyslog/lmnetstrms.so
+    %{_libdir}/rsyslog/lmnsd_ptcp.so
+    %{_libdir}/rsyslog/lmregexp.so
+    %{_libdir}/rsyslog/lmtcpclt.so
+    %{_libdir}/rsyslog/lmtcpsrv.so
+    %{_libdir}/rsyslog/lmzlibw.so
+    %{_libdir}/rsyslog/mmanon.so
+    %{_libdir}/rsyslog/mmcount.so
+    %{_libdir}/rsyslog/mmexternal.so
+    %{_libdir}/rsyslog/ommail.so
+    %{_libdir}/rsyslog/omprog.so
+    %{_libdir}/rsyslog/omstdout.so
+    %{_libdir}/rsyslog/omtesting.so
+    %{_libdir}/rsyslog/omuxsock.so
+    %{_libdir}/rsyslog/pmaixforwardedfrom.so
+    %{_libdir}/rsyslog/pmcisconames.so
+    %{_libdir}/rsyslog/pmlastmsg.so
+    %{_libdir}/rsyslog/pmsnare.so
+    %exclude %{rsyslog_docdir}/html
+    %exclude %{rsyslog_docdir}/mysql-createDB.sql
+    %exclude %{rsyslog_docdir}/pgsql-createDB.sql
+    
+    

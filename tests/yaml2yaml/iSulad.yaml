@@ -1,0 +1,219 @@
+buildRequires:
+- pkgconfig(systemd) %if 0%{?is_systemd}
+- sqlite-devel %if 0%{?is_embedded}
+- lcr-devel >= %{lcrver} clibcni-devel >= %{clibcniver}
+- cmake gcc-c++ yajl-devel lxc lxc-devel
+- grpc grpc-plugins grpc-devel protobuf-devel
+- libcurl libcurl-devel libarchive-devel device-mapper-devel
+- http-parser-devel
+- libseccomp-devel libcap-devel libselinux-devel libwebsockets libwebsockets-devel
+- systemd-devel git
+- lib-shim-v2 lib-shim-v2-devel %if 0%{?enable_shimv2}
+buildRoot:
+- '{_tmppath}/iSulad-%{version}'
+files: |
+  %attr(0600,root,root) %{_sysconfdir}/sysmonitor/process/isulad-monit
+  %attr(0550,root,root) %{_sysconfdir}/default/isulad/isulad-check.sh
+  %defattr(0640,root,root,0750)
+  %{_sysconfdir}/isulad
+  %{_sysconfdir}/isulad/*
+  %{_sysconfdir}/default/*
+  %defattr(-,root,root,-)
+  %if 0%{?is_systemd}
+  %{_unitdir}/isulad.service
+  %attr(0640,root,root) %{_unitdir}/isulad.service
+  %else
+  %{_initddir}/isulad.init
+  %attr(0640,root,root) %{_initddir}/isulad.init
+  %endif
+  %{_includedir}/isulad/*
+  %attr(0755,root,root) %{_libdir}/pkgconfig
+  %attr(0640,root,root) %{_libdir}/pkgconfig/isulad.pc
+  %defattr(0755,root,root,0755)
+  %{_bindir}/*
+  %{_libdir}/*
+  %attr(0640,root,root) %{_sysconfdir}/sysconfig/iSulad
+  %attr(0640,root,root) %{_sysconfdir}/isulad/daemon.json
+
+  %config(noreplace,missingok) %{_sysconfdir}/sysconfig/iSulad
+  %config(noreplace,missingok) %{_sysconfdir}/isulad/daemon.json
+  %if 0%{?is_systemd}
+  %config(noreplace,missingok) %{_unitdir}/isulad.service
+  %else
+  %config(noreplace,missingok) %{_initddir}/isulad.init
+  %endif
+meta.description: |
+  This is a umbrella project for gRPC-services based Lightweight Container
+  Runtime Daemon, written by C.
+meta.homepage: https://gitee.com/openeuler/iSulad
+meta.license: Mulan PSL v2
+meta.summary: Lightweight Container Runtime Daemon
+name: iSulad
+patchset:
+  '0': 0001-use-epoll-instead-of-select-for-wait_exit_fifo.patch
+phase.build: |+
+  mkdir -p build
+  cd build
+  %if 0%{?enable_shimv2}
+  %cmake -DDEBUG=ON -DCMAKE_SKIP_RPATH=TRUE -DLIB_INSTALL_DIR=%{_libdir} -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_SHIM_V2=ON ../
+  %else
+  %cmake -DDEBUG=ON -DCMAKE_SKIP_RPATH=TRUE -DLIB_INSTALL_DIR=%{_libdir} -DCMAKE_INSTALL_PREFIX=/usr ../
+  %endif
+  %make_build
+
+phase.clean: |+
+  rm -rf %{buildroot}
+
+phase.install: |+
+  rm -rf %{buildroot}
+  cd build
+  install -d $RPM_BUILD_ROOT/%{_libdir}
+  install -m 0755 ./src/libisula.so             %{buildroot}/%{_libdir}/libisula.so
+  install -m 0755 ./src/utils/http/libhttpclient.so  %{buildroot}/%{_libdir}/libhttpclient.so
+  install -m 0755 ./src/libisulad_tools.so  %{buildroot}/%{_libdir}/libisulad_tools.so
+  install -m 0755 ./src/daemon/modules/image/libisulad_img.so   %{buildroot}/%{_libdir}/libisulad_img.so
+
+  install -d $RPM_BUILD_ROOT/%{_libdir}/pkgconfig
+  install -m 0640 ./conf/isulad.pc              %{buildroot}/%{_libdir}/pkgconfig/isulad.pc
+
+  install -d $RPM_BUILD_ROOT/%{_bindir}
+
+  install -m 0755 ./src/isula                  %{buildroot}/%{_bindir}/isula
+  install -m 0755 ./src/isulad-shim            %{buildroot}/%{_bindir}/isulad-shim
+
+  install -m 0755 ./src/isulad                 %{buildroot}/%{_bindir}/isulad
+
+  install -d $RPM_BUILD_ROOT/%{_includedir}/isulad
+  install -m 0644 ../src/daemon/modules/api/image_api.h         %{buildroot}/%{_includedir}/isulad/image_api.h
+
+  install -d $RPM_BUILD_ROOT/%{_sysconfdir}/isulad
+  install -m 0640 ../src/contrib/config/daemon.json           %{buildroot}/%{_sysconfdir}/isulad/daemon.json
+  install -m 0440 ../src/contrib/config/daemon_constants.json %{buildroot}/%{_sysconfdir}/isulad/daemon_constants.json
+  install -m 0640 ../src/contrib/config/seccomp_default.json  %{buildroot}/%{_sysconfdir}/isulad/seccomp_default.json
+
+  install -d $RPM_BUILD_ROOT/%{_sysconfdir}/default/isulad
+  install -m 0640 ../src/contrib/config/config.json           %{buildroot}/%{_sysconfdir}/default/isulad/config.json
+  install -m 0640 ../src/contrib/config/systemcontainer_config.json           %{buildroot}/%{_sysconfdir}/default/isulad/systemcontainer_config.json
+  install -m 0550 ../src/contrib/sysmonitor/isulad-check.sh        %{buildroot}/%{_sysconfdir}/default/isulad/isulad-check.sh
+
+  mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sysmonitor/process
+  cp ../src/contrib/sysmonitor/isulad-monit $RPM_BUILD_ROOT/etc/sysmonitor/process
+
+  install -d $RPM_BUILD_ROOT/%{_sysconfdir}/default/isulad/hooks
+  install -m 0640 ../src/contrib/config/hooks/default.json %{buildroot}/%{_sysconfdir}/default/isulad/hooks/default.json
+
+  install -d $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig
+  install -p -m 0640 ../src/contrib/config/iSulad.sysconfig $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/iSulad
+
+  %if 0%{?is_systemd}
+  install -d $RPM_BUILD_ROOT/%{_unitdir}
+  install -p -m 0640 ../src/contrib/init/isulad.service $RPM_BUILD_ROOT/%{_unitdir}/isulad.service
+  %else
+  install -d $RPM_BUILD_ROOT/%{_initddir}
+  install -p -m 0640 ../src/contrib/init/isulad.init $RPM_BUILD_ROOT/%{_initddir}/isulad.init
+  %endif
+
+phase.prep: |+
+  %autosetup -n iSulad-v%{_version} -Sgit -p1
+
+provides:
+- libhttpclient.so()(64bit) %ifarch x86_64 aarch64
+- libisula.so()(64bit) %ifarch x86_64 aarch64
+- libisulad_img.so()(64bit) %ifarch x86_64 aarch64
+- libisulad_tools.so()(64bit) %ifarch x86_64 aarch64
+release: '%{_release}'
+requires:
+- systemd-units %if 0%{?is_systemd}
+- sqlite %if 0%{?is_embedded}
+- clibcni >= %{clibcniver} lcr >= %{lcrver}
+- grpc protobuf lxc
+- libcurl
+- http-parser libseccomp
+- libcap libselinux libwebsockets libarchive device-mapper
+- systemd
+- lib-shim-v2 %if 0%{?enable_shimv2}
+requiresPost:
+- chkconfig %else %if 0%{?is_systemd}
+requiresPreUn:
+- chkconfig %else %if 0%{?is_systemd}
+- initscripts %else %if 0%{?is_systemd}
+rpmMacros:
+- '%global _version 2.0.17'
+- '%global _release 2'
+- '%global is_systemd 1'
+- '%global enable_shimv2 1'
+- '%global is_embedded 1'
+- '%define lcrver 2.0.8'
+- '%define clibcniver 2.0.7'
+runtimePhase.post: |+
+  if ! getent group isula > /dev/null; then
+  groupadd --system isula
+  fi
+
+  if [ "$1" = "1" ]; then
+  %if 0%{?is_systemd}
+  systemctl enable isulad
+  systemctl start isulad
+  %else
+  /sbin/chkconfig --add isulad
+  %endif
+  elif [ "$1" = "2" ]; then
+  %if 0%{?is_systemd}
+  # support update from lcrd to isulad, will remove in next version
+  if [ -e %{_unitdir}/lcrd.service.rpmsave ]; then
+  mv %{_unitdir}/lcrd.service.rpmsave %{_unitdir}/isulad.service
+  sed -i 's/lcrd/isulad/g' %{_unitdir}/isulad.service
+  fi
+  systemctl status isulad | grep 'Active:' | grep 'running'
+  if [ $? -eq 0 ]; then
+  systemctl restart isulad
+  else
+  systemctl start isulad
+  fi
+  %else
+  /sbin/service isulad status | grep 'Active:' | grep 'running'
+  if [ $? -eq 0 ]; then
+  /sbin/service isulad restart
+  fi
+  %endif
+  fi
+
+  if ! getent group isula > /dev/null; then
+  groupadd --system isula
+  fi
+
+runtimePhase.postun: |+
+  %if 0%{?is_systemd}
+  %systemd_postun_with_restart isulad
+  %else
+  if [ "$1" -ge "1" ] ; then
+  /sbin/service isulad condrestart >/dev/null 2>&1 || :
+  fi
+  %endif
+
+runtimePhase.pre: |+
+  if [ "$1" = "2" ]; then
+  %if 0%{?is_systemd}
+  systemctl stop lcrd &>/dev/null
+  systemctl disable lcrd &>/dev/null
+  if [ -e %{_sysconfdir}/isulad/daemon.json ];then
+  sed -i 's#/etc/default/lcrd/hooks#/etc/default/isulad/hooks#g' %{_sysconfdir}/isulad/daemon.json
+  fi
+  %else
+  /sbin/chkconfig --del lcrd &>/dev/null
+  %endif
+  fi
+
+runtimePhase.preun: |+
+  %if 0%{?is_systemd}
+  %systemd_preun isulad
+  %else
+  if [ $1 -eq 0 ] ; then
+  /sbin/service isulad stop >/dev/null 2>&1
+  /sbin/chkconfig --del isulad
+  fi
+  %endif
+
+source:
+  '0': https://gitee.com/openeuler/iSulad/repository/archive/v%{version}.tar.gz
+version: null

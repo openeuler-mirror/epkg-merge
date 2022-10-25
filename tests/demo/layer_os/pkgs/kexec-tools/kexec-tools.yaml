@@ -1,0 +1,91 @@
+name: kexec-tools
+meta.summary: The kexec/kdump userspace component
+version: 2.0.23
+release: 8
+meta.license: GPLv2
+meta.homepage: "https://www.kernel.org/"
+source:
+    "0": http://kernel.org/pub/linux/utils/kernel/kexec/%{name}-%{version}.tar.xz
+    "1": kdumpctl
+    "2": kdump.sysconfig
+    "3": kdump.sysconfig.x86_64
+    "4": kdump.sysconfig.i386
+    "5": kdump.sysconfig.ppc64
+    "6": mkdumprd
+    "7": kdump.conf
+    "8": https://github.com/makedumpfile/makedumpfile/releases/download/%{mkdf_ver}/makedumpfile-%{mkdf_ver}.tar.gz
+    "9": mkdumprd.8
+    "10": 98-kexec.rules
+    "11": kdump.conf.5
+    "12": kdump.service
+    "13": kdump.sysconfig.s390x
+    "14": https://github.com/lucchouina/eppic/archive/%{eppic_ver}/eppic-%{eppic_shortver}.tar.gz
+    "15": kdump-lib.sh
+    "16": kdump-in-cluster-environment.txt
+    "17": kdump-dep-generator.sh
+    "18": kdump-lib-initramfs.sh
+    "19": kdump.sysconfig.ppc64le
+    "20": kdumpctl.8
+    "21": live-image-kdump-howto.txt
+    "22": early-kdump-howto.txt
+    "23": kdump-udev-throttler
+    "24": kdump.sysconfig.aarch64
+    "25": dracut-kdump.sh
+    "26": dracut-module-setup.sh
+    "27": dracut-monitor_dd_progress
+    "28": dracut-kdump-error-handler.sh
+    "29": dracut-kdump-emergency.service
+    "30": dracut-kdump-error-handler.service
+    "31": dracut-kdump-capture.service
+    "32": dracut-kdump-emergency.target
+    "33": dracut-early-kdump.sh
+    "34": dracut-early-kdump-module-setup.sh
+    "35": dracut-kdump-wait-for-target.sh
+patchset:
+    "0": arm64-support-more-than-one-crash-kernel-regions.patch
+    "1": add-secure-compile-options-for-makedumpfile.patch
+    "2": kexec-Add-quick-kexec-support.patch
+    "3": kexec-Quick-kexec-implementation-for-arm64.patch
+    "4": arm64-crashdump-deduce-paddr-of-_text-based-on-kerne.patch
+    "5": arm64-make-phys_offset-signed.patch
+    "6": arm64-crashdump-unify-routine-to-get-page_offset.patch
+    "7": arm64-read-VA_BITS-from-kcore-for-52-bits-VA-kernel.patch
+    "8": arm64-fix-PAGE_OFFSET-calc-for-flipped-mm.patch
+meta.description: |
+    kexec-tools provides /sbin/kexec binary that facilitates a new
+    kernel to boot using the kernel's kexec feature either on a
+    normal or a panic reboot. This package contains the /sbin/kexec
+    binary and ancillary utilities that together form the userspace
+    component of the kernel's kexec feature.
+requires:
+    - "dracut >= 047-34.git20180604"
+    - "dracut-network >= 044-117"
+    - "dracut-squash >= 049-4"
+    - "ethtool"
+    - "systemd-udev%{?_isa} %ifnarch s390x"
+requiresPre:
+    - "coreutils sed zlib"
+requiresPreUn:
+    - "systemd"
+requiresPost:
+    - "systemd"
+requiresPostUn:
+    - "systemd"
+buildRequires:
+    - "zlib-devel elfutils-devel-static glib2-devel bzip2-devel ncurses-devel bison flex lzo-devel snappy-devel"
+    - "pkgconfig intltool gettext"
+    - "systemd-units"
+    - "automake autoconf libtool"
+obsoletes:
+    - "diskdumputils netdump kexec-tools-eppic %ifarch %{ix86} x86_64"
+rpmMacros:
+    - "%global eppic_ver e8844d3793471163ae4a56d8f95897be9e5bd554"
+    - "%global eppic_shortver %(c=%{eppic_ver}; echo ${c:0:7})"
+    - "%global mkdf_ver 1.7.0"
+    - "%undefine _hardened_build"
+
+subpackage:
+    kexec-tools-help:
+        meta.summary: Doc files for %{name}
+        meta.description: The %{name}-help package contains doc files for %{name}.
+        buildArch: noarch

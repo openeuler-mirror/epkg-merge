@@ -1,0 +1,42 @@
+name: popt
+meta.summary: C library for parsing command line parameters
+version: 1.18
+release: 3
+meta.license: MIT
+meta.homepage: "https://github.com/rpm-software-management/popt/"
+source:
+    "0": http://ftp.rpm.org/%{name}/releases/%{name}-1.x/%{name}-%{version}.tar.gz
+patchset:
+    "0": fix-obscure-iconv-mis-call-error-path-could-lead-to-.patch
+    "1": fix-handle-newly-added-asset-.-call-like-elsewhere.patch
+    "2": fix-permit-reading-aliases-remove-left-over-goto-exi.patch
+    "3": fix-coverity-CID-1057440-Unused-pointer-value-UNUSED.patch
+    "4": backport-Consider-POPT_CONTEXT_KEEP_FIRST-during-reset.patch
+    "5": backport-Fix-incorrect-handling-of-leftovers-with-poptStuffAr.patch
+meta.description: |
+    The popt library exists essentially for parsing command line options. Some
+    specific advantages of popt are no global variables (allowing multiple passes
+    in parsing argv), parsing an arbitrary array of argv-style elements (allowing
+    parsing of command-line-strings from any source), a standard method of option
+    aliasing, ability to exec external option filters, and automatic generation
+    of help and usage messages.
+buildRequires:
+    - "gcc git gettext"
+filesInput: "%{name}.lang"
+subpackage:
+    popt-devel:
+        meta.summary: Development files for %{name}
+        meta.description: |
+            The %{name}-devel package contains libraries and header files for
+            developing applications that use %{name}.
+        requires:
+            - "%{name} = %{version}-%{release}"
+            - "pkgconfig"
+        provides:
+            - "%{name}-static = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-static < %{version}-%{release}"
+    popt-help:
+        meta.summary: Doc files for %{name}
+        meta.description: The %{name}-help package contains doc files for %{name}.
+        buildArch: noarch

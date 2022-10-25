@@ -1,0 +1,76 @@
+buildRequires:
+- gcc gperf autoconf automake
+files: |
+  %doc CREDITS
+  %license LICENSE
+  %{_libdir}/%{name}.so.*
+meta.description: |
+  The libseccomp library provides an easy to use, platform independent, interface to
+  the Linux Kernel's syscall filtering mechanism. The libseccomp API is designed to
+  abstract away the underlying BPF based syscall filter language and present a more
+  conventional function-call based filtering interface that should be familiar to,
+  and easily adopted by, application developers.
+meta.homepage: https://github.com/seccomp/libseccomp
+meta.license: LGPLv2
+meta.summary: Interface to the syscall filtering mechanism
+name: libseccomp
+patchset:
+  '0': backport-bpf-pfc-Add-handling-for-0-syscalls-in-the-binary-tr.patch
+  '1': backport-tests-Add-a-binary-tree-test-with-zero-syscalls.patch
+phase.build: |+
+  autoreconf
+  %configure
+  %make_build
+
+phase.check: |+
+  make check
+
+phase.install: |+
+  %make_install
+  %delete_la
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 2
+runtimePhase.post: |+
+  -p /sbin/ldconfig
+
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+runtimePhase.pre: |2+
+
+runtimePhase.preun: |2+
+
+source:
+  '0': https://github.com/seccomp/libseccomp/releases/download/v%{version}/%{name}-%{version}.tar.gz
+subpackage:
+  libseccomp-devel:
+    files: |
+      %{_bindir}/scmp_sys_resolver
+      %{_includedir}/seccomp.h
+      %{_includedir}/seccomp-syscalls.h
+      %{_libdir}/%{name}.a
+      %{_libdir}/%{name}.so
+      %{_libdir}/pkgconfig/%{name}.pc
+    meta.description: |
+      The %{name}-devel package contains libraries and header files for
+      developing applications that use %{name}.
+    meta.summary: Development files for %{name}
+    obsoletes:
+    - '%{name}-static <= %{version}-%{release}'
+    provides:
+    - '%{name}-static = %{version}-%{release}'
+    requires:
+    - '%{name} = %{version}-%{release}'
+  libseccomp-help:
+    buildArch: noarch
+    files: |
+      %doc CHANGELOG CONTRIBUTING.md README.md
+      %{_mandir}/man*/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 2.5.3

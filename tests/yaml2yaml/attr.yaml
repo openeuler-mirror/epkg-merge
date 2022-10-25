@@ -1,0 +1,97 @@
+buildRequires:
+- gettext, libtool, chrpath, gcc,
+conflicts:
+- xfsdump < 3.1.8
+- filesystem < 3
+files: |
+  %doc doc/CHANGES
+  %license doc/COPYING*
+  %{_bindir}/*
+  %{_libdir}/libattr.so.*
+  %config(noreplace) %{_sysconfdir}/xattr.conf
+meta.description: |
+  A set of tools for manipulating extended attributes on filesystem
+  objects, in particular getfattr(1) and setfattr(1).
+  An attr(1) command is also provided which is largely compatible
+  with the SGI IRIX tool of the same name.
+meta.homepage: https://savannah.nongnu.org/projects/attr
+meta.license: GPLv2+ AND LGPLv2+
+meta.summary: Commands for Manipulating Filesystem Extended Attributes
+name: attr
+obsoletes:
+- libattr
+patchset:
+  '0': 0001-bypass-wrong-output-when-enabled-selinux.patch
+  '1': 0002-dont-skip-security.evm-when-copy-xattr.patch
+phase.build: |+
+  %configure --disable-silent-rules
+  make %{?_smp_mflags}
+
+phase.check: |+
+  if ./setfattr -n user.name -v value .; then
+  make check || exit $?
+  else
+  echo '*** xattrs are probably not supported by the file system,' \
+           'the test-suite will NOT run ***'
+  fi
+
+phase.install: |+
+  %make_install
+  chrpath -d $RPM_BUILD_ROOT%{_bindir}/attr
+  chrpath -d $RPM_BUILD_ROOT%{_bindir}/getfattr
+  chrpath -d $RPM_BUILD_ROOT%{_bindir}/setfattr
+
+
+  rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}*
+
+  ln -fs ../sys/xattr.h $RPM_BUILD_ROOT%{_includedir}/attr/xattr.h
+
+  %find_lang %{name}
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+provides:
+- libattr
+release: 2
+rpmMacros:
+- '%{!?_licensedir:%global license None'
+runtimePhase.post: |
+  -p /sbin/ldconfig
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+source:
+  '0': https://download-mirror.savannah.gnu.org/releases/attr/attr-%{version}.tar.gz
+subpackage:
+  '%{name}':
+    files: ''
+    filesInput: '%{name}.lang'
+  attr-help:
+    files: |
+      %{_mandir}/man1/*
+      %{_mandir}/man3/*
+    meta.description: This contains man files for the using of attr
+    meta.summary: Including man files for attr
+    requires:
+    - man
+  libattr-devel:
+    files: |
+      %{_libdir}/libattr.so
+      %{_libdir}/pkgconfig/*.pc
+      %{_libdir}/libattr.a
+      %{_libdir}/libattr.la
+      %{_includedir}/attr
+    meta.description: |
+      This package contains header files and documentation needed to
+      develop programs which make use of extended attributes.
+      For Linux programs, the documented system call API is the
+      recommended interface, but an SGI IRIX compatibility interface
+      is also provided.
+    meta.license: LGPLv2+
+    meta.summary: Header files for libattr
+    obsoletes:
+    - libattr
+    requires:
+    - glibc-headers
+version: 2.5.1

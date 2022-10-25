@@ -1,0 +1,37 @@
+name: sysfsutils
+meta.summary: A set of utilities for interfacing with sysfs
+version: 2.1.1
+release: 1
+meta.license: GPLv2 and LGPLv2+
+meta.homepage: "https://github.com/linux-ras/sysfsutils"
+source:
+    "0": https://github.com/linux-ras/sysfsutils/archive/v%{version}.tar.gz
+meta.description: |
+    This package's purpose is to provide a set of utilities for interfacing
+    with sysfs, a virtual filesystem in Linux kernel versions 2.5+ that
+    provides a tree of system devices.
+buildRequires:
+    - "gcc chrpath autoconf automake make libtool"
+provides:
+    - "libsysfs libsysfs%{?_isa}"
+obsoletes:
+    - "libsysfs"
+subpackage:
+    sysfsutils-devel:
+        meta.summary: Including header files and library for the developing of sysfsutils
+        meta.license: LGPLv2+
+        meta.description: This contains dynamic libraries and header files for the developing of sysfsutils.
+        requires:
+            - "sysfsutils = %{version}-%{release}"
+        provides:
+            - "libsysfs-devel"
+        obsoletes:
+            - "libsysfs-devel"
+    sysfsutils-help:
+        meta.summary: Including man files for sysfsutils
+        meta.description: This contains man files for the using of sysfsutils.
+        requires:
+            - "man"
+        buildArch: noarch
+env.configureFlags: |
+    --disable-static

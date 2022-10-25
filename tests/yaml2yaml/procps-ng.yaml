@@ -1,0 +1,98 @@
+buildRequires:
+- ncurses-devel libtool autoconf automake gcc gettext-devel systemd-devel
+files: |
+  %doc COPYING COPYING.LIB
+  %{!?_licensedir:%global license None
+  %license COPYING COPYING.LIB
+  %{_libdir}/libprocps.so.*
+  %{_bindir}/*
+  %{_sbindir}/*
+  %exclude %{_libdir}/libprocps.la
+  %exclude /unwanted/*
+  %exclude %{_libdir}/*.a
+meta.description: |
+  The procps package contains a set of system utilities that provide
+  system information. Procps includes ps, free, skill, pkill, pgrep,
+  snice, tload, top, uptime, vmstat, pidof, pmap, slabtop, w, watch
+  and pwdx.
+meta.homepage: https://sourceforge.net/projects/procps-ng/
+meta.license: GPL+ and GPLv2 and GPLv2+ and GPLv3+ and LGPLv2+
+meta.summary: Utilities that provide system information.
+name: procps-ng
+patchset:
+  '0': 0001-top-fix-two-potential-alternate-display-mode-abends.patch
+  '1': 0002-top-In-the-bye_bye-function-replace-fputs-with-the-w.patch
+  '2': 0003-add-options-M-and-N-for-top.patch
+  '3': 0004-top-exit-with-error-when-pid-overflow.patch
+  '4': 0005-fix-a-fix-for-the-bye_bye-function.patch
+phase.build: |+
+  autoreconf -ivf
+
+  %configure  --exec-prefix=/ --docdir=/unwanted --disable-w-from \
+  --disable-kill \
+  --enable-watch8bit \
+  --enable-skill \
+  --enable-sigwinch \
+  --enable-libselinux \
+  --with-systemd \
+  --disable-modern-top \
+
+
+  make CFLAGS="%{optflags}"
+
+phase.install: |+
+  %make_install
+
+  %find_lang %{name} --all-name --with-man
+
+  ln -s %{_bindir}/pidof %{buildroot}%{_sbindir}/pidof
+
+  %ldconfig_scriptlets
+
+phase.prep: |+
+  %autosetup -n procps-%{version} -p1
+
+  cp -p %{SOURCE1} .
+  cp -p %{SOURCE2} top/
+
+provides:
+- procps = %{version}-%{release}
+- '%{name}'
+release: 2
+source:
+  '0': http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.xz
+  '1': README.md
+  '2': README.top
+subpackage:
+  procps-ng-devel:
+    files: |
+      %doc COPYING COPYING.LIB
+      %{!?_licensedir:%global license None
+      %license COPYING COPYING.LIB
+      %{_libdir}/libprocps.so
+      %{_libdir}/pkgconfig/libprocps.pc
+      %{_includedir}/proc
+    meta.description: System and process monitoring utilities
+    meta.summary: The devel for %{name}
+    provides:
+    - procps-devel = %{version}-%{release}
+    requires:
+    - '%{name} = %{version}-%{release}'
+  procps-ng-help:
+    buildArch: noarch
+    files: |
+      %doc AUTHORS Documentation/bugs.md Documentation/FAQ NEWS README.md top/README.top Documentation/TODO
+      %{_mandir}/man*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  procps-ng-i18n:
+    buildArch: noarch
+    files: ''
+    filesInput: '%{name}.lang'
+    meta.description: The package is used for the Internationalization of %{name}
+    meta.summary: Internationalization pack for %{name}
+    requires:
+    - '%{name} = %{version}-%{release}'
+version: 3.3.17

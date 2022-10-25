@@ -1,0 +1,24 @@
+name: libestr
+meta.summary: String handling essentials library
+version: 0.1.11
+release: 1
+meta.license: LGPLv2+
+meta.homepage: "http://libestr.adiscon.com/"
+source:
+    "0": http://libestr.adiscon.com/files/download/libestr-%{version}.tar.gz
+meta.description: |
+    libestr is a library for some string essentials. This package compiles the string handling essentials library
+    used by the Rsyslog daemon.
+buildRequires:
+    - "gcc"
+subpackage:
+    libestr-devel:
+        meta.summary: Development files for %{name}
+        meta.description: |
+            The %{name}-devel package contains libraries and header files for
+            developing applications that use %{name}.
+        requires:
+            - "%{name} = %{version}-%{release}"
+env.configureFlags: |
+    --disable-static
+    --with-pic

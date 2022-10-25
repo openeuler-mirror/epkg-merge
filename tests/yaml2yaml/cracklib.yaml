@@ -1,0 +1,150 @@
+buildRequires:
+- gcc, words, gettext, gettext-autopoint, zlib-devel
+- python3-devel %if %{with python3}
+conflicts:
+- cracklib-dicts < 2.8
+files: |
+  %defattr(-,root,root)
+  %doc README-LICENSE AUTHORS
+  %license COPYING.LIB
+  %{_sbindir}/*cracklib*
+  %{_sbindir}/mkdict
+  %{_sbindir}/packer
+  %{_libdir}/libcrack.so.*
+  %{_libdir}/cracklib_dict.*
+  %dir %{_datadir}/cracklib
+  %config(noreplace) %{_datadir}/cracklib/pw_dict.*
+  %{_datadir}/cracklib/cracklib-small.*
+  %{_datadir}/cracklib/cracklib.magic
+filesInput: '%{name}.lang'
+meta.description: |
+  CrackLib tests passwords to determine whether they match certain
+  security-oriented characteristics, with the purpose of preventing users
+  from choosing passwords that could easily be guessed.
+
+  CrackLib is a library containing a C function which may be used in a
+  "passwd"-like program. If you install CrackLib, you will also want to
+  install the cracklib-dicts package.
+meta.homepage: http://sourceforge.net/projects/cracklib/
+meta.license: LGPLv2+
+meta.summary: A password-checking library
+name: cracklib
+obsoletes:
+- cracklib-dicts
+- '%{name}-python < %{version}-%{release}'
+patchset:
+  '0': fix-problem-of-error-message-about-simplistic-passwo.patch
+  '1': backport-cracklib-2.9.6-lookup.patch
+  '2': fix-error-length-about-simplistic-password.patch
+  '3': fix-truncating-dict-file-without-input-data.patch
+phase.build: |+
+  %if %{with python3}
+  sed -i 's,util/cracklib-check <,util/cracklib-check $(DESTDIR)/$(DEFAULT_CRACKLIB_DICT) <,' Makefile.in
+  py3include=`python3-config --includes | awk -F' ' '{print $1;}'`
+  export PYTHON=%{__python3}
+  export CFLAGS="%{optflags} $py3include"
+  abiflags=`python3-config --abiflags`
+  py_version="%{python3_version}$abiflags"
+  %configure \
+      am_cv_python_version="$py_version" \
+      --disable-static \
+  --with-pic \
+  --with-python \
+  --with-default-dict=%{dictpath}
+  make -C po update-gmo
+  make
+  %endif
+
+phase.check: |+
+  make test
+
+  %ldconfig_scriptlets
+
+phase.install: |+
+  [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+  %if %{with python3}
+  make install DESTDIR=$RPM_BUILD_ROOT 'pythondir=${pyexecdir}'
+  %endif
+
+  ./util/cracklib-format cracklib-dicts/* | \
+  ./util/cracklib-packer $RPM_BUILD_ROOT/%{dictpath}
+  ./util/cracklib-format $RPM_BUILD_ROOT/%{dictdir}/cracklib-small | \
+  ./util/cracklib-packer $RPM_BUILD_ROOT/%{dictdir}/cracklib-small
+  rm -f $RPM_BUILD_ROOT/%{dictdir}/cracklib-small
+  sed s,/usr/lib/cracklib_dict,%{dictpath},g lib/crack.h > $RPM_BUILD_ROOT/%{_includedir}/crack.h
+  ln -s cracklib-format $RPM_BUILD_ROOT/%{_sbindir}/mkdict
+  ln -s cracklib-packer $RPM_BUILD_ROOT/%{_sbindir}/packer
+  touch $RPM_BUILD_ROOT/top
+
+  toprelpath=..
+  touch $RPM_BUILD_ROOT/top
+  while ! test -f $RPM_BUILD_ROOT/%{_libdir}/$toprelpath/top ; do
+  toprelpath=../$toprelpath
+  done
+  rm -f $RPM_BUILD_ROOT/top
+  if test %{dictpath} != %{_libdir}/cracklib_dict ; then
+  ln -s $toprelpath%{dictpath}.hwm $RPM_BUILD_ROOT/%{_libdir}/cracklib_dict.hwm
+  ln -s $toprelpath%{dictpath}.pwd $RPM_BUILD_ROOT/%{_libdir}/cracklib_dict.pwd
+  ln -s $toprelpath%{dictpath}.pwi $RPM_BUILD_ROOT/%{_libdir}/cracklib_dict.pwi
+  fi
+  rm -f $RPM_BUILD_ROOT/%{_libdir}/python*/site-packages/_cracklib*.*a
+  rm -f $RPM_BUILD_ROOT/%{_libdir}/libcrack.la
+
+  %find_lang %{name}
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+  mkdir cracklib-dicts
+  for dict in %{SOURCE1}
+  do
+  cp -fv ${dict} cracklib-dicts/
+  done
+  chmod +x util/cracklib-format
+
+provides:
+- cracklib-dicts
+- '%{name}-python = %{version}-%{release}'
+- '%{name}-python%{?_isa} = %{version}-%{release}'
+release: 8
+requires:
+- gzip
+rpmMacros:
+- '%bcond_without python3'
+- '%define dictdir %{_datadir}/cracklib'
+- '%define dictpath %{dictdir}/pw_dict'
+source:
+  '0': https://github.com/cracklib/cracklib/releases/download/v%{version}/cracklib-%{version}.tar.gz
+  '1': https://github.com/cracklib/cracklib/releases/download/v%{version}/cracklib-words-%{version}.gz
+subpackage:
+  cracklib-devel:
+    files: |
+      %{_includedir}/*
+      %{_libdir}/libcrack.so
+    meta.description: |
+      The cracklib-devel package contains the header files and libraries needed
+      for compiling applications which use cracklib.
+    meta.summary: Development files for %{name}
+    requires:
+    - '%{name} = %{version}-%{release}'
+  cracklib-help:
+    buildArch: noarch
+    files: |
+      %doc README README-WORDS NEWS
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+  python3-cracklib %if %{with python3}:
+    files: |
+      %{_libdir}/python3*/site-packages/_cracklib*.so
+      %{_libdir}/python3*/site-packages/*.py*
+      %{_libdir}/python3*/site-packages/__pycache__/*
+  python3-cracklib rpmWhen %if %{with python3}:
+    meta.description: |
+      The python3-cracklib package contains a module which permits applications
+      written in the Python 3 programming language to use cracklib.
+    meta.summary: Python 3 bindings for applications which use cracklib
+    requires:
+    - '%{name} = %{version}-%{release} '
+version: 2.9.7

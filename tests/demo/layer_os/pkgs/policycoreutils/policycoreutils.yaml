@@ -1,0 +1,88 @@
+name: policycoreutils
+meta.summary: Policy core utilities of selinux
+version: 3.3
+release: 2
+meta.license: GPLv2
+meta.homepage: "https://github.com/SELinuxProject"
+source:
+    "0": https://github.com/SELinuxProject/selinux/archive/refs/tags/policycoreutils-%{version}.tar.gz
+    "1": selinux-autorelabel
+    "2": selinux-autorelabel.service
+    "3": selinux-autorelabel-mark.service
+    "4": selinux-autorelabel.target
+    "5": selinux-autorelabel-generator.sh
+patchset:
+    "0": fix-fixfiles-N-date-function.patch
+    "1": fix-fixfiles-N-date-function-two.patch
+meta.description: It contains the selinux policy core utilities
+requires:
+    - "libsepol >= 3.3 libselinux-utils util-linux grep gawk diffutils rpm sed coreutils"
+buildRequires:
+    - "gcc"
+    - "pam-devel libsepol-static >= 3.3 libsemanage-static >= 3.3 libselinux-devel >= 3.3  libcap-devel audit-libs-devel  gettext"
+    - "desktop-file-utils dbus-devel dbus-glib-devel python3-devel libcap-ng-devel"
+    - "systemd systemd-units"
+provides:
+    - "%{name}-restorecond = %{version}-%{release}"
+    - "%{name}-newrole = %{version}-%{release}"
+    - "/sbin/fixfiles"
+    - "/sbin/restorecon"
+obsoletes:
+    - "%{name}-restorecond < %{version}-%{release}"
+    - "%{name}-newrole < %{version}-%{release}"
+    - "python2-policycoreutils"
+filesInput: "%{name}.lang"
+rpmMacros:
+    - "%global _python_bytecompile_extra 0"
+    - "%bcond_with sandbox"
+    - "%{?python_provide:%python_provide python3-policycoreutils}"
+
+subpackage:
+    python3-policycoreutils:
+        meta.summary: python3 utilities for seLinux policy core
+        meta.description: It contains the python3 policy core utilities for selinux
+        requires:
+            - "policycoreutils = %{version}-%{release}"
+            - "python3-libselinux python3-libsemanage >= 3.3"
+            - "audit-libs-python3 >= 2.8.5"
+            - "python3-IPy"
+            - "checkpolicy"
+            - "python3-setools >= 4.3.0"
+        provides:
+            - "%{name}-python3 = %{version}-%{release}"
+        obsoletes:
+            - "%{name}-python3 < %{version}-%{release}"
+        buildArch: noarch
+    policycoreutils-python-utils:
+        meta.summary: Policy core python utilities for selinux
+        meta.description: It contains the python utilities for selinux
+        requires:
+            - "python3-policycoreutils = %{version}-%{release}"
+        obsoletes:
+            - "policycoreutils-python <= 2.4-4"
+        buildArch: noarch
+    policycoreutils-dbus:
+        meta.summary: Policy core DBUS for selinux
+        meta.description: It contains policy core DBUS for selinux
+        requires:
+            - "python3-policycoreutils = %{version}-%{release} python3-slip-dbus"
+        buildArch: noarch
+    policycoreutils-devel:
+        meta.summary: Policy core devel utilities for selinux
+        meta.description: It contains policy core devel utilities for selinux
+        requires:
+            - "policycoreutils-python-utils = %{version}-%{release}"
+            - "/usr/bin/make"
+            - "selinux-policy-devel"
+    policycoreutils-help:
+        meta.summary: Including man files for selinux
+        meta.description: This contains man files for the using of selinux.
+        requires:
+            - "man"
+    policycoreutils-sandbox rpmWhen %if %{with sandbox}:
+        meta.summary: Sandbox utilities for selinux 
+        meta.description: It contains sandbox utilities for selinux
+        requires:
+            - "python3-policycoreutils = %{version}-%{release} "
+            - "xorg-x11-server-Xephyr >= 1.14.1-2 /usr/bin/rsync /usr/bin/xmodmap "
+            - "openbox "

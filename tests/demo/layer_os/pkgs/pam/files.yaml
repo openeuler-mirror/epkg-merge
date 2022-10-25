@@ -1,0 +1,64 @@
+subpackage.pam-devel.files: |
+    %defattr(-,root,root)
+    %{_includedir}/security
+    %{_libdir}/libpam.so
+    %{_libdir}/libpamc.so
+    %{_libdir}/libpam_misc.so
+    %{_libdir}/pkgconfig/pam.pc
+    %{_libdir}/pkgconfig/pam_misc.pc
+    %{_libdir}/pkgconfig/pamc.pc
+    
+    
+subpackage.pam-help.files: |
+    %defattr(-,root,root)
+    %{_mandir}/man3/*
+    %{_mandir}/man5/*
+    %{_mandir}/man8/*
+    
+    
+    
+files: |
+    %defattr(-,root,root)
+    %license Copyright COPYING gpl-2.0.txt
+    %doc AUTHORS README ChangeLog NEWS
+    %doc doc/README.d/
+    %dir %{_pamconfdir}
+    %config(noreplace) %{_pamconfdir}/other
+    %config(noreplace) %{_pamconfdir}/system-auth
+    %config(noreplace) %{_pamconfdir}/password-auth
+    %config(noreplace) %{_pamconfdir}/config-util
+    %config(noreplace) %{_pamconfdir}/postlogin
+    %{_pamlibdir}/libpam.so.*
+    %{_pamlibdir}/libpamc.so.*
+    %{_pamlibdir}/libpam_misc.so.*
+    %attr(4755,root,root) %{_sbindir}/pam_timestamp_check
+    %attr(4755,root,root) %{_sbindir}/unix_chkpwd
+    %attr(0700,root,root) %{_sbindir}/unix_update
+    %attr(0755,root,root) %{_sbindir}/pwhistory_helper
+    %{_sbindir}/faillock
+    %{_sbindir}/mkhomedir_helper
+    %{_sbindir}/pam_namespace_helper
+    %attr(0755,root,root) %{_sbindir}/pam_namespace_helper
+    %dir %{_moduledir}
+    %{_moduledir}/pam*.so
+    %{_moduledir}/pam_filter/
+    %{_unitdir}/pam_namespace.service
+    %dir %{_secconfdir}
+    %config(noreplace) %{_secconfdir}/access.conf
+    %config(noreplace) %{_secconfdir}/group.conf
+    %config(noreplace) %{_secconfdir}/limits.conf
+    %dir %{_secconfdir}/limits.d
+    %config(noreplace) %{_secconfdir}/namespace.conf
+    %dir %{_secconfdir}/namespace.d
+    %attr(755,root,root) %config(noreplace) %{_secconfdir}/namespace.init
+    %config(noreplace) %{_secconfdir}/pam_env.conf
+    %config(noreplace) %{_secconfdir}/time.conf
+    %config(noreplace) %{_secconfdir}/opasswd
+    %config(noreplace) %{_secconfdir}/sepermit.conf
+    %config(noreplace) %{_secconfdir}/faillock.conf
+    %dir /var/run/sepermit
+    %ghost %verify(not md5 size mtime) /var/log/tallylog
+    %dir /var/run/faillock
+    %{_prefix}/lib/tmpfiles.d/pam.conf
+    
+    

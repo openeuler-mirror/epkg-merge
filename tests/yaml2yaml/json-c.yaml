@@ -1,0 +1,88 @@
+buildRequires:
+- cmake gcc ninja-build
+files: |
+  %{_libdir}/lib%{name}.so.%{so_ver}*
+meta.description: |
+  JSON-C implements a reference counting object model that allows you
+  to easily construct JSON objects in C, output them as JSON formatted
+  strings and parse JSON formatted strings back into the C representation
+  of JSON objects.  It aims to conform to RFC 7159.
+meta.homepage: https://github.com/%{name}/%{name}
+meta.license: MIT
+meta.summary: JSON implementation in C
+name: json-c
+phase.build: |+
+  %cmake \
+    -DBUILD_STATIC_LIBS:BOOL=OFF       \
+    -DCMAKE_BUILD_TYPE:STRING=RELEASE  \
+    -DCMAKE_C_FLAGS_RELEASE:STRING=""  \
+    -DDISABLE_BSYMBOLIC:BOOL=OFF       \
+    -DDISABLE_WERROR:BOOL=ON           \
+    -DENABLE_RDRAND:BOOL=ON            \
+    -DENABLE_THREADING:BOOL=ON         \
+    -G Ninja\
+    %{!?__cmake_in_source_build:-S "%{_vpath_srcdir}"} \
+    %{!?__cmake_in_source_build:-B "%{_vpath_builddir}"} \
+
+  %__cmake --build "%{_vpath_builddir}" %{?_smp_mflags} --verbose --target all doc
+
+phase.check: |+
+  %ninja_test -C %{_vpath_builddir}
+
+phase.install: |+
+  DESTDIR="%{buildroot}" %__cmake --install "%{_vpath_builddir}"
+
+
+  mkdir -p %{buildroot}%{_pkgdocdir}
+  hardlink -cfv %{buildroot}%{_pkgdocdir}
+
+phase.prep: |+
+  %autosetup -n %{name}-%{name}-%{version}-%{reldate} -p 1
+
+  rm -fr doc/html
+
+  doxygen -s -u doc/Doxyfile.in
+
+
+release: 5
+rpmMacros:
+- '%{!?_pkgdocdir:%global _pkgdocdir %{_docdir}/json-c-0.15}'
+- '%global so_ver      5'
+- '%global reldate     20200726'
+source:
+  '0': '%{url}/archive/%{name}-%{version}-%{reldate}.tar.gz'
+subpackage:
+  json-c-devel:
+    files: |
+      %{_includedir}/%{name}
+      %{_libdir}/cmake/%{name}
+      %{_libdir}/lib%{name}.so
+      %{_libdir}/pkgconfig/%{name}.pc
+    meta.description: |
+      This package contains libraries and header files for
+      developing applications that use %{name}.
+    meta.summary: Development files for %{name}
+    requires:
+    - '%{name}%{?_isa} == %{version}-%{release}'
+    runtimePhase.pretrans: |
+      -p <lua>
+      path = "%{_includedir}/%{name}"
+      st = posix.stat(path)
+      if st and st.type == "link" then
+      os.remove(path)
+      end
+
+      %ldconfig_scriptlets
+  json-c-help:
+    buildArch: noarch
+    buildRequires:
+    - doxygen hardlink
+    files: |
+      %doc %{_pkgdocdir}
+    meta.description: This package contains the reference manual for %{name}.
+    meta.summary: Reference manual for json-c
+    obsoletes:
+    - '%{name}-doc = %{version}-%{release}'
+    provides:
+    - '%{name}-doc = %{version}-%{release}'
+version: 0.15

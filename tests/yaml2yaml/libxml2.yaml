@@ -1,0 +1,162 @@
+buildRequires:
+- python3-devel
+- zlib-devel
+- pkgconfig
+- xz-devel
+- libtool
+buildRoot:
+- '%{_tmppath}/%{name}-%{version}-root'
+files: |
+  %defattr(-, root, root)
+
+  %doc %{_datadir}/doc/libxml2
+
+  %{_libdir}/lib*.so.*
+  %{_bindir}/xmllint
+  %{_bindir}/xmlcatalog
+group: Development/Libraries
+meta.description: |
+  This library allows to manipulate XML files. It includes support
+  to read, modify and write XML and HTML files. There is DTDs support
+  this includes parsing and validation even with complex DtDs, either
+  at parse time or later once the document has been modified. The output
+  can be a simple SAX stream or and in-memory DOM like representations.
+  In this case one can use the built-in XPath and XPointer implementation
+  to select sub nodes or ranges. A flexible Input/Output mechanism is
+  available, with existing HTTP and FTP modules and combined to an
+  URI library.
+meta.homepage: http://xmlsoft.org/
+meta.license: MIT
+meta.summary: Library providing XML and HTML support
+name: libxml2
+patchset:
+  '0': libxml2-multilib.patch
+  '1': Fix-memleaks-in-xmlXIncludeProcessFlags.patch
+  '2': Fix-memory-leaks-for-xmlACatalogAdd.patch
+  '3': Fix-memory-leaks-in-xmlACatalogAdd-when-xmlHashAddEntry-failed.patch
+phase.build: |+
+  ./autogen.sh
+  %configure
+  %make_build
+
+  find doc -type f -exec chmod 0644 \{\} \;
+
+phase.check: |+
+  make runtests
+
+phase.clean: |+
+  rm -fr %{buildroot}
+
+phase.install: |+
+  %configure --with-python=%{__python3}
+  %make_install
+
+  rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+  rm -f $RPM_BUILD_ROOT%{_libdir}/python*/site-packages/*.a
+  rm -f $RPM_BUILD_ROOT%{_libdir}/python*/site-packages/*.la
+  rm -rf $RPM_BUILD_ROOT%{_datadir}/doc/libxml2-%{version}/*
+  rm -rf $RPM_BUILD_ROOT%{_datadir}/doc/libxml2-python-%{version}/*
+  (cd doc/examples ; make clean ; rm -rf .deps Makefile)
+  gzip -9 -c doc/libxml2-api.xml > doc/libxml2-api.xml.gz
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+  mkdir py3doc
+  cp doc/*.py py3doc
+  sed -i 's|#!/usr/bin/python |#!%{__python3} |' py3doc/*.py
+
+release: 2
+runtimePhase.post: |+
+  -p /sbin/ldconfig
+
+runtimePhase.postun: |+
+  -p /sbin/ldconfig
+
+source:
+  '0': https://download.gnome.org/sources/%{name}/2.9/%{name}-%{version}.tar.xz
+subpackage:
+  libxml2-devel:
+    files: |
+      %defattr(-, root, root)
+
+      %doc NEWS README.md Copyright
+      %doc doc/*.html doc/html doc/*.gif doc/*.png
+      %doc doc/tutorial doc/libxml2-api.xml.gz
+      %doc doc/examples
+      %doc %dir %{_datadir}/gtk-doc/html/libxml2
+      %doc %{_datadir}/gtk-doc/html/libxml2/*.devhelp2
+      %doc %{_datadir}/gtk-doc/html/libxml2/*.html
+      %doc %{_datadir}/gtk-doc/html/libxml2/*.png
+      %doc %{_datadir}/gtk-doc/html/libxml2/*.css
+
+      %{_libdir}/lib*.so
+      %{_libdir}/*.sh
+      %{_includedir}/*
+      %{_bindir}/xml2-config
+      %{_datadir}/aclocal/libxml.m4
+      %{_libdir}/pkgconfig/libxml-2.0.pc
+      %{_libdir}/cmake/libxml2/libxml2-config.cmake
+
+      %{_libdir}/*a
+    group: Development/Libraries
+    meta.description: |
+      Libraries, include files, etc you can use to develop XML applications.
+      This library allows to manipulate XML files. It includes support
+      to read, modify and write XML and HTML files. There is DTDs support
+      this includes parsing and validation even with complex DtDs, either
+      at parse time or later once the document has been modified. The output
+      can be a simple SAX stream or and in-memory DOM like representations.
+      In this case one can use the built-in XPath and XPointer implementation
+      to select sub nodes or ranges. A flexible Input/Output mechanism is
+      available, with existing HTTP and FTP modules and combined to an
+      URI library.
+    meta.summary: Libraries, includes, etc. to develop XML and HTML applications
+    obsoletes:
+    - '%{name}-static < %{version}-%{release}'
+    provides:
+    - '%{name}-static'
+    requires:
+    - libxml2 = %{version}-%{release}
+    - zlib-devel
+    - xz-devel
+    - pkgconfig
+  libxml2-help:
+    buildArch: noarch
+    files: |
+      %doc %{_mandir}/man1/xml2-config.1*
+      %doc %{_mandir}/man1/xmllint.1*
+      %doc %{_mandir}/man1/xmlcatalog.1*
+      %doc %{_mandir}/man3/libxml.3*
+    meta.description: '%{summary}.'
+    meta.summary: Man page for libxml2
+  python3-%{name}:
+    files: |
+      %defattr(-, root, root)
+
+      %{_libdir}/python3*/site-packages/libxml2.py*
+      %{_libdir}/python3*/site-packages/drv_libxml2.py*
+      %{_libdir}/python3*/site-packages/__pycache__/*py*
+      %{_libdir}/python3*/site-packages/libxml2mod*
+      %doc python/TODO
+      %doc python/libxml2class.txt
+      %doc py3doc/*.py
+      %doc doc/python.html
+    group: Development/Libraries
+    meta.description: |
+      The libxml2-python3 package contains a Python 3 module that permits
+      applications written in the Python programming language, version 3, to use the
+      interface supplied by the libxml2 library to manipulate XML files.
+
+      This library allows to manipulate XML files. It includes support
+      to read, modify and write XML and HTML files. There is DTDs support
+      this includes parsing and validation even with complex DTDs, either
+      at parse time or later once the document has been modified.
+    meta.summary: Python 3 bindings for the libxml2 library
+    obsoletes:
+    - '%{name}-python3 < %{version}-%{release}'
+    provides:
+    - '%{name}-python3 = %{version}-%{release}'
+    requires:
+    - libxml2 = %{version}-%{release}
+version: 2.9.14

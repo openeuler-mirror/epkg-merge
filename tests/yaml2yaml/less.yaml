@@ -1,0 +1,49 @@
+buildRequires:
+- gcc make ncurses-devel autoconf automake libtool
+files: |
+  %defattr(-,root,root)
+  %license LICENSE COPYING
+  %{_bindir}/less*
+meta.description: |
+  Less is a pager. A pager is a program that displays text files.
+  Other pagers commonly in use are more and pg. Pagers are often
+  used in command-line environments like the Unix shell and the MS-DOS
+  command prompt to display files.
+
+  Less is not an editor. You can't change the contents of the file
+  you're viewing. Less is not a windowing system. It doesn't have
+  fancy scroll bars or other GUI (graphical user interface) elements.
+meta.homepage: http://www.greenwoodsoftware.com/less
+meta.license: GPLv3+ or BSD
+meta.summary: Less is a pager that displays text files.
+name: less
+patchset:
+  '0': less-394-time.patch
+  '1': less-475-fsync.patch
+phase.build: |+
+  rm -f ./configure
+  autoreconf -ivf
+  %configure
+  %make_build CFLAGS="%{optflags} -D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
+
+phase.install: |+
+  %make_install
+
+
+phase.prep: |+
+  %autosetup -n %{name}-%{version} -p1
+
+release: 2
+source:
+  '0': http://www.greenwoodsoftware.com/less/%{name}-%{version}.tar.gz
+subpackage:
+  less-help:
+    buildArch: noarch
+    files: |
+      %doc README NEWS INSTALL
+      %{_mandir}/man1/*
+    meta.description: Man pages and other related documents for %{name}.
+    meta.summary: Documents for %{name}
+    requires:
+    - man info
+version: 610

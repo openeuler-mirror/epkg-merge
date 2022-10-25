@@ -1,0 +1,88 @@
+name: shadow
+meta.summary: Tools for managing accounts and shadow password files
+version: 4.9
+release: 4
+epoch: 2
+meta.license: BSD and GPLv2+
+meta.homepage: "http://pkg-shadow.alioth.debian.org/"
+source:
+    "0": https://github.com/shadow-maint/shadow/releases/download/v%{version}/shadow-%{version}.tar.xz
+    "1": shadow-utils.useradd
+    "2": shadow-utils.login.defs
+    "3": shadow-bsd.txt
+    "4": https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+    "5": chpasswd
+    "6": newusers
+patchset:
+    "0": shadow-4.8-goodname.patch
+    "1": shadow-4.9-null-tm.patch
+    "2": shadow-4.8-long-entry.patch
+    "3": usermod-unlock.patch
+    "4": useradd-create-directories-after-the-SELinux-user.patch
+    "5": shadow-4.1.5.1-var-lock.patch
+    "6": shadow-utils-fix-lock-file-residue.patch
+    "7": Makefile-include-libeconf-dependency-in-new-idmap.patch
+    "8": usermod-allow-all-group-types-with-G-option.patch
+    "9": useradd-avoid-generating-an-empty-subid-range.patch
+    "10": libmisc-fix-default-value-in-SHA_get_salt_rounds.patch
+    "11": semanage-close-the-selabel-handle.patch
+    "12": Revert-useradd.c-fix-memleaks-of-grp.patch
+    "13": useradd-change-SELinux-labels-for-home-files.patch
+    "14": libsubid-link-to-PAM-libraries.patch
+    "15": Fix-out-of-tree-builds-with-respect-to-libsubid-incl.patch
+    "16": Respect-enable-static-no-in-libsubid.patch
+    "17": Fixes-the-linking-issues-when-libsubid-is-static-and.patch
+    "18": pwck-fix-segfault-when-calling-fprintf.patch
+    "19": newgrp-fix-segmentation-fault.patch
+    "20": groupdel-fix-SIGSEGV-when-passwd-does-not-exist.patch
+    "21": backport-useradd-modify-check-ID-range-for-system-users.patch
+    "22": shadow-add-sm3-crypt-support.patch
+meta.description: |
+    This package includes the necessary programs for converting plain
+    password files to the shadow password format and to manage user and
+    group accounts.
+requires:
+    - "libselinux"
+    - "audit-libs"
+    - "setup"
+requiresPre:
+    - "coreutils"
+requiresPost:
+    - "coreutils"
+buildRequires:
+    - "gcc, libselinux-devel, audit-libs-devel, libsemanage-devel"
+    - "libacl-devel, libattr-devel"
+    - "bison, flex, gnome-doc-utils, docbook-style-xsl, docbook-dtds"
+    - "autoconf, automake, libtool, gettext-devel, itstool, pam-devel"
+provides:
+    - "shadow-utils"
+obsoletes:
+    - "shadow-utils"
+filesInput: shadow.lang
+
+buildRoot:
+    - "%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)"
+rpmMacros:
+    - "%global includesubiddir %{_includedir}/shadow"
+
+subpackage:
+    shadow-subid-devel:
+        meta.summary: Development package for shadow-utils-subid
+        meta.license: BSD and GPLv2+
+        meta.description: Development files for shadow-utils-subid.
+    shadow-help:
+        meta.summary: Documents for %{name}
+        meta.description: Man pages and other related documents for %{name}.
+        requires:
+            - "man info"
+        buildArch: noarch
+env.configureFlags: |
+    --enable-shadowgrp
+    --enable-man
+    --with-audit
+    --with-sha-crypt
+    --with-selinux
+    --without-libcrack
+    --with-libpam
+    --enable-shared
+    --with-group-name-max-length=32

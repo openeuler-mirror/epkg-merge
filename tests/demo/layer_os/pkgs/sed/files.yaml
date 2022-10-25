@@ -1,0 +1,12 @@
+subpackage.sed-help.files: |
+    %doc ABOUT-NLS AUTHORS BUGS ChangeLog* INSTALL NEWS README THANKS
+    %{_infodir}/*.info.gz
+    %exclude %{_infodir}/dir*
+    %{_mandir}/man1/*.1.gz
+    
+    
+files: |
+    %license COPYING
+    %{_bindir}/sed
+    
+    
