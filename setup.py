@@ -20,7 +20,6 @@ setup(
     include_package_data=True,
     install_requires=[
         'PyYAML>=3.0',
-    ],
-    py_modules=["src"]
+    ]
 )
 
