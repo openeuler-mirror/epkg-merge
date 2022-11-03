@@ -1,22 +1,22 @@
-## rpmEnv 字段：映射/传递 build options 到 spec
+## rpmGlobal 字段：映射/传递 build options 到 spec
 
-在包YAML中增加rpmEnv小节，其中的key/val会被视为rpm macro，进而合入生成的spec文件。
+在包YAML中增加rpmGlobal小节，其中的key/val会被视为rpm macro，进而合入生成的spec文件。
 其作用类似env环境变量，用于定制RPM spec。
 
-	rpmEnv:
+	rpmGlobal:
 		macroName: macro value
 
-在各个包名字空间下的rpmEnv，加到所生成spec的头部。
-rpmEnv尽量不暴露给用户或者第三方定制。避免在YAML字段中引用rpmEnv字段下的值。相反，rpmEnv可以引用其它字段。
+在各个包名字空间下的rpmGlobal，加到所生成spec的头部。
+rpmGlobal尽量不暴露给用户或者第三方定制。避免在YAML字段中引用rpmGlobal字段下的值。相反，rpmGlobal可以引用其它字段。
 
 数据流方向如下：
 
 	customizable YAML fields
-	=> pkgs.<pkg>.rpmEnv 	=> spec header macro definitions
+	=> pkgs.<pkg>.rpmGlobal 	=> spec header macro definitions
 
 ## compiler cflags 定制
 
-	rpmEnv:
+	rpmGlobal:
 		__cc: %%{env.compiler}
 		build_cflags: %%{env.cflags}
 		build_cxxflags: %%{env.cxxflags}

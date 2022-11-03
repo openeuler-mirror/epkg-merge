@@ -6,13 +6,13 @@
 
 	useConfigureFlags:
 		$flag:
-	rpmEnv:
+	rpmGlobal:
 		_with_$flag    when +$flag: 1	# for bcond_with
 		_without_$flag when -$flag: 1	# for bcond_without
 
 Q: shall we define %_with_$flag/%_without_$flag or %with_$flag?
 
-rpmEnv里的宏定义，会被yaml2spec加到spec的最前面。此处定义_with_$flag，可以起到执行 rpmbuild --with-$flag 的效果。
+rpmGlobal里的宏定义，会被yaml2spec加到spec的最前面。此处定义_with_$flag，可以起到执行 rpmbuild --with-$flag 的效果。
 
 - 受%define/%global macro控制的条件选项，安排YAML对应的useFlag，并定义传入macro
 
@@ -22,7 +22,7 @@ rpmEnv里的宏定义，会被yaml2spec加到spec的最前面。此处定义_wit
 		- "%define $flag %%{use.$flag}"
 
 此处需要把rpmMacros下原来的那行%define/%global替换掉。
-未来也可以考虑抽取到rpmEnv，把可定制项往rpmEnv集中。
+未来也可以考虑抽取到rpmGlobal，把可定制项往rpmGlobal集中。
 
 # 示例
 
@@ -77,7 +77,7 @@ Notes: spec 里
 
 We can move the above "%global var fixed-value" lines to
 
-	rpmEnv:
+	rpmGlobal:
 	  debuginfodir:         "/usr/lib/debug"
 	  upstream_version:     "5.10"
 	  upstream_sublevel:    "0"
@@ -89,7 +89,7 @@ Then we'll be able to expand %{} in YAML like this
 
 	%{xxx}
 =>
-	%%{rpmEnv.xxx}
+	%%{rpmGlobal.xxx}
 
 For example,
 
@@ -102,7 +102,7 @@ spec file
 
 to YAML file
 
-	rpmEnv:
+	rpmGlobal:
 	  pcs_snmp_pkg_name:  pcs-snmp
 	subpackage:
 	  %{pcs_snmp_pkg_name}:
@@ -113,7 +113,7 @@ The macro in the above key can be expanded as follows
 
   %{pcs_snmp_pkg_name}
   =>
-  %%{rpmEnv.pcs_snmp_pkg_name}
+  %%{rpmGlobal.pcs_snmp_pkg_name}
   =>
   pcs-snmp
 
