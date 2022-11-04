@@ -4,7 +4,7 @@
 
 from setuptools import setup, find_packages
 
-print(find_packages())
+# python3 setup.py bdist_wheel
 setup(
     name="merge-configs",
     version="0.0.1",
@@ -22,4 +22,3 @@ setup(
         'PyYAML>=3.0',
     ]
 )
-

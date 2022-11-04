@@ -26,13 +26,16 @@ def main():
     if args["config_file"]:
         handle_load(args["config_file"])
         StartUp.startup(config_space)
-    packages = []
     if args["packages"]:
         packages = args["packages"].split()
+    else:
+        packages = config_space["allPkgs"]
     for package in packages:
+        log.info(f"==========parse package {package}===============")
         package_info = handle_package(package, config_space)
         handle_output(package, package_info, args["output"])
 
 
 if __name__ == '__main__':
     main()
+
