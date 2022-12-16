@@ -24,19 +24,29 @@ def parse_shell_file(file_name, content):
     functions = {}
     function_name = ""
     function_content = ""
+    symbol_count = 0
     for line in content:
         _line = line.rstrip()
         if function_name:
             if _line == "{":
+                symbol_count += 1
                 continue
             if _line == "}":
+                symbol_count -= 1
+                if symbol_count:
+                    function_content += line
+                    continue
                 functions[function_name] = function_content
                 function_name, function_content = "", ""
                 continue
+            if "(){" in line or "() {" in line:
+                symbol_count += 1
             function_content += line
         else:
             shell_function_name = get_shell_function_name(line)
             function_name = combinate_function_name(file_name, shell_function_name)
+            if function_name and "{" in line:
+                symbol_count += 1
     return functions
 
 
