@@ -4,9 +4,9 @@
 def get_func(key, func_name, params_name):
     from src.core.config_space import config_space
 
-    merge_func = config_space.get_key(f"{key}:mergeFunc")
+    merge_func = config_space.get_key(f"{key}:{func_name}")
     if merge_func:
-        return merge_func, config_space.get(f"{key}:mergeParams", "")
+        return merge_func, config_space.get(f"{key}:{params_name}", "")
 
     temp_key = key
     last_key = key.split(".")[-1]
