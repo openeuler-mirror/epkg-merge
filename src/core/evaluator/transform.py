@@ -29,6 +29,7 @@ def parse_shell_file(file_name, content):
         _line = line.rstrip()
         if function_name:
             if _line == "{":
+                function_content += line
                 symbol_count += 1
                 continue
             if _line == "}":
