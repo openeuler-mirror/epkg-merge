@@ -50,6 +50,8 @@ def handle_output(package_name, content, output):
                     continue
                 src_path = os.path.join(package_path, sub_file)
                 if os.path.isdir(src_path):
+                  if os.path.exists(os.path.join(output, os.path.split(src_path)[-1])):
+                      shutil.rmtree(os.path.join(output, os.path.split(src_path)[-1]))
                   shutil.copytree(src_path, os.path.join(output, os.path.split(src_path)[-1]))
                 else:
                   shutil.copy(src_path, output)
