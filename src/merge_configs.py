@@ -5,6 +5,7 @@ import sys
 import argparse
 import os
 import logging
+import json
 
 sys.path.append(os.path.abspath("."))
 
@@ -20,7 +21,12 @@ def main():
     parser.add_argument("-p", "--packages", help="the parsed packages， use -p 'A B' to specify multiple packages")
     parser.add_argument("-o", "--output", help="which dir the output is redirected to")
     parser.add_argument("-d", "--debug", action="store_true", help="output the run log to the terminal")
+    parser.add_argument("-l", "--list-features", help="displays user configuration information")
     args = vars(parser.parse_args())
+    list_features_info = {}
+    if args["list_features"]:
+        for k in args["list_features"].split(","):
+            list_features_info[k] = {}
     if args["debug"]:
         log.addHandler(logging.StreamHandler())
     if args["config_file"]:
@@ -33,7 +39,14 @@ def main():
     for package in packages:
         log.info(f"==========parse package {package}===============")
         package_info = handle_package(package, config_space)
+        for k, v in package_info.items():
+            if "use." in k:
+                list_features_info[package][k] = v
         handle_output(package, package_info, args["output"])
+
+    for k, v in list_features_info.items():
+        print(k)
+        print(json.dump(v))
 
 
 if __name__ == '__main__':
