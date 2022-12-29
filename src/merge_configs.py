@@ -41,6 +41,7 @@ def main():
         package_info = handle_package(package, config_space)
         for k, v in package_info.items():
             if "use." in k:
+                k = k.replace("use.", "")
                 list_features_info[package][k] = v
         handle_output(package, package_info, args["output"])
 
