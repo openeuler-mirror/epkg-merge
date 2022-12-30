@@ -38,35 +38,43 @@ class YamlLoader:
                 config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
 
     def load_inherit(self, package_info):
-        from src.core.config_space import config_space
         final_package_info = {}
         for k, v in package_info.items():
             if k != f"{self._cspath}.inherit":
-                if k in final_package_info:
-                    final_package_info.pop(k)
-                final_package_info[k] = v
+                YamlLoader.sequential_update(k, v, final_package_info)
                 continue
-            inherit_package = v.split(".")[1]
+            self.merge_inherit(v, final_package_info)
+        return final_package_info
+
+    def merge_inherit(self, inherits, final_package_info):
+        from src.core.config_space import config_space
+        for inherit in inherits.split(","):
+            inherit_package = inherit.split(".")[1]
             inherit_package_info = config_space.get_package(inherit_package)
-            inherit_key = v.replace(f"pkgs.{inherit_package}", "")
+            inherit_key = inherit.replace(f"pkgs.{inherit_package}", "")
             for inherit_k, inherit_v in inherit_package_info.items():
-                if inherit_key and inherit_key not in inherit_k:
+                if inherit_key and not inherit_k.startswith(inherit_key):
                     continue
                 final_package_info[f"{self._cspath}.{inherit_k}"] = inherit_v
-        return final_package_info
 
     @staticmethod
     def load_include(configs):
         final_configs = {}
         for k, v in configs.items():
             if k != "include":
-                if k in final_configs:
-                    final_configs.pop(k)
-                final_configs[k] = v
+                YamlLoader.sequential_update(k, v, final_configs)
                 continue
-            include = yaml.safe_load(open(v, encoding="utf-8"))
-            final_configs.update(include)
+            for include in v.split(","):
+                include_info = yaml.safe_load(open(include, encoding="utf-8"))
+                final_configs.update(include_info)
         return final_configs
+
+    @staticmethod
+    def sequential_update(k, v, original_dict):
+        if k in original_dict:
+            original_dict.pop(k)
+        original_dict[k] = v
+        return original_dict
 
     def _load_include_and_inherit(self) -> None:
         from src.core.config_space import config_space

@@ -39,11 +39,13 @@ def main():
     for package in packages:
         log.info(f"==========parse package {package}===============")
         package_info = handle_package(package, config_space)
+        if not list_features_info:
+            handle_output(package, package_info, args["output"])
+            continue
         for k, v in package_info.items():
             if "use." in k:
                 k = k.replace("use.", "")
                 list_features_info[package][k] = v
-        handle_output(package, package_info, args["output"])
 
     for k, v in list_features_info.items():
         print(k)
