@@ -27,13 +27,54 @@ class YamlLoader:
     def _load_yaml(self) -> None:
         from src.core.config_space import config_space
         configs = yaml.safe_load(open(self._fspath, encoding="utf-8"))
+        configs = self.load_include(configs)
         result = expand_yaml(configs, self._cspath)
+        result = self.load_inherit(result)
         for k, v in result.items():
             actual_keys = config_space.add_key(k, v, self._fspath, None)
             if ":" in k:
-                return
+                continue
             for actual_key in actual_keys:
                 config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
+
+    def load_inherit(self, package_info):
+        final_package_info = {}
+        for k, v in package_info.items():
+            if k != f"{self._cspath}.inherit":
+                YamlLoader.sequential_update(k, v, final_package_info)
+                continue
+            self.merge_inherit(v, final_package_info)
+        return final_package_info
+
+    def merge_inherit(self, inherits, final_package_info):
+        from src.core.config_space import config_space
+        for inherit in inherits.split(","):
+            inherit_package = inherit.split(".")[1]
+            inherit_package_info = config_space.get_package(inherit_package)
+            inherit_key = inherit.replace(f"pkgs.{inherit_package}", "")
+            for inherit_k, inherit_v in inherit_package_info.items():
+                if inherit_key and not inherit_k.startswith(inherit_key):
+                    continue
+                final_package_info[f"{self._cspath}.{inherit_k}"] = inherit_v
+
+    @staticmethod
+    def load_include(configs):
+        final_configs = {}
+        for k, v in configs.items():
+            if k != "include":
+                YamlLoader.sequential_update(k, v, final_configs)
+                continue
+            for include in v.split(","):
+                include_info = yaml.safe_load(open(include, encoding="utf-8"))
+                final_configs.update(include_info)
+        return final_configs
+
+    @staticmethod
+    def sequential_update(k, v, original_dict):
+        if k in original_dict:
+            original_dict.pop(k)
+        original_dict[k] = v
+        return original_dict
 
     def _load_include_and_inherit(self) -> None:
         from src.core.config_space import config_space
@@ -50,7 +91,7 @@ class YamlLoader:
                     for k, v in result.items():
                         actual_keys = config_space.add_key(k, v, self._fspath, None)
                         if ":" in k:
-                            return
+                            continue
                         for actual_key in actual_keys:
                             config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
 
