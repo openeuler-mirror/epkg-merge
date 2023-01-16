@@ -163,6 +163,34 @@ RPM spec的build scriptlets都是shell script，这一般都够用好用。
 
 然后增强transform_include_phase，支持python函数加载。
 
+## build phases 函数拆分定制
+
+支持把复杂的build phase拆分为小函数。以便更好的模块化，并方便定制各函数。
+
+以phase.build为例，拆分方法：
+- 允许定义``phase.build_xxx/yyy``等函数，特点是以``build_``为前缀。
+- phase.build定义为
+	build_xxx
+	build_yyy
+- 转为spec时，在%build小节自动加入``phase.build_*``函数定义
+
+	%build
+
+	# from phase.build_*
+	function build_xxx()
+	{
+		...
+	}
+
+	function build_yyy()
+	{
+		...
+	}
+
+	# from phase.build
+	build_xxx
+	build_yyy
+
 ## runtime-phase.sh for runtime scriptlets
 
 以下spec字段可存到独立的runtime-phase.sh
