@@ -339,7 +339,7 @@ commit/branch/tag只能设置其中一个。
 	versions.'0.0.3'.sha256: d32052fbecd44299e13e69bf2dd7e5737c346404ccd784b8c2100ceed99d8cd3
 	versions.'0.0.2'.sha256: b88357bf88cdda9565472543225d6b0fa50f0726f6e2d464c92d31a98b493abb
 
-样例2: git branch/commit
+样例2: git branch/commit 以下建立了version值与git属性+值的关联
 
 	versions.main.branch: main
 	versions.'1.86.0'.commit: 9419cfa18c18dfbd1e1194127fd120ab456c3657
@@ -347,6 +347,22 @@ commit/branch/tag只能设置其中一个。
 
 btw, the '.' escape rule:
 - treat . inside ''/"" as normal character
+
+当用户指定了一个version, 对应的会创建如下属性之一，以确定下载方式。
+
+	source.0:sha256: %%{versions.%%{version}.sha256}
+
+	git.0:commit: %%{versions.%%{version}.commit}
+	git.0:branch: %%{versions.%%{version}.branch}
+	git.0:tag: %%{versions.%%{version}.tag}
+
+其中branch/tag不稳定，如需可重复，建议访问git服务，获取和设置当时对应的commit属性。
+
+用户可以直接在version中指定git属性，方法如下
+
+	version: commit:$commit # 如果是40字符完整commit，可支持省略前缀commit:
+	version: branch:$branch
+	version: tag:$tag
 
 ## source url中的version
 
