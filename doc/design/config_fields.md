@@ -47,6 +47,7 @@
 	Provides        =>  provides
 	Requires        =>  requires
 	BuildRequires   =>  buildRequires
+	(new) 		=>  testRequires
 	Recommends      =>  recommends
 	Suggests        =>  suggests
 	Supplements     =>  supplements
@@ -95,10 +96,10 @@
 Rare used ones:
 
 	OrderWithRequires
-	Prereq
-	BuildPrereq
+	Prereq (obsolete)
+	BuildPrereq (obsolete)
 	BuildArchitectures
-	Icon
+	Icon (obsolete)
 	SourceLicense
 	BugURL
 	ModularityLabel
@@ -118,6 +119,18 @@ Rare used ones:
 	ExclusiveOS
 	Prefixes/Prefix
 	%generate_buildrequires
+
+## 依赖类型标注?
+
+	provides: lib() # 包含.so
+	provides: cmd()
+	provides: file() # 以/开始
+	provides: api() resource() cap()
+
+	requires: lib()
+	requires: cmd()
+	requires: file()
+	requires: api() resource() cap()
 
 ## meta 字段
 
