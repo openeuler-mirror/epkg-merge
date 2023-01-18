@@ -401,3 +401,10 @@ changelog.md不必加载到YAML，减少解析负担。
 spec:%package 转换为 YAML:subpackage
 subpackage更贴合我们日常所说的"子包"，中英文一致，减少混淆。
 
+## subpackages 字段
+
+未来可参照nixpkgs的outputs字段:
+
+	outputs = [ "bin" "dev" "out" "man" "doc" ];
+
+按公共规则，自动构建对应的子包
