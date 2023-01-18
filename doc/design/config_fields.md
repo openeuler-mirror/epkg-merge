@@ -338,18 +338,18 @@ multi version中，某个具体version的url可以通过
 
 特殊情况source url scheme发生变化：
 
-	source.0: https://github.com/harfbuzz/harfbuzz/releases/download/2.9.1/harfbuzz-2.9.1.tar.xz
-	source.0 when @:2.3.1: http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-2.3.1.tar.bz2
+	source.0: https://github.com/harfbuzz/harfbuzz/releases/download/%%{version}/harfbuzz-%%{version}.tar.xz
+	source.0 when @:2.3.1: http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-%%{version}.tar.bz2
 
 ## patchset 字段
 
 改patch粒度为patchset粒度，具体形式如下
 
-	patches.<patchset-name>: patches
+	patchset.<patchset-name>: patches
 
 patches经常是有一个版本适用范围的，可以用when condition来限定：
 
-	patches.<patchset-name> when @v1:v2: patches
+	patchset.<patchset-name> when @v1:v2: patches
 
 ## files 字段
 
