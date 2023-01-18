@@ -299,6 +299,29 @@ reference：nixpkgs的build phases相当丰富，且一致性较好，值得借�
 	source.name2:dest:
 	source.name2:md5sum:
 
+## git 字段
+
+一个上游软件，可以同时指定tarball URL和git URL。
+前者使用source字段，一般内嵌version。
+后者使用git字段，与commit一起使用。
+
+	git.0:
+
+对应
+
+	source.0:
+
+代表同一个上游软件。
+
+git字段支持属性:
+- commit
+- branch
+- tag
+- submodules
+
+commit/branch/tag只能设置其中一个。
+其中commit可重复; branch不可重复; tag通常可重复，但没有保证。
+
 ## versions 字段：multi version 脚本化维护
 
 多版本的常见需求是
