@@ -290,15 +290,14 @@ reference：nixpkgs的build phases相当丰富，且一致性较好，值得借�
 对RPM spec，缺省进行Source0 => source.0的映射，也就是使用数字命名。
 
 这样使其它layer容易使用名字来override。
+在phase脚本内也方便引用%%{source.0}，相对而言，原spec引用方式是: %{SOURCE0}
 
-	source:
-		name1:
-			url:
-			md5sum:
-		name2:
-			url:
-			dest:
-			md5sum:
+	source.name1: url
+	source.name1:md5sum:
+
+	source.name2: url
+	source.name2:dest:
+	source.name2:md5sum:
 
 ## versions 字段：multi version 脚本化维护
 
