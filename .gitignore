@@ -11,4 +11,3 @@ __pycache__/
 .gitignore
 .VSCodeCounter
 merge_configs.egg-info/
-dist/
