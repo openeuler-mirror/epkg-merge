@@ -20,11 +20,11 @@ https://gitee.com/openeuler-customization/merge-package-configs/tree/master/test
 #### 安装分层构建工具和转换工具
 
 ```bash
-# 下载merge_configs-0.0.1-py3-none-any.whl  openEulerTransition-0.0.1-py3-none-any.whl
-https://gitee.com/openeuler-customization/merge-package-configs/blob/master/dist/merge_configs-0.0.1-py3-none-any.whl
+# 下载merge_configs-0.0.2-py3-none-any.whl  openEulerTransition-0.0.1-py3-none-any.whl
+https://gitee.com/openeuler-customization/merge-package-configs/blob/master/dist/merge_configs-0.0.2-py3-none-any.whl
 https://gitee.com/openeuler-customization/adapter-transition/blob/master/dist/openEulerTransition-0.0.1-py3-none-any.whl
 # 安装whl
-pip install merge_configs-0.0.1-py3-none-any.whl
+pip install merge_configs-0.0.2-py3-none-any.whl
 pip install openEulerTransition-0.0.1-py3-none-any.whl
 ```
 
