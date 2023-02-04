@@ -100,7 +100,7 @@ recommends:
     - python3-pip
 
 useConfigureFlags:
-    +sqlite:
+    -sqlite:
         doc: sqlite3 loadable extension support
         enable: --enable-loadable-sqlite-extensions
         disable: --disable-loadable-sqlite-extensions

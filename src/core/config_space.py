@@ -6,6 +6,7 @@ from src.core.evaluator.merge import merge_values
 from src.core.evaluator.transform import transform_key_default
 from src.core.common import format_package_json
 from src.core.evaluator.check import check_value
+from src.log import log
 
 def make_synchronized(func):
     import threading
@@ -55,24 +56,23 @@ class ConfigSpace(dict):
                 return None
             self[key] = value
             return value
-        return None
+        return self.get(f"{key}:default", None)
 
     def get_key(self, key):
-        value = self.get_key_value(key)
-        if value is not None:
-            return value
+        # value = self.get_key_value(key)
+        # if value is not None:
+        #     return value
 
         raw_key, fspath_list = get_key_fspath(key)
         fspath_set = set()
         if type(fspath_list) is list:
             fspath_set = set(fspath_list)
         fspath_set_not_loaded = fspath_set - ConfigSpace.fspath_loaded
-        if not fspath_set_not_loaded:
-            return None
-        for fspath in fspath_set_not_loaded:
-            # 文件已加载，但没有这个key
-            YamlLoader(raw_key, fspath).load()
-            ConfigSpace.fspath_loaded.add(fspath)
+        if fspath_set_not_loaded:
+            for fspath in fspath_set_not_loaded:
+                # 文件已加载，但没有这个key
+                YamlLoader(raw_key, fspath).load()
+                ConfigSpace.fspath_loaded.add(fspath)
         value = self.get_key_value(key)
         if value:
             return value

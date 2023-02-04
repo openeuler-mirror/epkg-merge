@@ -4,9 +4,9 @@ import pytest
 
 from src.core.config_space import config_space
 from src.core.loader.layer_loader import LayerLoader
-
-demo_dir = os.path.abspath(os.path.join(os.path.abspath(os.curdir), "../../../demo"))
-
+file_path = os.path.abspath(__file__)
+file_dir, _ = os.path.split(file_path)
+demo_dir = os.path.abspath(os.path.join(file_dir, "../../../tests/demo"))
 
 @pytest.fixture
 def load_layer_and_destroy():

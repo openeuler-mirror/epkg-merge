@@ -1,5 +1,10 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
+from src.log import log
+import logging
+console_handler = logging.StreamHandler()
+console_handler.setLevel(level="WARNING")
+log.addHandler(console_handler)
 
 from src.core.loader.layer_loader import LayerLoader
 from src.core.config_space import config_space
@@ -9,18 +14,10 @@ from src.core.common import format_package_json
 
 current_dir = os.path.abspath(os.curdir)
 config_file = os.path.join(current_dir, "demo/config.yaml")
-config_file = "/Users/duan/workspace/gitee/layers/config.yaml"
 LayerLoader(config_file).load()
 StartUp.startup(config_space)
-# name = config_space.get_key("pkgs.python3.subpackages.python3-unversioned-command.asWholeName")
-# print(name)
-
-# c = config_space.get_key("use.ssl.doc")
-# print(c)
-p = "langtable"
+p = "python3"
 x = config_space.get_package_format_json(p)
-# x = format_package_json(x)
-# print(x)
 import yaml
 
 
