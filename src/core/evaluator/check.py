@@ -11,7 +11,8 @@ def check_value(key, value):
     if check_func:
         check_func_result = value_check_func(key, value, check_func, check_params)
         if check_func_result:
-            log.info(check_func_result)
+            check_func_result["key"] = key
+            log.error(check_func_result)
             return False
         return True
 

@@ -52,7 +52,9 @@ def get_methods_name(py):
 
 def get_import_name(py):
     py_name, py_path = path_resolution(py)
-    scan_files = scan_dir(py_path[0])
+    scan_files = []
+    if py_path:
+        scan_files = scan_dir(py_path[0])
     for k in scan_files:
         scan_file, scan_file_path = path_resolution(k)
         constants.white_list_libs.append(scan_file[0])
@@ -85,7 +87,7 @@ def scan_dir(file_path):
 
 
 def path_resolution(py):
-    if sys.platform == 'linux':
+    if sys.platform in ['linux', 'darwin']:
         py_name = re.findall(r'(\w+)+\.', py)
         py_path = re.findall(r'^/.*/', py)
     else:

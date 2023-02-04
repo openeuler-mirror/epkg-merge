@@ -1,0 +1,7 @@
+configFilesPattern: .*\.yaml
+registerConfigSpaceForEachFile:
+  use.%%_basename:fspath: "%%_filepath"
+  use."%%_filepath":
+    name: "%%_basename"
+    :referAttrs: types.use
+    meta:referAttrs: types.use.meta

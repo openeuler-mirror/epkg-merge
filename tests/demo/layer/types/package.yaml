@@ -28,7 +28,7 @@ types.package.name:example: busybox
 types.package.name:checkFunc: is_str
 types.package.name:mergeFunc: merge_policy_first
 
-types.package.use.sqlite:checkFunc: is_bool
+
 types.package.use.sqlite:example: True/False
 
 types.package.epoch:type: int
@@ -106,3 +106,6 @@ types.package.files:mergeParams: "\n"
 types.package.configureFlags:type: str
 types.package.configureFlags:mergeFunc: merge_policy_config_concat
 types.package.configureFlags:mergeParams: " \\\n"
+
+types.package.use.sqlite:type: bool
+types.package.sqlite:checkFunc: is_bool

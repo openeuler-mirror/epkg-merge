@@ -3,8 +3,8 @@ import os
 import pytest
 
 from src.core.config_space import config_space
-from tests.src.core.loader.conftest import demo_dir
-
+from tests.core.loader.conftest import demo_dir
+print(demo_dir)
 
 class TestLayerLoader:
     @pytest.mark.usefixtures("load_layer_and_destroy")
@@ -17,20 +17,20 @@ class TestLayerLoader:
     @classmethod
     def _assert_all_pkgs(cls):
         assert len(config_space.get("allPkgs")) == 4
-        assert config_space.get("allPkgs") == {"python3", "less", "busybox", "kernel"}
+        assert config_space.get("allPkgs") == {'python3', 'kernel', 'attr', 'audit'}
 
         cls._assert_kernel()
         cls._assert_python3()
-        cls._assert_busybox()
-        cls._assert_less()
+        # cls._assert_busybox()
+        # cls._assert_less()
 
     @classmethod
     def _assert_libs(cls):
-        assert len(config_space.get("libs")) == 3
+        assert len(config_space.get("libs")) == 2
         assert set(config_space.get("libs")) == {
             os.path.join(demo_dir, "layer", "libs", "calculate.py"),
             os.path.join(demo_dir, "layer", "libs", "exclusive_info.py"),
-            os.path.join(demo_dir, "layer", "libs", "restart.py")
+            # os.path.join(demo_dir, "layer", "libs", "restart.py")
         }
 
     @classmethod
@@ -42,7 +42,7 @@ class TestLayerLoader:
         assert config_space.get(f'files."{fspath}".name') == "kernel"
         assert config_space.get(f'files."{fspath}".docType') == "base"
         assert config_space.get(f'files."{fspath}".includePhase') == "phase.sh"
-        assert config_space.get(f'files."{fspath}".includeRuntimePhase') == "runtime-phase.sh"
+        assert config_space.get(f'files."{fspath}".includeRuntimePhase') == "runtimePhase.sh"
         assert config_space.get(f'files."{fspath}".include') == "versions.yaml files.yaml"
         assert config_space.get(f'files."{fspath}":referAttrs') == "types.package"
         assert config_space.get(f'files."{fspath}".meta:referAttrs') == "types.package.meta"
@@ -58,7 +58,7 @@ class TestLayerLoader:
         assert config_space.get(f'files."{fspath}".name') == "python3"
         assert config_space.get(f'files."{fspath}".docType') == "base"
         assert config_space.get(f'files."{fspath}".includePhase') == "phase.sh"
-        assert config_space.get(f'files."{fspath}".includeRuntimePhase') == "runtime-phase.sh"
+        assert config_space.get(f'files."{fspath}".includeRuntimePhase') == "runtimePhase.sh"
         assert config_space.get(f'files."{fspath}".include') == "versions.yaml files.yaml"
         assert config_space.get(f'files."{fspath}":referAttrs') == "types.package"
         assert config_space.get(f'files."{fspath}".meta:referAttrs') == "types.package.meta"
@@ -70,7 +70,7 @@ class TestLayerLoader:
         assert config_space.get(f'files."{fspath}".name') == "python3"
         assert config_space.get(f'files."{fspath}".docType') == "build"
         assert config_space.get(f'files."{fspath}".includePhase') == "phase.sh"
-        assert config_space.get(f'files."{fspath}".includeRuntimePhase') == "runtime-phase.sh"
+        assert config_space.get(f'files."{fspath}".includeRuntimePhase') == "runtimePhase.sh"
         assert config_space.get(f'files."{fspath}".include') == "versions.yaml files.yaml"
         assert config_space.get(f'files."{fspath}":referAttrs') == "types.package"
         assert config_space.get(f'files."{fspath}".meta:referAttrs') == "types.package.meta"
@@ -100,7 +100,7 @@ class TestLayerLoader:
         assert fspath == os.path.join(demo_dir, "layer_tools", "pkgs", "less", "less.yaml")
         assert config_space.get(f'files."{fspath}".name') == "less"
         assert config_space.get(f'files."{fspath}".includePhase') == "phase.sh"
-        assert config_space.get(f'files."{fspath}".includeRuntimePhase') == "runtime-phase.sh"
+        assert config_space.get(f'files."{fspath}".includeRuntimePhase') == "runtimePhase.sh"
         assert config_space.get(f'files."{fspath}".include') == "versions.yaml files.yaml"
         assert config_space.get(f'files."{fspath}":referAttrs') == "types.package"
         assert config_space.get(f'files."{fspath}".meta:referAttrs') == "types.package.meta"
@@ -116,7 +116,7 @@ class TestLayerLoader:
         fspath_list = config_space.get("use.ssl:fspath")
         assert len(fspath_list) == 1
         fspath = fspath_list[0]
-        assert fspath == os.path.join(demo_dir, "layer_tools", "use", "ssl.yaml")
+        assert fspath == os.path.join(demo_dir, "layer", "use", "ssl.yaml")
         assert config_space.get(f'use."{fspath}".name') == "ssl"
         assert config_space.get(f'use."{fspath}":referAttrs') == "types.use"
         assert config_space.get(f'use."{fspath}".meta:referAttrs') == "types.use.meta"

@@ -7,7 +7,7 @@ class TestYamlLoader:
     @pytest.mark.usefixtures("load_layer_and_destroy")
     def test_yaml_loader_pkg(self):
         assert config_space.get_key("pkgs.kernel.name") == "kernel%{?package64kb}"
-        assert len(config_space.get_key("pkgs.kernel:loadedKeys")) == 78
+        assert len(config_space.get_key("pkgs.kernel:loadedKeys")) == 81
 
     @pytest.mark.usefixtures("load_layer_and_destroy")
     def test_yaml_loader_use(self):

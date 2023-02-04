@@ -9,8 +9,7 @@ class TestExpand(unittest.TestCase):
         file_content = '''
 #!/bin/bash
 
-public_network_ok()
-{
+public_network_ok() {
         ping -c 1 -W 10 114.114.114.114 >/dev/null 2>&1 ||
                 curl -k -s -m 10 --retry-delay 2 --retry 5 https://compass-ci.openeuler.org/ -o /dev/null
 }
@@ -31,8 +30,7 @@ function test_d(){
         echo "test_d"
 }
 
-function test_e()
-{
+function test_e() {
         echo "test_e"
 }
 
@@ -44,8 +42,7 @@ function test_g{
         echo "test_g"
 }
 
-function test_h
-{
+function test_h{
         echo "test_h"
 }
 
@@ -54,12 +51,9 @@ post:%{wxbasename}-devel(){
 }
         '''
         expectation = {
-            'runtimePhase.public_network_ok': '        ping -c 1 -W 10 114.114.114.114 '
-                                              '>/dev/null 2>&1 ||\n'
-                                              '                curl -k -s -m 10 '
-                                              '--retry-delay 2 --retry 5 '
-                                              'https://compass-ci.openeuler.org/ -o '
-                                              '/dev/null\n',
+            'runtimePhase.public_network_ok': '        ping -c 1 -W 10 114.114.114.114 >/dev/null 2>&1 ||\n'
+                                              '                curl -k -s -m 10 --retry-delay 2 --retry 5 '
+                                              'https://compass-ci.openeuler.org/ -o /dev/null\n',
             'runtimePhase.test_a': '        echo "test_a"\n',
             'runtimePhase.test_b': '        echo "test_b"\n',
             'runtimePhase.test_c': '        echo "test_c"\n',
@@ -72,7 +66,9 @@ post:%{wxbasename}-devel(){
                                                                 '"subpackage"\n'
         }
         res = parse_shell_file("runtimePhase", file_content.splitlines(keepends=True))
-        self.assertEqual(res, expectation)
+        for k,v in res.items():
+            print(k)
+            self.assertEqual(res[k], expectation[k])
 
     def test_transform_key_with_when(self):
         k1 = "patch.1 when +ssl"

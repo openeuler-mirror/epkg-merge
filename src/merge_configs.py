@@ -28,7 +28,9 @@ def main():
         for k in args["list_features"].split(","):
             list_features_info[k] = {}
     if args["debug"]:
-        log.addHandler(logging.StreamHandler())
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(level="WARNING")
+        log.addHandler(console_handler)
     if args["config_file"]:
         handle_load(args["config_file"])
         StartUp.startup(config_space)
@@ -49,7 +51,7 @@ def main():
 
     for k, v in list_features_info.items():
         print(k)
-        print(json.dump(v))
+        print(json.dumps(v))
 
 
 if __name__ == '__main__':
