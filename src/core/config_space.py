@@ -22,10 +22,9 @@ def make_synchronized(func):
 def get_key_fspath(key):
     key = key.rsplit(":", 1)[0]
     temp_key = key
-    fspath_list = None
     while True:
         raw_key = temp_key
-        fspath_list = config_space.get(f"{raw_key}:fspath")
+        fspath_list = config_space.get(f"{raw_key}:fspath", None)
         if fspath_list:
             break
         raw_key = temp_key.rsplit(".", 1)[0]
@@ -59,10 +58,6 @@ class ConfigSpace(dict):
         return self.get(f"{key}:default", None)
 
     def get_key(self, key):
-        # value = self.get_key_value(key)
-        # if value is not None:
-        #     return value
-
         raw_key, fspath_list = get_key_fspath(key)
         fspath_set = set()
         if type(fspath_list) is list:
@@ -74,13 +69,12 @@ class ConfigSpace(dict):
                 YamlLoader(raw_key, fspath).load()
                 ConfigSpace.fspath_loaded.add(fspath)
         value = self.get_key_value(key)
-        if value:
+        if value is not None:
             return value
 
-        return False
+        return ""
 
-    def add_key(self, key, value, fspath, when):
-        # key_c, value_c = transform_key_with_use_configure(key, value, fspath)
+    def add_key(self, key, value, fspath):
         key_info = transform_key_default(key, value, fspath)
         for k, v in key_info.items():
             if ":" in k:
@@ -91,7 +85,11 @@ class ConfigSpace(dict):
 
     def get_package(self, package_name):
         pre_name = f"pkgs.{package_name}"
-        # keys = self.keys()
+        package_fspath = f"{pre_name}:fspath"
+        if package_fspath not in config_space:
+            log.error(f"{package_name} not in layers, please check it")
+            return {}
+
         package_info = {}
         self.get_key(pre_name)
         loaded_keys = config_space.get_key(f"pkgs.{package_name}:loadedKeys")
