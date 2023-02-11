@@ -78,7 +78,7 @@ class _LayerConfigLoader:
                     break
 
             if not pkg_config:
-                print(f"warning: package '{pkg}' of layer '{self._layer}' lacks of main config")
+                log.error(f"warning: package '{pkg}' of layer '{self._layer}' lacks of main config")
                 continue
 
             _ElementConfigLoader(pkg, pkg_config, index_config).load()

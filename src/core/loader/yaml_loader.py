@@ -31,7 +31,7 @@ class YamlLoader:
         result = expand_yaml(configs, self._cspath)
         result = self.load_inherit(result)
         for k, v in result.items():
-            actual_keys = config_space.add_key(k, v, self._fspath, None)
+            actual_keys = config_space.add_key(k, v, self._fspath)
             if ":" in k:
                 continue
             for actual_key in actual_keys:
@@ -89,7 +89,7 @@ class YamlLoader:
                     transform_result = getattr(transform, func)(os.path.join(os.path.dirname(self._fspath), f))
                     result = expand_yaml(transform_result, self._cspath)
                     for k, v in result.items():
-                        actual_keys = config_space.add_key(k, v, self._fspath, None)
+                        actual_keys = config_space.add_key(k, v, self._fspath)
                         if ":" in k:
                             continue
                         for actual_key in actual_keys:

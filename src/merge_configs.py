@@ -27,10 +27,15 @@ def main():
     if args["list_features"]:
         for k in args["list_features"].split(","):
             list_features_info[k] = {}
+
+    console_handler = logging.StreamHandler()
+    console_format = logging.Formatter("[%(levelname)s][%(filename)s][%(lineno)s]: %(message)s")
+    console_handler.setFormatter(console_format)
+    console_handler.setLevel(level="WARNING")
     if args["debug"]:
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(level="WARNING")
-        log.addHandler(console_handler)
+        console_handler.setLevel(level="INFO")
+    log.addHandler(console_handler)
+
     if args["config_file"]:
         handle_load(args["config_file"])
         StartUp.startup(config_space)
