@@ -5,7 +5,7 @@ from functools import cmp_to_key
 from src.core.evaluator.expand import expand_macro
 from src.core.common import is_pycode, eval_python
 from src.core.evaluator.lib.merge_funcs import sort_doctype
-
+from src.log import log
 
 def cmp(v_left, v_right):
     from src.core.config_space import config_space
@@ -92,7 +92,12 @@ def merge_with_func(merge_func, merge_params, values_all):
 
     for cur_value in values_all:
         fspath = cur_value.get('fspath')
-        when_value = get_val(cur_value.get("when"), fspath)
+        try:
+            when_value = get_val(cur_value.get("when"), fspath)
+        except Exception as _:
+            log.error(f"expand {cur_value.get('when')} failed!")
+            when_value = False
+
         if not when_value or str(when_value).upper()=="FALSE":
             continue
         raw_value = cur_value.get("value", "")

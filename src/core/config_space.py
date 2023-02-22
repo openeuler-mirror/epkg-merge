@@ -37,6 +37,7 @@ def get_key_fspath(key):
 class ConfigSpace(dict):
     instance = None
     fspath_loaded = set()
+    checked_failed_keys = []
 
     @make_synchronized
     def __new__(cls, *args, **kwargs):
@@ -48,14 +49,22 @@ class ConfigSpace(dict):
         value = self.get(key)
         if value is not None:
             return value
+
         values = self.get(f"{key}:values")
-        if values is not None:
-            value = merge_values(key)
-            if not check_value(key, value):
-                return None
-            self[key] = value
-            return value
-        return self.get(f"{key}:default", None)
+        if values is None:
+            return self.get(f"{key}:default", None)
+
+        value = merge_values(key)
+        if key in ConfigSpace.checked_failed_keys:
+            return None
+
+        if not check_value(key, value):
+            ConfigSpace.checked_failed_keys.append(key)
+            return None
+
+        self[key] = value
+        return value
+
 
     def get_key(self, key):
         raw_key, fspath_list = get_key_fspath(key)
