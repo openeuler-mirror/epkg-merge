@@ -62,6 +62,7 @@ class _LayerConfigLoader:
     def _load_pkgs_index_yaml(self, pkgs_dir: str) -> None:
         index_yaml = os.path.join(pkgs_dir, str(Config.INDEX.value))
         if not os.path.isfile(index_yaml):
+            log.error(f"Pkgs index file of layer '{self._layer}' is missing")
             raise LoadException(f"Pkgs index file of layer '{self._layer}' is missing")
 
         index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
@@ -78,7 +79,7 @@ class _LayerConfigLoader:
                     break
 
             if not pkg_config:
-                log.error(f"warning: package '{pkg}' of layer '{self._layer}' lacks of main config")
+                log.error(f"layer '{self._layer}' lacks of f{pkg}.yaml")
                 continue
 
             _ElementConfigLoader(pkg, pkg_config, index_config).load()
