@@ -14,6 +14,17 @@ rpmGlobal尽量不暴露给用户或者第三方定制。避免在YAML字段中�
 	customizable YAML fields
 	=> pkgs.<pkg>.rpmGlobal 	=> spec header macro definitions
 
+reference: define vs. global
+
+	两者都可以用来进行变量定义，不过在细节上有些许差别，简单列举如下：
+
+	    - define 用来定义宏，global 用来定义变量；
+	    - 如果定义带参数的宏 (类似于函数)，必须要使用 define；
+	    - 在 %{} 内部，必须要使用 global 而非 define；
+	    - define 在使用时计算其值，而 global 则在定义时就计算其值；
+
+	https://www.cnblogs.com/michael-xiang/p/10480809.html
+
 ## compiler cflags 定制
 
 	rpmGlobal:
