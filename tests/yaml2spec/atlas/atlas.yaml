@@ -61,7 +61,7 @@ subpackage:
   corei2 rpmWhen %ifarch x86_64:
       rpmMacros:
           - "%define types base corei2 %ifarch x86_64"
-      meta.ummary: ATLAS libraries for Corei2 (Ivy/Sandy bridge) CPUs 
+      meta.summary: ATLAS libraries for Corei2 (Ivy/Sandy bridge) CPUs
       meta.description: |
           This package contains the ATLAS (Automatically Tuned Linear Algebra
           Software) libraries compiled with optimizations for the Corei2 (Ivy/Sandy bridge)
@@ -69,7 +69,7 @@ subpackage:
           The base ATLAS builds for the x86_64 architecture are made for the hammer64 CPUs.
 
   corei2-devel rpmWhen %ifarch x86_64:
-      meta.summary: ATLAS development libraries for ATLAS for Corei2 (Ivy/Sandy bridge) CPUs 
+      meta.summary: ATLAS development libraries for ATLAS for Corei2 (Ivy/Sandy bridge) CPUs
       meta.description: |
           This package contains shared and static versions of the ATLAS libraries compiled with
           optimizations for the corei2 (Ivy/Sandy bridge) CPUs.
