@@ -1,0 +1,1395 @@
+## Pre-defined const and functions
+#set $flag = 0
+#set $str_newline = '\n'
+#set $str_spaceline = ' '
+#set $str_line = ''
+#set $pkg_if_cont = 0
+#set $special_part = []
+#def arch_line($value, $pre='', $post='')
+#set $rarch, $arch, $value = $arch_split($value)
+#if $arch
+%ifarch $arch
+#end if
+${pre}${value}${post}#slurp
+#if $arch
+
+%endif#slurp
+#end if
+#end def
+###################
+###################
+## rpmMacros
+#if "rpmMacros" in $metadata
+##control whether to print %else
+#for $br in $metadata.rpmMacros
+#set $flag = 0
+#set $else_flag = 0
+#if "%if" in $br
+#set $br_comps1 = $br.split('%if')
+#set $flag = len($br_comps1) - 1
+#if "%else" in $br
+#set $br_comps = $br.split('%else')
+#while len($br_comps) > 1
+#set $last_judge = $br_comps[-1]
+#set $br_comps = $br_comps[:-1]
+#if "%if" in $last_judge
+%if$str_line.join('\n%if'.join($last_judge.split("%if")[1:]))
+%else
+#end if
+#end while
+$br_comps[0]
+#else
+%if$str_line.join('\n%if'.join($br_comps1[1:]))
+$br_comps1[0]
+#end if
+#for _ in range($flag)
+%endif
+#end for
+#else
+$br
+#end if
+#end for
+#end if
+
+## rpmMacros
+#if "macros" in $metadata
+#set $flag = 0
+##control whether to print %else
+#set $else_flag = 0
+#for $br in $metadata.macros
+#if "%if" not in $br and "%else" not in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+$br
+#set $else_flag = 0
+#end if
+#if $else_flag == 1 and "%else" not in $br
+%endif
+#set $flag = $flag - 1
+#set $else_flag = 0
+#end if
+#if "%if" in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#set $br_comps = $br.split('%if')
+%if$str_line.join('\n%if'.join($br_comps[1:]))
+$str_line.join($br_comps[0])
+#set $flag = $flag + len($br_comps) - 1
+#set $else_flag = 0
+#end if
+#if "%else" in $br
+#set $br_comps = $br.split('%else')
+#if $else_flag == 0
+%else
+#set $else_flag = 1
+#end if
+$str_line.join($br_comps[0])
+#end if
+#end for
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#end if
+
+###################
+###################
+Name:       ${metadata.name}
+Version:    ${metadata.version}
+#if "release" in $metadata
+#if "%if" in $metadata.release and "%else" in $metadata.release
+#set $release_comps = $metadata.release.split()
+$str_spaceline.join($release_comps[1:3])
+Release:    $release_comps[0]
+%else
+Release:    $release_comps[3]
+%endif
+#else
+Release:    ${metadata.release}
+#end if
+#end if
+Summary:    ${metadata.summary}
+#if "epoch" in $metadata
+#if "%if" in $metadata.epoch
+#set $epoch_comps = $metadata.epoch.split()
+$str_spaceline.join($epoch_comps[1:])
+Epoch: $epoch_comps[0]
+%endif
+#else
+Epoch:      ${metadata.epoch}
+#end if
+#set $auto_depend = "%{epoch}:%{version}-%{release}"
+#else
+#set $auto_depend = "%{version}-%{release}"
+#end if
+#if "group" in $metadata
+#if "%if" in $metadata.group
+#set $group_comps = $metadata.group.split()
+$str_spaceline.join($group_comps[1:])
+Group: $group_comps[0]
+%endif
+#else
+Group:      ${metadata.group}
+#end if
+#end if
+License:    ${metadata.license}
+#if "exclusiveArch" in $metadata
+#for $ExclusiveArch in $metadata.exclusiveArch
+ExclusiveArch:  $ExclusiveArch
+#end for
+#end if
+#if "buildArch" in $metadata
+BuildArch:  ${metadata.buildArch}
+#end if
+#if "prefix" in $metadata
+Prefix:     ${metadata.prefix}
+#end if
+#if "homepage" in $metadata
+URL:        ${metadata.homepage}
+#end if
+## source
+#if "source" in $metadata
+#set $idx = 0
+#set $if_flag = 0
+#set $else_flag = 0
+#for $source in $metadata.source
+#if "%else" in $source
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $sc_comps = $source.split('%else')
+#set $idx = $idx - 1
+Source${idx}:    $sc_comps[0]
+#else
+#if "%if" in $source and "else" not in $source
+#if $if_flag == 1
+%endif
+#end if
+#set $sc_comps = $source.split('%if')
+%if$str_line.join('\n%if'.join($sc_comps[1:]))
+#set $if_flag = 1
+Source${idx}:    $sc_comps[0]
+#else
+#if "%if" not in $source and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+Source${idx}:    $source
+#end if
+#end if
+#set $idx = $idx + 1
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+#if "RpmLintIgnore" in $metadata
+Source101:  ${metadata.name}-rpmlintrc
+#end if
+
+#if "IncludeSource" in $metadata
+#for $isc in $metadata.IncludeSource
+%include     $isc
+#end for
+#end if
+
+#if "Buildroot" in $metadata
+#for $prd in $metadata.Buildroot
+Buildroot:   $prd
+#end for
+#end if
+
+#if "buildRoot" in $metadata
+#for $prd in $metadata.buildRoot
+BuildRoot:   $prd
+#end for
+#end if
+
+#if "recommends" in $metadata
+#for $recommend in $metadata.recommends
+#if "%if" in $recommend
+#if "%else" in $recommend
+#set $re_comps = $recommend.split('%else')
+%else
+#else
+#set $re_comps = $recommend.split('%if')
+%if$str_line.join('\n%if'.join($re_comps[1:]))
+#end if
+Recommends:    $re_comps[0]
+%endif
+#else
+Recommends:    $recommend
+#end if
+#end for
+#end if
+
+#if "excludeArch" in $metadata
+#for $prd in $metadata.excludeArch
+ExcludeArch:   $prd
+#end for
+#end if
+
+#if "Buildrequires" in $metadata
+#for $prd in $metadata.Buildrequires
+Buildrequires:   $prd
+#end for
+#end if
+
+#if "suggests" in $metadata
+#for $prd in $metadata.suggests
+Suggests:   $prd
+#end for
+#end if
+
+## patchset
+#if "patchset" in $metadata
+#set $idx = 0
+#set $if_flag = 0
+#set $else_flag = 0
+#for $patch in $metadata.patchset
+#if "%else" in $patch
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $pt_comps = $patch.split('%else')
+Patch${idx}:    $pt_comps[0]
+#else
+#if "%if" in $patch and "else" not in $patch
+#set $pt_comps = $patch.split('%if')
+%if$str_line.join('\n%if'.join($pt_comps[1:]))
+#set $if_flag = 1
+Patch${idx}:    $pt_comps[0]
+#else
+#if "%if" not in $patch and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+Patch${idx}:    $patch
+#end if
+#end if
+#set $idx = $idx + 1
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+#if 'NoAutoReq' in $metadata
+AutoReq:    0
+#end if
+#if 'NoAutoReqProv' in $metadata
+AutoReqProv:    0
+#end if
+
+## requires
+#if $metadata.builder == 'perl'
+Requires:   perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo \$version))
+#end if
+#if "requires" in $metadata
+#for $req in $metadata.requires
+$arch_line($req, 'Requires:   ')
+#end for ## each req
+#end if
+#if "requiresPre" in $metadata
+#for $req in $metadata.requiresPre
+Requires(pre): $req
+#end for
+#end if
+#if "requiresPreUn" in $metadata
+#for $req in $metadata.requiresPreUn
+Requires(preun): $req
+#end for
+#end if
+#if "requiresPost" in $metadata
+#for $req in $metadata.requiresPost
+Requires(post): $req
+#end for
+#end if
+#if "requiresPostUn" in $metadata
+#for $req in $metadata.requiresPostUn
+Requires(postun): $req
+#end for
+#end if
+
+## buildRequires
+#if "buildRequires" in $metadata
+#set $flag = 0
+##control whether to print %else
+#set $else_flag = 0
+#for $br in $metadata.buildRequires
+#if "%if" not in $br and "%else" not in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+BuildRequires: $br
+#set $else_flag = 0
+#end if
+#if $else_flag == 1 and "%else" not in $br
+%endif
+#set $flag = $flag - 1
+#set $else_flag = 0
+#end if
+#if "%if" in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#set $br_comps = $br.split('%if')
+%if$str_line.join('\n%if'.join($br_comps[1:]))
+BuildRequires: $str_line.join($br_comps[0])
+#set $flag = $flag + len($br_comps) - 1
+#set $else_flag = 0
+#end if
+#if "%else" in $br
+#set $br_comps = $br.split('%else')
+#if $else_flag == 0
+%else
+#set $else_flag = 1
+#end if
+BuildRequires: $str_line.join($br_comps[0])
+#end if
+#end for
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#end if
+
+## buildConflicts
+#if "buildConflicts" in $metadata
+#for $bcfl in $metadata.buildConflicts
+BuildConflicts: $bcfl
+#end for
+#end if
+#if "RunFdupes" in $metadata
+BuildRequires:  fdupes
+#end if
+#if $metadata.builder == 'cmake'
+BuildRequires:  cmake
+#end if
+#if 'NoAutoProv' in $metadata
+AutoProv:   0
+#end if
+## Provides
+#if "provides" in $metadata
+#for $prd in $metadata.provides
+Provides:   $prd
+#end for
+#end if
+## Conflicts
+#if "conflicts" in $metadata
+#for $cfl in $metadata.conflicts
+Conflicts:   $cfl
+#end for
+#end if
+## Obsoletes
+#if "obsoletes" in $metadata
+#for $obs in $metadata.obsoletes
+Obsoletes:   $obs
+#end for
+#end if
+%description
+${metadata.description}
+
+
+#if "subpackage" in $metadata
+#for $sp in $metadata.subpackage
+#if "%if" in $sp.name
+#set $cond_sp = 1
+#else
+#set $cond_sp = 0
+#end if
+#if $cond_sp == 1
+%if$str_line.join('\n%if'.join($sp.name.split('%if')[1:]))
+#set $sp_name_if_count = $sp.name.split('%if')
+#set $pkg_if_cont = len($sp_name_if_count) - 1
+#end if
+#if "asWholeName" in $sp
+%package -n $str_line.join($sp.name.split('%if')[0])
+#set $pkg_name = "-n " + $str_line.join($sp.name.split('%if')[0])
+#else
+%package $str_line.join($sp.name.split('%if')[0])
+#set $pkg_name = $str_line.join($sp.name.split('%if')[0])
+#end if
+#if "summary" in $sp
+Summary:    $sp.summary
+#end if
+#if "buildArch" in $sp
+#if "%if" in $sp.buildArch
+#if "else" in $sp.buildArch
+%else
+#set $group_comps = $sp.buildArch.split('%else')
+BuildArch:  $group_comps[0]
+#else
+#set $group_comps = $sp.buildArch.split('%if')
+%if$str_line.join($group_comps[1:])
+BuildArch:  $group_comps[0]
+#end if
+%endif
+#else
+BuildArch:  $sp.buildArch
+#end if
+#end if
+
+## rpmMacros
+#if "macros" in $sp
+#set $flag = 0
+##control whether to print %else
+#set $else_flag = 0
+#for $br in $sp.macros
+#if "%if" not in $br and "%else" not in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+$br
+#set $else_flag = 0
+#end if
+#if $else_flag == 1 and "%else" not in $br
+%endif
+#set $flag = $flag - 1
+#set $else_flag = 0
+#end if
+#if "%if" in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#set $br_comps = $br.split('%if')
+%if$str_line.join('\n%if'.join($br_comps[1:]))
+$str_line.join($br_comps[0])
+#set $flag = $flag + len($br_comps) - 1
+#set $else_flag = 0
+#end if
+#if "%else" in $br
+#set $br_comps = $br.split('%else')
+#if $else_flag == 0
+%else
+#set $else_flag = 1
+#end if
+$str_line.join($br_comps[0])
+#end if
+#end for
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#end if
+
+#if "license" in $sp
+License:    $sp.license
+#end if
+#if "group" in $sp
+#if "%if" in $sp.group
+#set $group_comps = $sp.group.split('if')
+%if$str_line.join($group_comps[1:])
+Group: $group_comps[0]
+%endif
+#else
+Group:      ${sp.group}
+#end if
+#end if
+#if "version" in $sp
+Version:    $sp.version
+#end if
+#if "release" in $sp
+Release:    $sp.release
+#end if
+#if "epoch" in $sp
+Epoch:      $sp.epoch
+#end if
+#if "homepage" in $sp
+URL:        $sp.homepage
+#end if
+#if "Buildarch" in $sp
+#for $br in $sp.Buildarch
+Buildarch:  $br
+#end for
+#end if
+## patchset
+#if "patchset" in $sp and "patchset" not in $metadata
+#set $idx = 0
+#for $patch in $sp.patchset
+Patch${idx}:    $patch
+#set $idx = $idx + 1
+#end for
+#end if
+#if "Prefix" in $sp
+Prefix:     $sp.Prefix
+#end if
+#if 'NoAutoReq' in $sp
+AutoReq:    0
+#end if
+#if 'NoAutoProv' in $sp
+AutoProv:   0
+#end if
+#if 'NoAutoReqProv' in $sp
+AutoReqProv:    0
+#end if
+#if "OrderWithRequires" in $sp
+#for $owr in $sp.OrderWithRequires
+OrderWithRequires:  $owr
+#end for
+#end if
+#if "requires" in $sp
+#set $if_flag = 0
+#set $else_flag = 0
+#for $br in $sp.requires
+#if "%else" in $br
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $br_comps = $br.split('%else')
+Requires:    $br_comps[0]
+#else
+#if "%if" in $br and "else" not in $br
+#set $br_comps = $br.split('%if')
+#if $if_flag == 1
+%endif
+#end if
+%if$str_line.join('\n%if'.join($br_comps[1:]))
+#set $if_flag = 1
+Requires:    $br_comps[0]
+#else
+#if "%if" not in $br and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+#if "%if" not in $br and $else_flag == 1
+#set $else_flag = 0
+%endif
+#end if
+Requires:    $br
+#end if
+#end if
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+
+#if "recommends" in $sp
+#for $prd in $sp.recommends
+Recommends:   $prd
+#end for
+#end if
+
+#######################
+## Pre for SubPackages
+#if "pre" in $sp
+%pre $pkg_name
+$sp.pre
+#end if
+#######################
+## Preun for SubPackages
+#if "preun" in $sp
+%preun $pkg_name
+$sp.preun
+#end if
+#######################
+## pretrans for SubPackages
+#if "pretrans" in $sp
+%pretrans $pkg_name
+$sp.pretrans
+#end if
+
+#######################
+## Posttrans for SubPackages
+#if "posttrans" in $sp
+%posttrans $pkg_name
+$sp.posttrans
+#end if
+
+#if "suggests" in $sp
+#for $sug in $sp.suggests
+#if "%if" in $sug
+#if "%else" in $sug
+#set $sug_comps = $sug.split("%else")
+%else
+Suggests:  $sug_comps[0]
+#else
+#set $sug_comps = $sug.split("%if")
+%if$str_line.join($sug_comps[1:])
+Suggests:  $sug_comps[0]
+#end if
+%endif
+#else
+Suggests:  $sug
+#end if
+#end for
+#end if
+
+#if "requiresPre" in $sp
+#set $if_flag = 0
+#set $else_flag = 0
+#for $req in $sp.requiresPre
+#if "%else" in $req
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $req_comps = $req.split('%else')
+Requires(pre):    $req_comps[0]
+#else
+#if "%if" in $req and "else" not in $req
+#set $req_comps = $req.split('%if')
+#if $if_flag == 1
+%endif
+#end if
+%if$str_line.join('\n%if'.join($req_comps[1:]))
+#set $if_flag = 1
+Requires(pre):    $req_comps[0]
+#else
+#if "%if" not in $req and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+#if "%if" not in $br and $else_flag == 1
+#set $else_flag = 0
+%endif
+#end if
+Requires(pre):    $req
+#end if
+#end if
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+#if "requiresPreUn" in $sp
+#set $if_flag = 0
+#set $else_flag = 0
+#for $req in $sp.requiresPreUn
+#if "%else" in $req
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $req_comps = $req.split('%else')
+Requires(preun):    $req_comps[0]
+#else
+#if "%if" in $req and "else" not in $req
+#set $req_comps = $req.split('%if')
+#if $if_flag == 1
+%endif
+#end if
+%if$str_line.join('\n%if'.join($req_comps[1:]))
+#set $if_flag = 1
+Requires(preun):    $req_comps[0]
+#else
+#if "%if" not in $req and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+#if "%if" not in $br and $else_flag == 1
+#set $else_flag = 0
+%endif
+#end if
+Requires(preun):    $req
+#end if
+#end if
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+#if "requiresPreTrans" in $sp
+#set $if_flag = 0
+#set $else_flag = 0
+#for $req in $sp.requiresPreTrans
+#if "%else" in $req
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $req_comps = $req.split('%else')
+Requires(pretrans):    $req_comps[0]
+#else
+#if "%if" in $req and "else" not in $req
+#set $req_comps = $req.split('%if')
+#if $if_flag == 1
+%endif
+#end if
+%if$str_line.join('\n%if'.join($req_comps[1:]))
+#set $if_flag = 1
+Requires(pretrans):    $req_comps[0]
+#else
+#if "%if" not in $req and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+#if "%if" not in $br and $else_flag == 1
+#set $else_flag = 0
+%endif
+#end if
+Requires(pretrans):    $req
+#end if
+#end if
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+#if "requiresPost" in $sp
+#set $if_flag = 0
+#set $else_flag = 0
+#for $req in $sp.requiresPost
+#if "%else" in $req
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $req_comps = $req.split('%else')
+Requires(post):    $req_comps[0]
+#else
+#if "%if" in $req and "else" not in $req
+#set $req_comps = $req.split('%if')
+#if $if_flag == 1
+%endif
+#end if
+%if$str_line.join('\n%if'.join($req_comps[1:]))
+#set $if_flag = 1
+Requires(post):    $req_comps[0]
+#else
+#if "%if" not in $req and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+#if "%if" not in $br and $else_flag == 1
+#set $else_flag = 0
+%endif
+#end if
+Requires(post):    $req
+#end if
+#end if
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+#if "requiresPostUn" in $sp
+#set $if_flag = 0
+#set $else_flag = 0
+#for $req in $sp.requiresPostUn
+#if "%else" in $req
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $req_comps = $req.split('%else')
+Requires(postun):    $req_comps[0]
+#else
+#if "%if" in $req and "else" not in $req
+#set $req_comps = $req.split('%if')
+#if $if_flag == 1
+%endif
+#end if
+%if$str_line.join('\n%if'.join($req_comps[1:]))
+#set $if_flag = 1
+Requires(postun):    $req_comps[0]
+#else
+#if "%if" not in $req and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+#if "%if" not in $br and $else_flag == 1
+#set $else_flag = 0
+%endif
+#end if
+Requires(postun):    $req
+#end if
+#end if
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+#if "requiresPostTrans" in $sp
+#set $if_flag = 0
+#set $else_flag = 0
+#for $req in $sp.requiresPostTrans
+#if "%else" in $req
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $req_comps = $req.split('%else')
+Requires(posttrans):    $req_comps[0]
+#else
+#if "%if" in $req and "else" not in $req
+#set $req_comps = $req.split('%if')
+#if $if_flag == 1
+%endif
+#end if
+%if$str_line.join('\n%if'.join($req_comps[1:]))
+#set $if_flag = 1
+Requires(posttrans):    $req_comps[0]
+#else
+#if "%if" not in $req and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+#if "%if" not in $br and $else_flag == 1
+#set $else_flag = 0
+%endif
+#end if
+Requires(posttrans):    $req
+#end if
+#end if
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+## Provides
+#if "provides" in $sp
+#set $flag = 0
+##control whether to print %else
+#set $else_flag = 0
+#for $br in $sp.provides
+#if "%if" not in $br and "%else" not in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+Provides: $br
+#set $else_flag = 0
+#end if
+#if $else_flag == 1 and "%else" not in $br
+%endif
+#set $flag = $flag - 1
+#set $else_flag = 0
+#end if
+#if "%if" in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#set $br_comps = $br.split('%if')
+%if$str_line.join('\n%if'.join($br_comps[1:]))
+#if "else" in $br and $else_flag == 0 and $flag == 0
+Provides: $br_comps[0].replace("%else", "")
+#else
+Provides: $str_line.join($br_comps[0])
+#end if
+#set $flag = $flag + len($br_comps) - 1
+#set $else_flag = 0
+#end if
+#if "%else" in $br
+#set $br_comps = $br.split('%else')
+#if $else_flag == 0
+%else
+#set $else_flag = 1
+#end if
+Provides: $str_line.join($br_comps[0])
+#end if
+#end for
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#end if
+
+## Conflicts
+#if "conflicts" in $sp
+#for $cfl in $sp.conflicts
+Conflicts:  $cfl
+#end for
+#end if
+## Obsoletes
+#if "obsoletes" in $sp
+#set $if_flag = 0
+#set $else_flag = 0
+#for $obs in $sp.obsoletes
+#if "%else" in $obs
+#if $else_flag == 0
+#set $else_flag = 1
+#set $if_flag = 0
+%else
+#end if
+#set $obs_comps = $obs.split('%else')
+Obsoletes:    $obs_comps[0]
+#else
+#if "%if" in $obs and "else" not in $obs
+#set $obs_comps = $obs.split('%if')
+#if $if_flag == 1
+%endif
+#end if
+%if$str_line.join('\n%if'.join($obs_comps[1:]))
+#set $if_flag = 1
+Obsoletes:    $obs_comps[0]
+#else
+#if "%if" not in $obs and $if_flag == 1
+#set $if_flag = 0
+#set $else_flag = 0
+%endif
+#end if
+Obsoletes:    $obs
+#end if
+#end if
+#end for
+#if $if_flag == 0 and $else_flag == 1
+#set $if_flag = 1
+#set $else_flag = 0
+#end if
+#if $if_flag == 1 and $else_flag == 0
+%endif
+#set $if_flag = 0
+#set $else_flag = 0
+#end if
+#end if
+## BR
+#if "buildRequires" in $sp
+#set $flag = 0
+##control whether to print %else
+#set $else_flag = 0
+#for $br in $sp.buildRequires
+#if "%if" not in $br and "%else" not in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+BuildRequires: $br
+#set $else_flag = 0
+#end if
+#if $else_flag == 1 and "%else" not in $br
+%endif
+#set $flag = $flag - 1
+#set $else_flag = 0
+#end if
+#if "%if" in $br
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#set $br_comps = $br.split('%if')
+%if$str_line.join('\n%if'.join($br_comps[1:]))
+#if "else" in $br and $else_flag == 0 and $flag == 0
+BuildRequires: $br_comps[0].replace("%else", "")
+#else
+BuildRequires: $str_line.join($br_comps[0])
+#end if
+#set $flag = $flag + len($br_comps) - 1
+#set $else_flag = 0
+#end if
+#if "%else" in $br
+#set $br_comps = $br.split('%else')
+#if $else_flag == 0
+%else
+#set $else_flag = 1
+#end if
+BuildRequires: $str_line.join($br_comps[0])
+#end if
+#end for
+#while $flag > 0
+%endif
+#set $flag = $flag - 1
+#end while
+#end if
+## PkgConfigBR
+#if "PkgConfigBR" in $sp
+#for $br in $sp.PkgConfigBR
+#set $br_comps = $br.split()
+#if $len($br_comps) > 1
+$arch_line($br_comps[0], "BuildRequires:  pkgconfig(", ")%s" % $br[$len($br_comps[0]):])
+#else
+$arch_line($br, "BuildRequires:  pkgconfig(", ")")
+#end if
+#end for ## each br
+#end if
+## BuildConflicts
+#if "buildConflicts" in $sp
+#for $bcfl in $sp.buildConflicts
+BuildConflicts: $bcfl
+#end for
+#end if
+
+
+#if "asWholeName" in $sp
+%description -n $str_line.join($sp.name.split('%if')[0])
+#else
+%description $str_line.join($sp.name.split('%if')[0])
+#end if
+#if "description" in $sp
+$sp.description
+#end if
+#if $cond_sp == 1
+#while $pkg_if_cont > 0
+%endif
+#set $pkg_if_cont = $pkg_if_cont - 1
+#end while
+#end if
+#end for
+#end if
+
+#if "SpecialKey" in $metadata
+$metadata.SpecialKey
+#end if
+
+###################
+############################ prep scripts
+#if "prep" in $metadata
+%prep
+$metadata.prep
+#end if
+
+############################ build scripts
+#if "build" in $metadata
+%build
+#if "compileExport" in $metadata
+#for $export_cmd in $metadata.compileExport
+$export_cmd
+#end for
+#end if
+$metadata.build
+#end if
+
+############################ installation scripts
+#if "install" in $metadata
+%install
+$metadata.install
+#end if
+
+############################ optional check scripts
+#if "check" in $metadata
+#set $check_if_count = 0
+#if "check" in $keywords_if_config
+#set $check_if_list = $keywords_if_config.check.split('%if')
+#set $check_if_count = len($check_if_list) - 1
+$keywords_if_config.check
+#end if
+#if "{check}" in $metadata.check
+#set $check_comps = $metadata.check.split("\n")
+#set $check_comps[0] = $check_comps[0].replace("{check}", "")
+$check_comps[0]
+%check
+$str_newline.join($check_comps[1:])
+#else
+%check
+$metadata.check
+#end if
+#if "check" in $keywords_if_config
+#for _ in range($check_if_count)
+%endif
+#end for
+#end if
+#end if
+
+############################ Pre
+#if "pre" in $metadata
+#set $pre_if_count = 0
+#if "pre" in $keywords_if_config
+#set $pre_if_list = $keywords_if_config.pre.split('%if')
+#set $pre_if_count = len($pre_if_list) - 1
+$keywords_if_config.pre
+#end if
+%pre
+$metadata.pre
+#if "pre" in $keywords_if_config
+#for _ in range($pre_if_count)
+%endif
+#end for
+#end if
+#end if
+############################ Pretrans
+#if "pretrans" in $metadata
+#set $pretrans_if_count = 0
+#if "pretrans" in $keywords_if_config
+#set $pretrans_if_list = $keywords_if_config.pretrans.split('%if')
+#set $pretrans_if_count = len($pretrans_if_list) - 1
+$keywords_if_config.pretrans
+#end if
+%pretrans
+$metadata.pretrans
+#if "pretrans" in $keywords_if_config
+#for _ in range($pretrans_if_count)
+%endif
+#end for
+#end if
+#end if
+############################ Preun
+#if "preun" in $metadata
+#set $preun_if_count = 0
+#if "preun" in $keywords_if_config
+#set $preun_if_list = $keywords_if_config.preun.split('%if')
+#set $preun_if_count = len($preun_if_list) - 1
+$keywords_if_config.preun
+#end if
+%preun
+$metadata.preun
+#if "preun" in $keywords_if_config
+#for _ in range($preun_if_count)
+%endif
+#end for
+#end if
+#end if
+############################ Post
+#if "post" in $metadata
+#set $post_if_count = 0
+#if "post" in $keywords_if_config
+#set $post_if_list = $keywords_if_config.post.split('%if')
+#set $post_if_count = len($post_if_list) - 1
+$keywords_if_config.post
+#end if
+%post
+$metadata.post
+#if "post" in $keywords_if_config
+#for _ in range($post_if_count)
+%endif
+#end for
+#end if
+#end if
+############################ Posttrans
+#if "posttrans" in $metadata
+#set $posttrans_if_count = 0
+#if "posttrans" in $keywords_if_config
+#set $posttrans_if_list = $keywords_if_config.posttrans.split('%if')
+#set $posttrans_if_count = len($posttrans_if_list) - 1
+$keywords_if_config.posttrans
+#end if
+%posttrans
+$metadata.posttrans
+#if "posttrans" in $keywords_if_config
+#for _ in range($posttrans_if_count)
+%endif
+#end for
+#end if
+#end if
+
+############################ Postun
+#if "postun" in $metadata
+#set $postun_if_count = 0
+#if "postun" in $keywords_if_config
+#set $postun_if_list = $keywords_if_config.postun.split('%if')
+#set $postun_if_count = len($postun_if_list) - 1
+$keywords_if_config.postun
+#end if
+%postun
+$metadata.postun
+#if "postun" in $keywords_if_config
+#for _ in range($postun_if_count)
+%endif
+#end for
+#end if
+#end if
+
+
+########################################
+#if "subpackage" in $metadata
+#for $sp in $metadata.subpackage
+#if "%if" in $sp.name
+#set $cond_sp = 1
+#else
+#set $cond_sp = 0
+#end if
+#if "asWholeName" in $sp
+#set $pkg_name = "-n " + $str_line.join($sp.name.split('%if')[0])
+#else
+#set $pkg_name = $str_line.join($sp.name.split('%if')[0])
+#end if
+
+#######################
+## Post for SubPackages
+#if "post" in $sp
+#if "{post}" in $sp.post
+#if $cond_sp == 1
+%if$str_line.join('\n'.join($sp.name.split('%if')[1:]))
+#end if
+#set $post_comps = $sp.post.split("\n")
+#set $post_comps[0] = $post_comps[0].replace("{post}", "")
+$post_comps[0]
+%post $pkg_name
+$str_newline.join($post_comps[1:])
+#if $cond_sp == 1
+%endif
+#end if
+#else
+#if $cond_sp == 1
+%if$str_line.join('\n'.join($sp.name.split('%if')[1:]))
+#end if
+%post $pkg_name
+$sp.post
+#if $cond_sp == 1
+%endif
+#end if
+#end if
+#end if
+#######################
+## Postun for SubPackages
+#if "postun" in $sp
+#if $cond_sp == 1
+%if$str_line.join('\n'.join($sp.name.split('%if')[1:]))
+#end if
+%postun $pkg_name
+$sp.postun
+#if $cond_sp == 1
+%endif
+#end if
+#end if
+######################
+#end for
+#end if
+############################ clean scripts
+#if "clean" in $metadata
+#set $clean_if_count = 0
+#if "clean" in $keywords_if_config
+#set $clean_if_list = $keywords_if_config.clean.split('%if')
+#set $clean_if_count = len($clean_if_list) - 1
+$keywords_if_config.clean
+#end if
+%clean
+$metadata.clean
+#if "clean" in $keywords_if_config
+#for _ in range($clean_if_count)
+%endif
+#end for
+#end if
+#end if
+######################
+## files for main
+#if 'filesInput' in $metadata
+#set $files_str = ""
+#set files_comp = $metadata.filesInput.split()
+#for $file in $files_comp
+#set $files_str = $files_str + " -f " + $file
+#end for
+%files $files_str
+#else
+#if "files" in $metadata:
+%files
+#end if
+#end if
+#if "files" in $metadata:
+$str_line.join($metadata.files)
+#end if
+## files for subpkgs
+#if "subpackage" in $metadata
+#for $sp in $metadata.subpackage
+#if "%if" in $sp.name
+#set $cond_sp = 1
+#else
+#set $cond_sp = 0
+#end if
+#if "asWholeName" in $sp
+#set $pkg_name = "-n " + $str_line.join($sp.name.split('%if')[0])
+#else
+#set $pkg_name = $str_line.join($sp.name.split('%if')[0])
+#end if
+#if 'filesInput' in $sp
+#if $cond_sp == 1
+%if$str_line.join('\n'.join($sp.name.split('%if')[1:]))
+#end if
+#set $files_str = ""
+#set files_comp = $sp.filesInput.split()
+#for $file in $files_comp
+#set $files_str = $files_str + " -f " + $file
+#end for
+%files $pkg_name $files_str
+#else
+#if $cond_sp == 1
+%if$str_line.join('\n'.join($sp.name.split('%if')[1:]))
+#end if
+#if "files" in $sp:
+#if "filesJudgement" in $sp
+#set $cond_if = 0
+#for judgement in $sp.filesJudgement
+$judgement
+#set $cond_if = $cond_if + 1
+#end for
+#end if
+%files $pkg_name
+#end if
+#end if
+#if "files" in $sp:
+$str_line.join($sp.files)
+#if "filesJudgement" in $sp
+#for _ in range($cond_if)
+%endif
+#end for
+#set $cond_if = 0
+#end if
+#end if
+#if $cond_sp == 1
+%endif
+#end if
+#end for
+#end if
