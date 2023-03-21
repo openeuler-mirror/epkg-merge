@@ -22,10 +22,10 @@ class SpecWriter:
         def _no_number(self, node):
             return str(self.construct_scalar(node))
 
-        yaml.add_constructor('tag:yaml.org,2002:int', _no_number())
-        yaml.add_constructor('tag:yaml.org,2002:float', _no_number())
+        yaml.add_constructor('tag:yaml.org,2002:int', _no_number)
+        yaml.add_constructor('tag:yaml.org,2002:float', _no_number)
         try:
-            stream = os.open(self.file_path, 'r')
+            stream = open(self.file_path, 'r')
             self.metadata.update(yaml.load(stream, Loader=yaml.FullLoader))
         except IOError:
             log.error('Cannot read file: %s' % self.file_path)
@@ -48,7 +48,7 @@ class SpecWriter:
         """
         if "subpackage" in self.metadata and isinstance(self.metadata["subpackage"], dict):
             subpackage_list = []
-            for sp_name, sp in self.metadata["subpackage"].items:
+            for sp_name, sp in self.metadata["subpackage"].items():
                 if isinstance(sp, dict):
                     sp["name"] = sp_name
                     if "asWholeName" not in sp:
@@ -90,14 +90,14 @@ class SpecWriter:
                         del temp_some_key[index1]
                         special_tmp_lines.append(temp_line)
                 self.metadata[some_key] = temp_some_key
-                final_paragra_key = os.linesep.join(special_tmp_lines)
-                for requires_key, requires_new_key in REQUIRES_REPLACE.items():
-                    final_paragra_key = final_paragra_key.replace(requires_key, requires_new_key)
-                final_paragra_key += os.linesep
-                if "SpecialKey" in self.metadata:
-                    self.metadata["SpecialKey"] += final_paragra_key
-                else:
-                    self.metadata["SpecialKey"] = final_paragra_key
+        final_paragra_key = os.linesep.join(special_tmp_lines)
+        for requires_key, requires_new_key in REQUIRES_REPLACE.items():
+            final_paragra_key = final_paragra_key.replace(requires_key, requires_new_key)
+        final_paragra_key += os.linesep
+        if "SpecialKey" in self.metadata:
+            self.metadata["SpecialKey"] += final_paragra_key
+        else:
+            self.metadata["SpecialKey"] = final_paragra_key
 
     def trans_compile_args(self):
         """
@@ -168,9 +168,9 @@ class SpecWriter:
                     self.metadata['PatchOpts'].append(' '.join(patch[1:]))
 
     def change_source_to_list(self):
-        if 'source' in self.metadata and type(self.metadata['source'][0]) is dict:
+        if 'source' in self.metadata and type(self.metadata['source']) is dict:
             source_list = []
-            for item_key, item in self.metadata['source'][0].items():
+            for item_key, item in self.metadata['source'].items():
                 source_list.append(item)
             self.metadata['source'] = source_list
 
@@ -255,17 +255,17 @@ class SpecWriter:
                 the_value = self.metadata[some_key]
                 del target_metadata[some_key]
                 real_key = some_key.replace("meta.", "")
-                self.metadata[real_key] = the_value
+                target_metadata[real_key] = the_value
             if some_key == "subpackage":
                 for index0, sp in enumerate(self.metadata["subpackage"]):
                     if isinstance(sp, dict):
                         target_sp = sp.copy()
                         for sp_key in sp:
                             if sp_key.startswith("meta."):
-                                this_value = self.metadata[some_key]
+                                this_value = sp[some_key]
                                 del target_sp[sp_key]
                                 real_sp_key = sp_key.replace("meta.", "")
-                                self.metadata[real_sp_key] = this_value
+                                target_sp[real_sp_key] = this_value
                             if sp_key.startswith("files") and "%if" in sp_key and "filesJudgement" not in sp:
                                 judge_list = sp_key.split("%if")[1:]
                                 this_value = sp[sp_key]
