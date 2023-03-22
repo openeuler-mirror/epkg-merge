@@ -67,10 +67,10 @@ types.package.includePhase:mergeFunc: merge_policy_concat
 types.package.includePhase:mergeParams: "\n"
 
 types.package.source:type: str
-types.package.source:mergeFunc: merge_policy_first
+types.package.source:mergeFunc: merge_policy_concat
 
 types.package.patchset:type: str
-types.package.patchset:mergeFunc: merge_policy_first
+types.package.patchset:mergeFunc: merge_policy_concat
 
 types.package.buildRoot:type: list
 types.package.buildRoot:checkFunc: is_list
@@ -108,4 +108,4 @@ types.package.configureFlags:mergeFunc: merge_policy_config_concat
 types.package.configureFlags:mergeParams: " \\\n"
 
 types.package.use.sqlite:type: bool
-types.package.sqlite:checkFunc: is_bool
+types.package.use.sqlite:checkFunc: is_bool
