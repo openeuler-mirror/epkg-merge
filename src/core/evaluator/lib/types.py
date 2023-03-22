@@ -47,7 +47,6 @@ def get_func(key, func_name, params_name):
         return merge_func, config_space.get(f"{key}:{params_name}", "")
 
     keys = gen_keys(key)
-    print(keys)
     for key_item in keys:
         merge_func = config_space.get_key(f"{key_item}:{func_name}")
         if merge_func:
