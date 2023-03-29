@@ -87,7 +87,7 @@ class SpecWriter:
                         if_count = len(re.findall("%if", some_line))
                         for _ in range(if_count):
                             temp_line += "%endif" + os.linesep
-                        del temp_some_key[index1]
+                        temp_some_key.reomve(some_line)
                         special_tmp_lines.append(temp_line)
                 self.metadata[some_key] = temp_some_key
         final_paragra_key = os.linesep.join(special_tmp_lines)
