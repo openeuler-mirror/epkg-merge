@@ -188,35 +188,6 @@ class SpecWriter:
                 self.metadata[necessary_key] = ""
                 log.error("no such necessary key:" + necessary_key)
 
-    def combine_subpackage_if(self):
-        def combine_if_lines(_temp_list):
-            """
-            合并判断语句
-            :param _temp_list: 输入的字符串数组
-            :return:
-            """
-            temp_if_key_lines = []
-            temp_combine_str = ""
-            for temp_step in _temp_list:
-                if "%if" in temp_step and temp_step not in temp_if_key_lines:
-                    temp_if_key_lines.append(temp_step)
-                    temp_combine_str += temp_step + os.linesep
-                elif "%endif" in temp_step and temp_if_key_lines:
-                    temp_if_key_lines.pop()
-                    temp_combine_str += temp_step + os.linesep
-                elif "%if" in temp_step and temp_step in temp_if_key_lines:
-                    continue
-                else:
-                    temp_combine_str += temp_step + os.linesep
-            return temp_combine_str
-
-        if "subpackage" in self.metadata:
-            for index, sp in enumerate(self.metadata["subpackage"]):
-                if "files" in sp.keys():
-                    temp_list = self.metadata["subpackage"][index]["files"].split(os.linesep)
-                    combine_str = combine_if_lines(temp_list)
-                    self.metadata["subpackage"][index]["files"] = combine_str.strip().strip(os.linesep)
-
     def change_field(self):
         """
         在change_subpackage_to_list之前执行
@@ -279,7 +250,6 @@ class SpecWriter:
         self.parse_special_key()
         self.trans_compile_args()
         self.parse_patchset()
-        self.combine_subpackage_if()
         self.change_rpmmacros_linesep()
         self.parse_subpackage_files_with_if()
 
