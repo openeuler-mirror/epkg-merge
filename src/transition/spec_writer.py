@@ -218,54 +218,45 @@ class SpecWriter:
                     self.metadata["subpackage"][index]["files"] = combine_str.strip().strip(os.linesep)
 
     def change_field(self):
-        def remove_strings_keywords(origin_dict: dict, keywords=""):
-            target_dict = copy.deepcopy(origin_dict)
-            for some_key in origin_dict:
-                if isinstance(origin_dict[some_key], str):
-                    target_dict[some_key] = origin_dict[some_key].replace(keywords, "").replace(keywords + " ", "")
-                if isinstance(origin_dict[some_key], dict):
-                    target_dict[some_key] = remove_strings_keywords(origin_dict[some_key], keywords)
-                if isinstance(origin_dict[some_key], list):
-                    for index0, member in enumerate(origin_dict[some_key]):
-                        if isinstance(member, dict):
-                            target_dict[some_key][index0] = remove_strings_keywords(member, keywords)
-                        elif isinstance(member, str):
-                            target_dict[some_key][index0] = origin_dict[some_key][index0].replace(keywords, "").replace(
-                                keywords + " ", "")
-                        elif isinstance(member, list):
-                            for index1, member_item in enumerate(member):
-                                target_dict[some_key][index0][index1] = member_item.replace(keywords, "").replace(
-                                    keywords + " ", "")
-                if keywords in some_key:
-                    target_value = origin_dict[some_key]
-                    del target_dict[some_key]
-                    target_dict[some_key.replace(keywords, "")] = target_value
+        """
+        在change_subpackage_to_list之前执行
+        需要yaml中无数组嵌套字典
+        :return:
+        """
+        def replace_dict_keywords(origin: dict, keywords):
+            target_dict = copy.deepcopy(origin)
+            for key in origin.keys():
+                target_key = key
+                if str(key).__contains__(keywords):
+                    value = origin[key]
+                    target_key = str(key).replace(keywords, "")
+                    del target_dict[key]
+                    target_dict[target_key] = value
+                if type(origin[key]) is dict:
+                    target_dict[target_key] = replace_dict_keywords(origin[key], keywords)
             return target_dict
 
-        # remove rpmWhen
-        self.metadata = remove_strings_keywords(self.metadata, "rpmWhen ")
-        # remove runtimePhase.
-        self.metadata = remove_strings_keywords(self.metadata, "runtimePhase.")
-        # remove phase.
-        self.metadata = remove_strings_keywords(self.metadata, "phase.")
-        # remove meta.
+        # replace rpmWhen
+        self.metadata = replace_dict_keywords(self.metadata, "rpmWhen ")
+        # replace runtimePhase.
+        self.metadata = replace_dict_keywords(self.metadata, "runtimePhase.")
+        # replace phase.
+        self.metadata = replace_dict_keywords(self.metadata, "phase.")
+        # replace meta.
+        self.metadata = replace_dict_keywords(self.metadata, "meta.")
+
+    def parse_subpackage_files_with_if(self):
+        """
+        在change_subpackage_to_list之后执行
+        :return:
+        """
         target_metadata = self.metadata.copy()
         for some_key in self.metadata:
-            if some_key.startswith("meta."):
-                the_value = self.metadata[some_key]
-                del target_metadata[some_key]
-                real_key = some_key.replace("meta.", "")
-                target_metadata[real_key] = the_value
             if some_key == "subpackage":
                 for index0, sp in enumerate(self.metadata["subpackage"]):
                     if isinstance(sp, dict):
                         target_sp = sp.copy()
                         for sp_key in sp:
-                            if sp_key.startswith("meta."):
-                                this_value = sp[some_key]
-                                del target_sp[sp_key]
-                                real_sp_key = sp_key.replace("meta.", "")
-                                target_sp[real_sp_key] = this_value
                             if sp_key.startswith("files") and "%if" in sp_key and "filesJudgement" not in sp:
                                 judge_list = sp_key.split("%if")[1:]
                                 this_value = sp[sp_key]
@@ -281,6 +272,8 @@ class SpecWriter:
         :return:
         """
         self.process_use_native_commands()
+        self.generate_necessary_keys()
+        self.change_field()
         self.change_subpackage_to_list()
         self.change_source_to_list()
         self.parse_special_key()
@@ -288,8 +281,8 @@ class SpecWriter:
         self.parse_patchset()
         self.combine_subpackage_if()
         self.change_rpmmacros_linesep()
-        self.generate_necessary_keys()
-        self.change_field()
+        self.parse_subpackage_files_with_if()
+
 
     @staticmethod
     def arch_split(value):
