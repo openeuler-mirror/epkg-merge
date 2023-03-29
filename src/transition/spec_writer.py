@@ -12,9 +12,9 @@ from src.log import log
 
 
 class SpecWriter:
-    def __init__(self, yaml_fpath):
+    def __init__(self, yaml_fpath, metadata):
         self.file_path = yaml_fpath
-        self.metadata = {}
+        self.metadata = metadata
         self.keywords_if_config = {}
         self.specfile = os.path.splitext(yaml_fpath)[0] + '.spec'
 
@@ -352,7 +352,7 @@ def generate_spec(file_path):
     if file_path.find(os.path.sep) != -1 and directory != os.path.curdir:
         os.chdir(directory)
     file_name = os.path.basename(file_path)
-    spec_writer = SpecWriter(file_name)
+    spec_writer = SpecWriter(yaml_fpath=file_name, metadata={})
     spec_writer.load_data_from_yaml()
     spec_writer.parse()
     spec_writer.trans_data_to_spec()
