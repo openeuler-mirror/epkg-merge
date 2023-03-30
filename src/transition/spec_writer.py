@@ -87,7 +87,7 @@ class SpecWriter:
                         if_count = len(re.findall("%if", some_line))
                         for _ in range(if_count):
                             temp_line += "%endif" + os.linesep
-                        temp_some_key.reomve(some_line)
+                        temp_some_key.remove(some_line)
                         special_tmp_lines.append(temp_line)
                 self.metadata[some_key] = temp_some_key
         final_paragra_key = os.linesep.join(special_tmp_lines)
@@ -194,6 +194,7 @@ class SpecWriter:
         需要yaml中无数组嵌套字典
         :return:
         """
+
         def replace_dict_keywords(origin: dict, keywords):
             target_dict = copy.deepcopy(origin)
             for key in origin.keys():
@@ -253,7 +254,6 @@ class SpecWriter:
         self.change_rpmmacros_linesep()
         self.parse_subpackage_files_with_if()
 
-
     @staticmethod
     def arch_split(value):
         m = re.match(r'^(\w+):([^:]+)', value)
@@ -275,7 +275,7 @@ class SpecWriter:
                                     'keywords_if_config': self.keywords_if_config,
                                 }]).respond()
 
-        def collation_spec_content(self, content):
+        def collation_spec_content(content):
             """
             整理模板引擎处理过后的spec数据
             :param content:
