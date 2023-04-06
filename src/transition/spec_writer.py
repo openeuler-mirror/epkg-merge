@@ -16,7 +16,7 @@ class SpecWriter:
         self.file_path = yaml_fpath
         self.metadata = metadata
         self.keywords_if_config = {}
-        self.specfile = os.path.splitext(yaml_fpath)[0] + '.spec'
+        self.specfile = ''
 
     def load_data_from_yaml(self):
         def _no_number(self, node):
@@ -234,7 +234,7 @@ class SpecWriter:
                                 this_value = sp[sp_key]
                                 del target_sp[sp_key]
                                 target_sp["files"] = this_value
-                                target_sp["filesJudgement"] = map(lambda x: ("%if" + x).strip(), judge_list)
+                                target_sp["filesJudgement"] = list(map(lambda x: ("%if" + x).strip(), judge_list))
                         target_metadata["subpackage"][index0] = target_sp
         self.metadata = target_metadata
 
@@ -318,4 +318,5 @@ def generate_spec(file_path):
     spec_writer = SpecWriter(yaml_fpath=file_name, metadata={})
     spec_writer.load_data_from_yaml()
     spec_writer.parse()
+    spec_writer.specfile = os.path.splitext(spec_writer.file_path)[0] + '.spec'
     spec_writer.trans_data_to_spec()
