@@ -29,6 +29,10 @@ use字段经由如下方式之一对影响构建行为：
 - %%{use.xxx} 宏替换，一般用于phase.xxx
 - 通过transform函数，修改env.xxx，进而影响引用这些env的builder script
 
+可以直接修改CFLAGS等env变量实现的定制，就不要使用use。
+还有一些不宜在包中引入use flags的场景，可以参照如下gentoo指南：
+https://devmanual.gentoo.org/general-concepts/use-flags/#when-not-to-use-use-flags
+
 ## 快速自定义 use 开关量
 
 spec样例
