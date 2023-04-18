@@ -34,6 +34,8 @@ reference: define vs. global
 
 ## reference: 定制相关 rpm macros
 
+https://src.fedoraproject.org/rpms/redhat-rpm-config/blob/rawhide/f/buildflags.md
+
 Observation:
 CFLAGS
 - spec CFLAGS normally inherits one of %optflags/%build_ldflags/RPM_OPT_FLAGS/CFLAGS
