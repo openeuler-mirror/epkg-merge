@@ -2,9 +2,9 @@
 
 - 扫描其中的--enable-xxx --disable-xxx --with-xxx --without-xxx
 - 取出其中的固定选项，存入 YAML env.configureFlags，然后用%%{env.configureFlags}替代之
-- 受with macro控制的条件选项，安排YAML对应的useConfigureFlag，并定义传入macro
+- 受with macro控制的条件选项，安排YAML对应的useFlags，并定义传入macro
 
-	useConfigureFlags:
+	useFlags:
 		$flag:
 	rpmGlobal:
 		_with_$flag    when +$flag: 1	# for bcond_with

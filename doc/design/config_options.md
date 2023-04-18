@@ -75,7 +75,7 @@ useFlags的底层实现，是通过transform函数添加如下字段
 
 ## 定义 configure flags
 
-对最常见的 configure flags, 可以特别定义 useConfigureFlags
+对最常见的 configure flags, 可以扩展定义 useFlags
 
 参照yocto
 
@@ -93,27 +93,7 @@ useFlags的底层实现，是通过transform函数添加如下字段
 
 我们引入如下字段来实现类似功能：
 
-	useConfigureFlags:
-		f1: description-f1, --with-f1,   --without-f1, build-deps-for-f1, runtime-deps-for-f1, runtime-recommends-for-f1, packageconfig-conflicts-for-f1
-		f2: description-f2, --enable-f2, --disable-f2, build-deps-for-f2, runtime-deps-for-f2, runtime-recommends-for-f2, packageconfig-conflicts-for-f2
-
-Can prefix the f1/f2 key with +/- to set default to true/false.
-
-通常 configure with/without或enable/disable flags 是对称的，此时可省略第三项，让工具自动推导。
-后面的几个字段也不常用。所以一般看起来像这样
-
-	useConfigureFlags:
-		f1: description-f1, --with-f1,, build-deps-for-f1 
-		f2: description-f1, --with-f2,, build-deps-for-f2 
-		f3: description-f1, --with-f3,, build-deps-for-f3 
-		f4: description-f1, --with-f4,, build-deps-for-f4 
-		f5: description-f1, --with-f5,, build-deps-for-f5 
-		f6: description-f1, --with-f6,, build-deps-for-f6 
-		f7: description-f1, --with-f7,, build-deps-for-f7 
-
-一种更好的方案，类似函数调用的named parameter:
-
-	useConfigureFlags:
+	useFlags:
 		f1:
 			doc: 		description-f1
 			values:		# if empty, default to: on, off
@@ -128,9 +108,12 @@ Can prefix the f1/f2 key with +/- to set default to true/false.
 		f2:
 			configureFlags: --with-f2=%%{use.f2} # 当有若干values时，用该方式较方便
 
-这一形式稍显罗嗦，但灵活性和可演进性强，且有利于推广，因为小白用户也能一看便知大概含义，便能上手使用。
+Can prefix the f1/f2 key with +/- to set default to true/false.
 
-Looks more configurable than Gentoo's DSL:
+这一形式相比yocto稍显罗嗦，类似函数调用的named parameter。
+但灵活性和可演进性强，且有利于推广，因为小白用户也能一看便知大概含义，便能上手使用。
+
+Also more configurable than Gentoo's DSL:
 
 	DEPEND="
 		alsa? (
@@ -149,9 +132,9 @@ Looks more configurable than Gentoo's DSL:
 
 ## 自动翻转 configure flags
 
-完整的useConfigureFlags定义样例：
+完整的useFlags定义样例：
 
-	useConfigureFlags:
+	useFlags:
 		f1=on:
 			configureFlags: --enable-f1
 		f1=off:
@@ -213,7 +196,7 @@ Looks more configurable than Gentoo's DSL:
 		requires: 	runtime-deps-for-feature
 
 然后将它们作为base layer的一部份，由LayerLoader预加载到配置空间。
-上述字段均来自useConfigureFlags的子字段，仅新增了一个alt字段。
+上述字段均来自useFlags的子字段，仅新增了一个alt字段。
 
 参考：Gentoo 定义了369个全局use flags，所有包加起来用了9600+ use flags。
 这么多的use flags，用工具维护更scale，也更靠谱。
@@ -222,7 +205,7 @@ Looks more configurable than Gentoo's DSL:
 
 一个软件包，可通过设置useGlobal字段，继承/复用一组全局use flags。
 
-	useConfigureFlags:
+	useFlags:
 		# inherit 3 flags from pre-defined global use.xxx
 		# setting f3's default to true btw.
 		f1 f2 +f3:
