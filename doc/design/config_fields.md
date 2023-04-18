@@ -412,20 +412,20 @@ in main yaml:
 
 files.yaml:
 
+	files:rpm_macro_param: -f .mfiles
 	files:
-		%files -f .mfiles
 		%license LICENSE.txt NOTICE.txt
 		%doc KEYS readme.html
 
+	subpackage.xsltc.files:rpm_macro_param: -f .mfiles-xsltc
 	subpackage.xsltc.files:
-		%files xsltc -f .mfiles-xsltc
 		%license LICENSE.txt NOTICE.txt
 
 	subpackage.manual.files:
 		%license LICENSE.txt NOTICE.txt
 		%doc build/docs/*
 
-参数暂存规则：如果%files带-f/-n等参数，则把原%files行原封不动放入内容的第一行，以方便转为spec的时候还原
+参数暂存规则：如果%files带-f/-n等参数，则记录在`:rpm_macro_param`属性中，以方便转为spec的时候还原
 
 ## changelog.md 文件
 
