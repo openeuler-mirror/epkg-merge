@@ -1,3 +1,5 @@
+import os
+
 import yaml
 import re
 from src.log import log
@@ -324,7 +326,7 @@ class SpecWriter:
 
     def parse_files(self):
         """
-        metadata{'files': 'values', 'subpackage.package1': {'files': 'values'} }
+        trans metadata{'files': 'values', 'subpackage.package1': {'files': 'values'} }
         to
         target_metadata{'files': [{'condition':'', 'param':'', 'values': 'values'},
         {'condition':'', 'param': '-n package1', 'values': 'values'}]
@@ -384,6 +386,11 @@ class SpecWriter:
                                 {'condition': condition, 'param': param, 'value': value})
 
     def parse_when(self, line):
+        """
+        根据条件表达式还原spec中的%if表达式
+        :param line: 条件表达式
+        :return:
+        """
         judgement = ""
         # do(when +***=>%if %{with ***})
         if re.search("when\s+[+-][\w_]+", line) is not None:
@@ -429,9 +436,16 @@ class SpecWriter:
             judgement = judgement[0:-1]
         return judgement
 
-    def print_endif(self, conditon):
+    def print_endif(self, condition):
+        """
+        在spec中，一个%if条件对应一个%endif,
+        condition存在多个条件嵌套，例如：when arch in x86 when +benchtests,
+        所以根据when的个数确定%endif的个数
+        :param conditon:
+        :return:
+        """
         end_str = ''
-        results = re.findall("when", conditon)
+        results = re.findall("when", condition)
         for _ in results:
             end_str += "%endif\n"
         return end_str
