@@ -47,7 +47,7 @@ index.yaml样例
 		files."%%_filepath".include:
 			name: %%_basename # can catch spell error if conflict with the name defined in yaml
 			includePhase: phase.sh
-			includeRuntimePhase: runtime-phase.sh
+			includeRuntimePhase: runtimePhase.sh
 			include: versions.yaml files.yaml
 			:referAttrs: types.package
 			meta:referAttrs: types.package.meta
@@ -191,9 +191,9 @@ RPM spec的build scriptlets都是shell script，这一般都够用好用。
 	build_xxx
 	build_yyy
 
-## runtime-phase.sh for runtime scriptlets
+## runtimePhase.sh for runtime scriptlets
 
-以下spec字段可存到独立的runtime-phase.sh
+以下spec字段可存到独立的runtimePhase.sh
 体现为脚本中的一个个函数。
 
 	https://rpm-software-management.github.io/rpm/manual/spec.html
@@ -253,7 +253,7 @@ YAML:
 		posttrans: |
 			yyy
 
-runtime-phase.lua:
+runtimePhase.lua:
 
 	function post()
 		--:rpm_macro_param: -p <lua>
@@ -283,7 +283,7 @@ phase/runtimePhase/files等很多宏参数，都可以按照以上规则统一�
 为了支持多语言，includePhase/includeRuntimePhase应当定义为
 
 	includePhase: phase.sh phase.lua
-	includeRuntimePhase: runtime-phase.sh runtime-phase.lua
+	includeRuntimePhase: runtimePhase.sh runtimePhase.lua
 
 它们应当接受一组文件路径，然后依次搜索加载所有文件。
 
