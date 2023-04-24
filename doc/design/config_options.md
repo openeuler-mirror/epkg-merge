@@ -44,16 +44,16 @@ spec样例
 
 我们希望yaml可以这样写
 	定义参数
-		useFlags:
+		defineFlags:
 			-bootstrap: do initial bootstrap build
 			+ncurses: use ncurses library
 	一般形式
-		useFlags:
+		defineFlags:
 			[+-]<option>: <one-line doc>
 	使用参数
 		key when +ncurses: val
 
-useFlags的底层实现，是通过transform函数添加如下字段
+defineFlags的底层实现，是通过transform函数添加如下字段
 
 	    use.ncurses:type: bool
 	    use.ncurses:default: true
@@ -75,7 +75,7 @@ useFlags的底层实现，是通过transform函数添加如下字段
 
 ## 定义 configure flags
 
-对最常见的 configure flags, 可以扩展定义 useFlags
+对最常见的 configure flags, 可以扩展定义 defineFlags
 
 参照yocto
 
@@ -93,7 +93,7 @@ useFlags的底层实现，是通过transform函数添加如下字段
 
 我们引入如下字段来实现类似功能：
 
-	useFlags:
+	defineFlags:
 		f1:
 			doc: 		description-f1
 			values:		# if empty, default to: on, off
@@ -132,9 +132,9 @@ Also more configurable than Gentoo's DSL:
 
 ## 自动翻转 configure flags
 
-完整的useFlags定义样例：
+完整的defineFlags定义样例：
 
-	useFlags:
+	defineFlags:
 		f1=on:
 			configureFlags: --enable-f1
 		f1=off:
@@ -196,7 +196,7 @@ Also more configurable than Gentoo's DSL:
 		requires: 	runtime-deps-for-feature
 
 然后将它们作为base layer的一部份，由LayerLoader预加载到配置空间。
-上述字段均来自useFlags的子字段，仅新增了一个alt字段。
+上述字段均来自defineFlags的子字段，仅新增了一个alt字段。
 
 参考：Gentoo 定义了369个全局use flags，所有包加起来用了9600+ use flags。
 这么多的use flags，用工具维护更scale，也更靠谱。
@@ -205,7 +205,7 @@ Also more configurable than Gentoo's DSL:
 
 一个软件包，可通过设置useGlobal字段，继承/复用一组全局use flags。
 
-	useFlags:
+	defineFlags:
 		# inherit 3 flags from pre-defined global use.xxx
 		# setting f3's default to true btw.
 		f1 f2 +f3:

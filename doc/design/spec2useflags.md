@@ -2,9 +2,9 @@
 
 - 扫描其中的--enable-xxx --disable-xxx --with-xxx --without-xxx
 - 取出其中的固定选项，存入 YAML env.configureFlags，然后用%%{env.configureFlags}替代之
-- 受with macro控制的条件选项，安排YAML对应的useFlags，并定义传入macro
+- 受with macro控制的条件选项，安排YAML对应的defineFlags，并定义传入macro
 
-	useFlags:
+	defineFlags:
 		$flag:
 	rpmGlobal:
 		_with_$flag    when +$flag: 1	# for bcond_with
@@ -16,7 +16,7 @@ rpmGlobal里的宏定义，会被yaml2spec加到spec的最前面。此处定义_
 
 - 受%define/%global macro控制的条件选项，安排YAML对应的useFlag，并定义传入macro
 
-	useFlags:
+	defineFlags:
 		$flag:
 	rpmMacros:
 		- "%define $flag %%{use.$flag}"
@@ -54,7 +54,7 @@ yaml output:
 			--disable-doxygen-ps 
 			--enable-doxygen-html 
 			--enable-examples
-	useFlags:
+	defineFlags:
 		build_pdf_doc:
 			default: false
 	rpmMacros:
