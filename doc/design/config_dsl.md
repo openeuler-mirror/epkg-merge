@@ -251,8 +251,8 @@ condition语法：
 1) k=v, 其中k是%%或者%%%宏
 2) option=value，其中option是常见的global/package构建参数
 	  global build parameters: target, board, platform, arch, os, 在build字段下搜索
-	  package build option: eg. buildType, cxxstd, ..., 在pkg.<pkg>.use字段下搜索
-	  package builder ENV: compiler, configureFlags, ..., 在pkg.<pkg>.env字段下搜索
+	  package build option: eg. buildType, cxxstd, ..., 在pkgs.<pkg>.use字段下搜索
+	  package builder ENV: compiler, configureFlags, ..., 在pkgs.<pkg>.env字段下搜索
 3) +flag or -flag，其中flag是bool型的package build option，例如+debug -qt
 4) @version-specs，例如
 	@1.2:1.4 表示 version >= 1.2 and version <= 1.4
@@ -285,6 +285,41 @@ section Conditional Syntax (Overrides)
 	EXTRA_OECONF:append:linux-gnux32 = " --disable-asm"
 =>
 	EXTRA_OECONF when target=linux-gnux32: --disable-asm
+
+## when expression
+
+when支持and/or/not/()组合起来的复合表达式。优先级规则与python相同，从高到低为：
+
+	()
+	in, not in, <, <=, >, >=, !=, ==, =
+	! x, not x
+	&&, and
+	||, or
+
+这这里，我们选择同时支持and or not与 && || !，因为使用不同主力开发语言的开发者，可能有不同的习惯用法。
+	ruby: 都支持
+	python/jinja: 只支持 and or not
+	js/github actions: 只支持 && || ! https://docs.github.com/en/actions/learn-github-actions/expressions
+
+Rule1: =与==含义相同，因为不会在when里做赋值操作。
+
+Rule2: 对
+	word1 OP word2
+word1/workd2均可以是如下明确形式
+	- d/dd变量
+	- %%/%%%变量
+	- +flag/-flag
+	- @version
+	- ''/""字符串
+	- 数字
+如果出现非明确的形式，则约定word1是变量，word2是字符串。
+这样方便书写如下形式的条件
+
+	when target = linux-gnux32:
+	when arch in aarch64 riscv:
+
+Rule3: 真值、假值判断原则同python，但"off"作为假值处理
+假值：null, None, False, false, 0, "", "off", [], {}
 
 ## when block
 
