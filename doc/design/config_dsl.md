@@ -39,6 +39,9 @@
 - 包含{{ }}的字符串
 - 以"!"结尾的key
 
+{{ python-expression }} 会被替换为 repr(python-expression)
+所以{{ }}中前后多余的空格不会被显示。
+
 ## 字段引用
 
 按引用的场合方式，可分为两大类：
@@ -85,6 +88,104 @@ b) 任意位置的宏替换
 之所以不用%或者%{}，是因为它被RPM spec大量使用了，容易产生混淆。
 
 我们的宏只出现在key/value部分，仍然是合法的YAML，是update友好的。
+
+## 宏引用不存在的字段
+
+当宏引用的key不存在时，系统将报错，以避免拼写错误等造成的静默bug。
+通常空值(YAML null or python None)也意味着数据有问题，系统应当阻止其传播。
+所以，系统提供如下设施，帮助处理可能不存在或者为空的字段。
+
+- 对d/dd，提供get()/has()方法
+
+	{{ d[key]	}} 	# raise error if key doesn't exist
+	{{ d.get(key)	}} 	# return None if key doesn't exist, or was YAML null
+	{{ d.has(key)	}}	# return True/False indicating whether key exists
+
+- 对%%{}/%%%{}，增加filters机制 (prefer)
+
+filters的优点是
+- 一种通用机制，可对数据进行一系列操作
+- 灵活、可扩展
+- 不言自明，所有人可准确无误的理解
+
+	%%{ key | default(0) }	# return 0 when key not exist/defined
+	%%{ key | exists }	# whether key exists/defined
+
+这里有一个可能的改进，就是会有很多判断型的filters，像ruby那样统一以问号做后缀，会比较清晰：
+
+	%%{ key | exist? }	# whether key exists/defined
+
+缺点是后台定义对应的python函数时，要做一个名字转换，因为python不支持带?的函数名。
+
+Refer to
+https://jinja.palletsprojects.com/en/3.0.x/templates/#jinja-filters.default
+
+- 对%%{}/%%%{}，提供操作方法前缀(不推荐)
+
+类似d.get(), d.has():
+
+	%%{get:key}
+	%%{has:key}
+
+不如上面的数据流操作可扩展。
+
+- 对%%{}/%%%{}，提供问号操作符(不推荐)
+
+该可能性仅供参考。
+该语法简洁，但不容易无歧义的被用户理解，不方便文档查询，也难以进一步扩展，
+而后面几点远比语法表达少输几个字符重要。
+
+%%{key?val1:val2}
+
+	expand to val1, if key exists AND is not null
+	expand to val2, if key does not exist or is null
+
+容易发生理解歧义的地方：对exist/null/empty等情况下的确切行为，该返回val1还是val2还是报错? 不同的人可能有不同的想当然理解。
+
+%%{key?}
+
+	expand key, if key exists
+	expand to nothing, if key's value is null/empty
+	expand to nothing, if key does not exist
+
+同样的功能，RPM macro用的是%{?key}形式，问号在前。
+rust用的是问号在后的形式。
+这种简单的加问号后缀形式，大概可以考虑支持。
+
+%%{key}
+
+	expand key, if key exists
+	raise error, if key does not exist
+
+Examples:
+
+	"when %%{key?1:0}" detects whether key exists AND is not null
+	"when %%{key?}"    detects whether key exists AND value != (null/empty, 0, false, off)
+	"when %%{key}"     asserts key exists AND detects value != (null/empty, 0, false, off)
+
+Reference: Conditionally Expanded Macros
+https://rpm-software-management.github.io/rpm/manual/macros.html#expression-expansion
+
+	Sometimes it is useful to test whether a macro is defined or not. Syntax
+
+	%{?macro_name:value}
+	%{!?macro_name:value}
+
+	can be used for this purpose. %{?macro_name:value} is expanded to “value” if “macro_name” is defined, otherwise it is expanded to the empty string. %{!?macro_name:value} negates the test. It is expanded to “value” if macro_name is not defined. Otherwise it is expanded to the empty string.
+
+	Frequently used conditionally expanded macros are e.g. Define a macro if it is not defined:
+
+	%{!?with_python3: %global with_python3 1}
+
+	A macro that is expanded to 1 if “with_python3” is defined and 0 otherwise:
+
+	%{?with_python3:1}%{!?with_python3:0}
+
+	or shortly
+
+	0%{!?with_python3:1}
+
+	%{?macro_name} is a shortcut for %{?macro_name:%macro_name}.
 
 ## 函数引用
 
