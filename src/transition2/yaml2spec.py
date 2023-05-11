@@ -74,7 +74,7 @@ RUNTIMEPHASE_KEYS = ('pre',
 
 
 class SpecWriter:
-    def __init__(self, yaml_fpath, metadata):
+    def __init__(self, yaml_fpath, metadata={}):
         self.file_path = yaml_fpath
         self.metadata = metadata
         self.target_metadata = {}
@@ -103,18 +103,18 @@ class SpecWriter:
                                                                'field1_condition2': 'field1_values'
                                                                }
                                                      },
-                                      'condition2': 'value2'
+                                      'condition2': {}
                                      },
-                         'package2': { 'condition1': 'value1', 'condition2': 'value2'}
+                         'package2': { 'condition1': {}, 'condition2': {}}
                          }
          }
         """
         self.target_metadata['subpackage'] = {}
         for main_field in self.metadata:
             if main_field.startswith('subpackage.'):
-                if main_field.__contains__(" when "):
-                    condition = main_field[main_field.find(" when ") + 1:]
-                    package_name = main_field[main_field.find('.') + 1:main_field.find(" when ")]
+                if main_field.__contains__(" rpmWhen "):
+                    condition = main_field[main_field.find(" rpmWhen ") + 1:]
+                    package_name = main_field[main_field.find('.') + 1:main_field.find(" rpmWhen ")]
                 else:
                     condition = ''
                     package_name = main_field[main_field.find('.') + 1:]
@@ -126,10 +126,8 @@ class SpecWriter:
                 # 将meta字段分解成单独字段
                 if 'meta' in self.target_metadata['subpackage'][package_name][condition]:
                     target_meta = {}
-                    for meta_field in self.target_metadata['subpackage'][package_name][condition]['meta']:
-                        target_meta.update({meta_field:
-                                                self.target_metadata['subpackage'][package_name][condition]['meta'][
-                                                    meta_field]})
+                    for meta_field, meta_value in self.target_metadata['subpackage'][package_name][condition]['meta'].items():
+                        target_meta.update({meta_field: meta_value})
                     del self.target_metadata['subpackage'][package_name][condition]['meta']
                     self.target_metadata['subpackage'][package_name][condition].update(target_meta)
                 # 解析子包中所有字段
@@ -137,9 +135,9 @@ class SpecWriter:
                 for sub_filed in self.target_metadata['subpackage'][package_name][condition]:
                     sub_condition = ''
                     sub_values = self.target_metadata['subpackage'][package_name][condition][sub_filed]
-                    if sub_filed.__contains__(' when '):
-                        sub_condition = sub_filed[sub_filed.find(' when ') + 1:]
-                        sub_filed = sub_filed[0:sub_filed.find(' when ')]
+                    if sub_filed.__contains__(' rpmWhen '):
+                        sub_condition = sub_filed[sub_filed.find(' rpmWhen ') + 1:]
+                        sub_filed = sub_filed[0:sub_filed.find(' rpmWhen ')]
                     if sub_filed in values:
                         values[sub_filed].update({sub_condition: sub_values})
                     else:
@@ -156,8 +154,8 @@ class SpecWriter:
             for key in DICT_KEYS:
                 if main_filed.startswith(key):
                     condition = ''
-                    if main_filed.__contains__(' when '):
-                        condition = main_filed[main_filed.find(' when ') + 1:]
+                    if main_filed.__contains__(' rpmWhen '):
+                        condition = main_filed[main_filed.find(' rpmWhen ') + 1:]
                     if key in self.target_metadata:
                         self.target_metadata[key].update({condition: self.metadata[main_filed]})
                     else:
@@ -169,8 +167,8 @@ class SpecWriter:
             for key in STR_KEYS:
                 if main_filed.startswith(key):
                     condition = ''
-                    if main_filed.__contains__(' when '):
-                        condition = main_filed[main_filed.find(' when ') + 1:]
+                    if main_filed.__contains__(' rpmWhen '):
+                        condition = main_filed[main_filed.find(' rpmWhen ') + 1:]
                     if key in self.target_metadata:
                         self.target_metadata[key].update({condition: self.metadata[main_filed]})
                     else:
@@ -182,8 +180,8 @@ class SpecWriter:
             for key in LIST_KEYS:
                 if main_filed.startswith(key):
                     condition = ''
-                    if main_filed.__contains__(' when '):
-                        condition = main_filed[main_filed.find(' when ') + 1:]
+                    if main_filed.__contains__(' rpmWhen '):
+                        condition = main_filed[main_filed.find(' rpmWhen ') + 1:]
                     if key in self.target_metadata:
                         self.target_metadata[key].update({condition: self.metadata[main_filed]})
                     else:
@@ -201,19 +199,19 @@ class SpecWriter:
                 self.metadata[main_field] = self.metadata['meta'][main_field]
 
     def parse_macros(self):
-        self.target_metadata['useFlags'] = {}
+        self.target_metadata['defineFlags'] = {}
         if 'rpmMacros' in self.metadata:
             self.target_metadata['rpmMacros'] = self.metadata['rpmMacros']
         if 'rpmGlobal' in self.metadata:
             self.target_metadata['rpmGlobal'] = self.metadata['rpmGlobal']
         for field in self.metadata:
-            if field.startswith('useFlags'):
+            if field.startswith('defineFlags'):
                 condition = ''
-                if field.__contains__(' when '):
-                    condition = field[field.find(' when ') + 1:]
+                if field.__contains__(' rpmWhen '):
+                    condition = field[field.find(' rpmWhen ') + 1:]
                 becond_values = self.metadata[field]
                 target_values = []
-                # todo useflags后的值添加为评论
+                # todo defineFlags后的值添加为评论
                 for value in becond_values:
                     if value.startswith('+'):
                         target_value = '%becond_without ' + value[1:]
@@ -221,37 +219,31 @@ class SpecWriter:
                     elif value.startswith('-'):
                         target_value = '%becond_with ' + value[1:]
                         target_values.append(target_value)
-                self.target_metadata['useFlags'][condition] = target_values
+                self.target_metadata['defineFlags'][condition] = target_values
 
     def parse_phase(self):
-        # phase. prep build install check
+        # phase. prep build install check clean
         # move configure to build
         for main_field in list(self.metadata):
             if main_field.startswith('phase.configure'):
                 if 'phase.build' in list(self.metadata):
                     self.metadata['phase.build'] = self.metadata[main_field] + self.metadata['phase.build']
                     self.metadata.pop(main_field)
-        condition = ''
-        param = ''
-        value = ''
-        target_field = ''
         # move phase. to self.target_metadata
         for main_field in self.metadata:
-            if main_field.startswith('phase.'):
-                if main_field.__contains__(" when "):
-                    target_field = main_field[main_field.find('.') + 1:main_field.find(" when ")]
-                    condition = main_field[main_field.find(" when ") + 1:]
+            if main_field.startswith('phase.') and not main_field.__contains__(':'):
+                condition = ''
+                param = ''
+                if main_field.__contains__(" rpmWhen "):
+                    condition = main_field[main_field.find(" rpmWhen ") + 1:]
+                    target_field = main_field[main_field.find('.') + 1:main_field.find(" rpmWhen ")]
+                    target_param_filed = 'phase.' + target_field + ':rpm_macro_param ' + condition
                 else:
                     target_field = main_field[main_field.find('.') + 1:]
-                values = self.metadata[main_field]
-                line_index = values.find('\n')
-                first_line = values[0:line_index]
-                if first_line.__contains__("rpm_macro_param: "):
-                    param_index = first_line.find("rpm_macro_param: ") + len("rpm_macro_param: ")
-                    param = first_line[param_index:]
-                    value = values[line_index + 1:]
-                else:
-                    value = values
+                    target_param_filed = 'phase.' + target_field + ':rpm_macro_param'
+                if target_param_filed in self.metadata:
+                    param = self.metadata[target_param_filed]
+                value = self.metadata[main_field]
                 if target_field in self.target_metadata:
                     self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
                 else:
@@ -270,52 +262,44 @@ class SpecWriter:
             param = ''
             value = ''
             target_field = ''
-            if main_field.startswith('runtimePhase.'):
-                if main_field.__contains__(" when "):
-                    target_field = main_field[main_field.find('.') + 1:main_field.find(' when ')]
-                    condition = main_field[main_field.find(' when ') + 1:]
+            if main_field.startswith('runtimePhase.') and not main_field.__contains__('rpm_macro_param'):
+                if main_field.__contains__(" rpmWhen "):
+                    condition = main_field[main_field.find(' rpmWhen ') + 1:]
+                    target_field = main_field[main_field.find('.') + 1:main_field.find(' rpmWhen ')]
+                    target_param_field = 'runtimePhase.' + target_field + ":rpm_macro_param " + condition
                 else:
                     target_field = main_field[main_field.find('.') + 1:]
+                    target_param_field = 'runtimePhase.' + target_field + ":rpm_macro_param"
                 # parse param
-                values = self.metadata[main_field]
-                line_index = values.find('\n')
-                first_line = values[0:line_index]
-                if first_line.__contains__("rpm_macro_param: "):
-                    param_index = first_line.find("rpm_macro_param: ") + len("rpm_macro_param: ")
-                    param = first_line[param_index:]
-                    value = values[line_index + 1:]
-                else:
-                    value = values
+                value = self.metadata[main_field]
+                if target_param_field in self.metadata:
+                    param = self.metadata[target_param_field]
                 if target_field in self.target_metadata:
                     self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
                 else:
                     self.target_metadata[target_field] = []
                     self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
             if main_field.startswith('subpackage.'):
-                if main_field.__contains__(' when '):
-                    sub_name = main_field[main_field.find('.') + 1:main_field.find(' when ')]
-                    condition = main_field[main_field.find(' when ') + 1:]
+                if main_field.__contains__(' rpmWhen '):
+                    sub_name = main_field[main_field.find('.') + 1:main_field.find(' rpmWhen ')]
+                    condition = main_field[main_field.find(' rpmWhen ') + 1:]
                 else:
                     sub_name = main_field[main_field.find('.') + 1:]
                 sub_values = self.metadata[main_field]
                 for sub_field in sub_values:
-                    if sub_field.startswith('runtimePhase.'):
-                        if sub_field.__contains__(' when '):
-                            target_field = sub_field[sub_field.find('.') + 1:sub_field.find(' when ')]
-                            # 条件表达式直接连接
-                            condition = sub_field[sub_field.find(' when ') + 1:] + ' and ' + condition
+                    if sub_field.startswith('runtimePhase.') and not sub_field.__contains__("rpm_macro_param"):
+                        if sub_field.__contains__(' rpmWhen '):
+                            target_field = sub_field[sub_field.find('.') + 1:sub_field.find(' rpmWhen ')]
+                            # 嵌套表达式用’and'连接
+                            condition = condition + ' and ' + sub_field[sub_field.find(' rpmWhen ') + len(' rpmWhen '):]
                         else:
                             target_field = sub_field[sub_field.find('.') + 1:]
-                        values = sub_values[sub_field]
-                        line_index = values.find('\n')
-                        first_line = values[0:line_index]
-                        if first_line.__contains__("rpm_macro_param: "):
-                            param_index = first_line.find("rpm_macro_param: ") + len("rpm_macro_param: ")
-                            param = first_line[param_index:] + " -n " + sub_name
-                            value = values[line_index + 1:]
-                        else:
-                            param = " -n " + sub_name
-                            value = values
+                        value = sub_values[sub_field]
+                        param = '-n ' + sub_name
+                        for k in sub_values:
+                            if k.__contains__('rpm_macro_param'):
+                                param = param + ' ' + sub_values[k]
+                                break
                         if target_field in self.target_metadata:
                             self.target_metadata[target_field].append(
                                 {'condition': condition, 'param': param, 'value': value})
@@ -333,57 +317,91 @@ class SpecWriter:
         :return:
         """
         target_field = 'files'
+        self.target_metadata[target_field] = []
         for main_field in self.metadata:
             condition = ''
             param = ''
             value = ''
-            if main_field.startswith('files'):
-                if main_field.__contains__(" when "):
-                    condition = main_field[main_field.find(' when ') + 1:]
-                # parse param
-                values = self.metadata[main_field]
-                line_index = values.find('\n')
-                first_line = values[0:line_index]
-                if first_line.__contains__("rpm_macro_param: "):
-                    param_index = first_line.find("rpm_macro_param: ") + len("rpm_macro_param: ")
-                    param = first_line[param_index:]
-                    value = values[line_index + 1:]
+            if main_field.startswith('files') and not main_field.__contains__(':'):
+                if main_field.__contains__(" rpmWhen "):
+                    condition = main_field[main_field.find(' rpmWhen ') + 1:]
+                    target_param_filed = 'files:rpm_macro_param' + ' ' + condition
                 else:
-                    value = values
-                if target_field in self.target_metadata:
-                    self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
-                else:
-                    self.target_metadata[target_field] = []
-                    self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
+                    target_param_filed = 'files:rpm_macro_param'
+                if target_param_filed in self.metadata:
+                    param = self.metadata[target_param_filed]
+                value = self.metadata[main_field]
+                self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
             if main_field.startswith('subpackage.'):
-                if main_field.__contains__(' when '):
-                    sub_name = main_field[main_field.find('.') + 1:main_field.find(' when ')]
-                    condition = main_field[main_field.find(' when ') + 1:]
+                if main_field.__contains__(' rpmWhen '):
+                    sub_name = main_field[main_field.find('.') + 1:main_field.find(' rpmWhen ')]
+                    condition = main_field[main_field.find(' rpmWhen ') + 1:]
                 else:
                     sub_name = main_field[main_field.find('.') + 1:]
                 sub_values = self.metadata[main_field]
                 for sub_field in sub_values:
-                    if sub_field.startswith('files'):
-                        if sub_field.__contains__(' when '):
-                            # 条件表达式直接连接
-                            condition = sub_field[sub_field.find(' when ') + 1:] + ' ' + condition
-                        values = sub_values[sub_field]
-                        line_index = values.find('\n')
-                        first_line = values[0:line_index]
-                        if first_line.__contains__("rpm_macro_param: "):
-                            param_index = first_line.find("rpm_macro_param: ") + len("rpm_macro_param: ")
-                            param = first_line[param_index:] + " -n " + sub_name
-                            value = values[line_index + 1:]
-                        else:
-                            param = " -n " + sub_name
-                            value = values
-                        if target_field in self.target_metadata:
-                            self.target_metadata[target_field].append(
-                                {'condition': condition, 'param': param, 'value': value})
-                        else:
-                            self.target_metadata[target_field] = []
-                            self.target_metadata[target_field].append(
-                                {'condition': condition, 'param': param, 'value': value})
+                    if sub_field.startswith('files') and not sub_field.__contains__(":"):
+                        if sub_field.__contains__(' rpmWhen '):
+                            # 嵌套的条件表达式用‘and'连接
+                            condition = condition + ' and ' + sub_field[sub_field.find(' rpmWhen ') + len(' rpmWhen '):]
+                        value = sub_values[sub_field]
+                        param = '-n ' + sub_name
+                        for k in sub_values:
+                            if k.__contains__('rpm_macro_param'):
+                                param = param + ' ' + sub_values[k]
+                                break
+                        self.target_metadata[target_field].append(
+                            {'condition': condition, 'param': param, 'value': value})
+
+    def trans_compile_args(self):
+        """
+        转换编译选项
+
+        :return:
+        """
+        if "build" in self.metadata:
+            # check is only make or not
+            build_info_list = self.metadata["phase.build"].split(os.linesep)
+            only_make = False
+            configure_make = False
+            for line in build_info_list:
+                if re.search("#.*make", line) is None and "make" in line and "cmake" not in line and not configure_make:
+                    only_make = True
+                if re.search("#.*configure", line) is None and ("/configure" in line or "%configure" in line):
+                    only_make = False
+                    configure_make = True
+            # compileExport 是列表，在%build字段中
+            if "compileExport" in self.metadata and isinstance(self.metadata["compileExport"], dict):
+                export_list = []
+                for export_name, export_value in self.metadata["compileExport"].items():
+                    if isinstance(export_value, list):
+                        export_value = ",".join(export_value)
+                    export_list.append("export " + export_name + "=\"" + export_value + "\"")
+                self.metadata["compileExport"] = export_list
+            # env.CC, env.LDFLAGS, env.CFLAGS都是字符串
+            if "env.CC" in self.metadata:
+                self.metadata["phase.build"] = "export CC=\"" + self.metadata["env.CC"] + "\"" + os.linesep + self.metadata[
+                    "build"]
+            if "env.CFLAGS" in self.metadata:
+                if only_make:
+                    self.metadata["build"] = "export CFLAGS=\"" + self.metadata["env.CFLAGS"] + "\"" + os.linesep + \
+                                             self.metadata["build"]
+                else:
+                    if "rpmMacros" in self.metadata:
+                        self.metadata["rpmMacros"].append("%global optflags %optflags " + self.metadata["env.CFLAGS"])
+                    else:
+                        self.metadata["rpmMacros"] = ["%global optflags %optflags " + self.metadata["env.CFLAGS"]]
+            if "env.LDFLAGS" in self.metadata:
+                if only_make:
+                    self.metadata["build"] = "export LDFLAGS=\"" + self.metadata["env.LDFLAGS"] + "\"" + os.linesep + \
+                                             self.metadata["build"]
+                else:
+                    if "rpmMacros" in self.metadata:
+                        self.metadata["rpmMacros"].append(
+                            "%global build_optflags %build_optflags " + self.metadata["env.LDFLAGS"])
+                    else:
+                        self.metadata["rpmMacros"] = [
+                            "%global build_optflags %build_optflags " + self.metadata["env.LDFLAGS"]]
 
     def parse_when(self, line):
         """
@@ -393,8 +411,8 @@ class SpecWriter:
         """
         judgement = ""
         # do(when +***=>%if %{with ***})
-        if re.search("when\s+[+-][\w_]+", line) is not None:
-            results = re.findall("when\s+[+-][\w_]+", line)
+        if re.search("rpmWhen\s+[+-][\w_]+", line) is not None:
+            results = re.findall("rpmWhen\s+[+-][\w_]+", line)
             for result in results:
                 line = line.replace(result, "")
                 if "+" in result:
@@ -403,35 +421,35 @@ class SpecWriter:
                 elif "-" in result:
                     condition = result.split("-")[1]
                     judgement += "%if %{without " + condition + "}" + "\n"
-        # do(when %%%{rpmGlobal.openEuler}=>%if 0%{?openEuler})
-        if re.search("when\s+%+\{[\w|_.]+}", line) is not None:
-            results = re.findall("when\s+%+\{[\w|_.]+}", line)
+        # do(rpmWhen %%%{rpmGlobal.openEuler}=>%if 0%{?openEuler})
+        if re.search("rpmWhen\s+%+\{[\w|_.]+}", line) is not None:
+            results = re.findall("rpmWhen\s+%+\{[\w|_.]+}", line)
             for result in results:
                 line = line.replace(result, "")
             conditions = list(map(lambda x: x.split("{")[1].rstrip("}").replace("rpmGlobal.", ""), results))
             for condition in conditions:
                 judgement += "%if 0%{?" + condition + "}" + "\n"
-        # do(when arch in=>%ifarch|%ifos|%ifnarch|%ifnos)
-        if re.search("when arch|os in [\w|_.]+", line) is not None:
-            results = re.findall("when arch in [\w|_.]+", line) + re.findall("when os in [\w|_.]+", line)
+        # do(rpmWhen arch in=>%ifarch|%ifos|%ifnarch|%ifnos)
+        if re.search("rpmWhen arch|os in [\w|_.]+", line) is not None:
+            results = re.findall("rpmWhen arch in [\w|_.]+", line) + re.findall("rpmWhen os in [\w|_.]+", line)
             for result in results:
                 line = line.replace(result, "")
             conditions = list(
-                map(lambda x: x.replace("when arch in", "%ifarch").replace("when os in", "%ifos"), results))
+                map(lambda x: x.replace("rpmWhen arch in", "%ifarch").replace("rpmWhen os in", "%ifos"), results))
             for condition in conditions:
                 judgement += condition + "\n"
-        if re.search("when arch|os not in [\w|_.]+", line) is not None:
-            results = re.findall("when arch not in [\w|_.]+", line) + re.findall("when os not in [\w|_.]+", line)
+        if re.search("rpmWhen arch|os not in [\w|_.]+", line) is not None:
+            results = re.findall("rpmWhen arch not in [\w|_.]+", line) + re.findall("rpmWhen os not in [\w|_.]+", line)
             for result in results:
                 line = line.replace(result, "")
-            conditions = list(map(lambda x: x.replace("when arch not in", "%ifnarch").replace(
-                "when os not in", "%ifnos"), results))
+            conditions = list(map(lambda x: x.replace("rpmWhen arch not in", "%ifnarch").replace(
+                "rpmWhen os not in", "%ifnos"), results))
             for condition in conditions:
                 judgement += condition + "\n"
-        if "when" in line:
-            results = re.findall("when\s+.*", line)
+        if "rpmWhen" in line:
+            results = re.findall("rpmWhen\s+.*", line)
             for result in results:
-                judgement += result.replace("when not", "%if !").replace("when", "%if") + "\n"
+                judgement += result.replace("rpmWhen not", "%if !").replace("rpmWhen", "%if") + "\n"
         if judgement.endswith("\n"):
             judgement = judgement[0:-1]
         return judgement
@@ -439,23 +457,28 @@ class SpecWriter:
     def print_endif(self, condition):
         """
         在spec中，一个%if条件对应一个%endif,
-        condition存在多个条件嵌套，例如：when arch in x86 when +benchtests,
-        所以根据when的个数确定%endif的个数
+        condition存在多个条件嵌套，例如：rpmWhen arch in x86 rpmrpmWhen +benchtests,
+        所以根据rpmWhen的个数确定%endif的个数
         :param conditon:
         :return:
         """
         end_str = ''
-        results = re.findall("when", condition)
+        results = re.findall("rpmWhen", condition)
         for _ in results:
             end_str += "%endif\n"
         return end_str
 
     def parse(self):
         self.parse_macros()
+        self.parse_meta()
         self.parse_str_keys()
         self.parse_list_keys()
         self.parse_dict_keys()
         self.parse_subpackage()
+        self.parse_phase()
+        self.parse_runtimePhase()
+        self.parse_files()
+
 
     def trans_data_to_spec(self, temp_name):
         spec_content = Template(file='template/' + temp_name,
@@ -492,7 +515,7 @@ class SpecWriter:
 
 
 if __name__ == '__main__':
-    yaml_file = 'template/glibc.yaml'
+    yaml_file = 'template/bind.yaml'
     spec_writer = SpecWriter(yaml_file, {})
     spec_writer.load_data_from_yaml()
     spec_writer.parse()
