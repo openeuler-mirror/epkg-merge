@@ -35,8 +35,8 @@ $print_endif($condition)
 #end if
 
 ## useFlags
-#if 'useFlags' in $metadata
-#for $condition, $values in $metadata['useFlags'].items()
+#if 'defineFlags' in $metadata
+#for $condition, $values in $metadata['defineFlags'].items()
 #if $condition == ''
 #for $value in $values
 $value
