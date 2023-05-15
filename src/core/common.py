@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
+import os
 
 
 def is_pycode(val: str):
@@ -61,11 +62,51 @@ def format_source(k, v, format_json, raw_json):
     format_json.setdefault(source, {}) \
         .setdefault(key, v)
 
+def format_rpm_global(k, v, format_json, raw_json):
+    if "." not in k:
+        return
+    source, key = k.split(".", 1)
+    format_json.setdefault(source, {}) \
+        .setdefault(key, v)
+
+def format_define_flags(k, v, format_json, raw_json):
+    if "." not in k:
+        return
+    source, key = k.split(".", 1)
+    format_json.setdefault(source, {}) \
+        .setdefault(key, v)
+
+def format_rpm_macros(k, v, format_json, raw_json):
+    if "." not in k:
+        format_json.setdefault(k, v)
+        return
+    source, key = k.split(".", 1)
+    format_json.setdefault(source, {}) \
+        .setdefault(key, v)
+
+def format_phase(k, v, format_json, raw_json):
+    line_list = v.split(os.linesep)
+    if line_list:
+        first_line = line_list[0]
+        tab_count = 0
+        for word in first_line:
+            if word != " ":
+                break
+            tab_count += 1
+        for line_index, line in enumerate(line_list):
+            line_list[line_index] = line.replace(" "*tab_count, "", 1)
+        v = os.linesep.join(line_list)
+        format_json.setdefault(k, v)
+
 
 format_funcs = {
     "subpackage": format_subpackage,
     "patchset": format_patchset,
-    "source": format_source
+    "source": format_source,
+    "rpmGlobal": format_rpm_global,
+    "defineFlags": format_define_flags,
+    "rpmMacros": format_rpm_macros,
+    "phase": format_phase
 }
 
 
