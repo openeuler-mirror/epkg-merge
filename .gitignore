@@ -1,7 +1,6 @@
 # pycharm
 .idea/
 .DS_Store
-
 __pycharm__/
 *.py[cod]
 *$py.class
@@ -11,3 +10,6 @@ __pycache__/
 .gitignore
 .VSCodeCounter
 merge_configs.egg-info/
+build/
+merge/
+tests/merge/

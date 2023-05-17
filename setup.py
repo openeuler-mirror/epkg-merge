@@ -20,5 +20,6 @@ setup(
     include_package_data=True,
     install_requires=[
         'PyYAML>=3.0',
+        'ply>=3.11'
     ]
 )

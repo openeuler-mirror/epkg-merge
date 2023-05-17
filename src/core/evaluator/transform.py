@@ -4,6 +4,8 @@ import os
 import yaml
 import copy
 
+from src.core.constant.tokens import IF_TOKEN
+
 
 def transform_include_phase(file):
     if not os.path.exists(file):
@@ -92,6 +94,26 @@ def load_yaml(file):
         return yaml.safe_load(f)
 
 
+def transform_key_with_defineFlags(key_dict: dict) -> dict:
+    res = {}
+    for key, value in key_dict.items():
+        if "defineFlags" not in key:
+            res[key] = value
+            continue
+        last_key = key.split(".")[-1]
+        if last_key.startswith("+"):
+            real_key = key.replace(last_key, last_key[1:])
+            value['value'] = True
+            res[real_key] = value
+        elif last_key.startswith("-"):
+            real_key = key.replace(last_key, last_key[1:])
+            value['value'] = False
+            res[real_key] = value
+        else:
+            res[key] = value
+
+    return res
+
 def transform_key_with_use_configure(key_dict: dict) -> dict:
     res = {}
     for key, value in key_dict.items():
@@ -137,19 +159,27 @@ def transform_key_with_use_configure(key_dict: dict) -> dict:
 def transform_key_with_when(key_dict: dict) -> dict:
     res = {}
     for key, value in key_dict.items():
-        if "when" not in key:
+        if IF_TOKEN not in key:
             res[key] = value
             continue
-        keys = key.split()
-        real_key = keys[0]
-        use_config_flag = keys[2]
-        if use_config_flag.startswith("+"):
-            when = "%%use.{}".format(use_config_flag[1:])
-        elif use_config_flag.startswith("-"):
-            when = "{{ " + "not %%use.{}".format(use_config_flag[1:]) + " }}"
-        else:
-            when = "%%use.{}".format(use_config_flag)
-        value["when"] = when
+        keys = key.split(IF_TOKEN)
+        real_key = keys[0].strip()
+        when_statement = " ".join(keys[1:]).strip()
+        when_statements = when_statement.split(" ")
+        when = ""
+        for flag in when_statements:
+            if flag.startswith("+"):
+                # when += "%%defineFlags.{} ".format(flag[1:])
+                when = "{} %%defineFlags.{}".format(when, flag[1:])
+            elif flag.startswith("-"):
+                # when += "not %%defineFlags.{} ".format(flag[1:])
+                when = "{} not %%defineFlags.{}".format(when, flag[1:])
+            else:
+                when = "{} {}".format(when, flag.strip())
+
+            if "@version" in flag:
+                flag.replace("@version", "%%version")
+        value["when"] = when.strip()
         res[real_key] = value
     return res
 
@@ -197,6 +227,7 @@ def transform_key_with_iuse(key_dict: dict):
 
 def transform_key_default(key, value, fspath):
     transform_list = [
+        transform_key_with_defineFlags,
         transform_key_with_iuse,
         transform_key_with_use_configure,
         transform_key_with_when,
