@@ -40,8 +40,8 @@ types.package.version:type: str
 types.package.version:checkFunc: is_version
 types.package.version:mergeFunc: merge_policy_first
 
-types.package.rpmMacros:type: list
-types.package.rpmMacros:checkFunc: is_list
+types.package.rpmMacros:type: str
+types.package.rpmMacros:checkFunc: is_str
 types.package.rpmMacros:mergeFunc: merge_policy_first
 
 types.package.release:type: str

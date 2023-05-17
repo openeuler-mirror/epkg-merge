@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 from typing import overload, Any, Dict
+from src.core.constant.tokens import IF_TOKEN
 
 
 def expand_implicit_fields(val: Any, implicit_fields: Dict[str, str] = None) -> str:
@@ -10,9 +11,24 @@ def expand_implicit_fields(val: Any, implicit_fields: Dict[str, str] = None) -> 
     return val
 
 
+def merge_key(key: str, prefix: str) -> (str, str):
+    if IF_TOKEN not in prefix:
+        return key, prefix
+    prefix_key, if_statement = prefix.split(IF_TOKEN)
+    key = str(key)
+    if IF_TOKEN in key:
+        new_key = key + " && {}".format(if_statement)
+    else:
+        new_key = key + " when {}".format(if_statement)
+    new_key = new_key.strip()
+    prefix_key = prefix_key.strip()
+    return new_key, prefix_key
+
+
 def expand_key(key: Any, prefix: str = None) -> str:
     if not prefix:
         return key
+    key, prefix = merge_key(key, prefix)
     if isinstance(key, str) and key.startswith(":"):
         return f"{prefix}{key}"
     return f"{prefix}.{key}"
