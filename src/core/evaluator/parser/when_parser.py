@@ -1,4 +1,3 @@
-
 # 使用ply库实现一个DSL解释器，能够执行条件语句
 
 from ply.lex import lex
@@ -37,8 +36,9 @@ t_NOT2 = r'!'
 t_STRING = r'\".*?\"'
 t_LSQUARE = r'\['
 t_RSQUARE = r'\]'
-# t_IN = r'in'
 
+
+# t_IN = r'in'
 
 
 def t_NOTIN(t):
@@ -46,32 +46,39 @@ def t_NOTIN(t):
     t.value = str(t.value).strip()
     return t
 
+
 def t_IN(t):
     r'in\s*'
     t.value = str(t.value).strip()
     return t
 
+
 def t_NOT(t):
     r'not'
     return t
+
 
 def t_OR(t):
     r'or'
     return t
 
+
 def t_AND(t):
     r'and'
     return t
+
 
 def t_TRUE(t):
     r'(TRUE)|(True)|(true)'
     t.value = True
     return t
 
+
 def t_FALSE(t):
     r'(FALSE)|(False)|(false)'
     t.value = False
     return t
+
 
 def t_NAME(t):
     r'[a-zA-Z_][a-zA-Z0-9_]*\s*'
@@ -79,18 +86,22 @@ def t_NAME(t):
     t.value = str(t.value).strip()
     return t
 
+
 def t_NUMBER(t):
     r'\d+'
     t.value = int(t.value)
     return t
 
+
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
+
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
+
 
 t_ignore = ' \t'
 
@@ -98,10 +109,7 @@ lexer = lex()
 
 # 定义语法分析器
 precedence = (
-    ('left', 'OR'),
-    ('left', 'OR2'),
-    ('left', 'AND'),
-    ('left', 'AND2'),
+    ('left', 'OR', 'OR2', 'AND', 'AND2'),
     ('left', 'NOT'),
     ('left', 'NOT2'),
     ('nonassoc', 'EQUAL', 'EQUAL2', 'NOT_EQUAL', 'GREATER', 'LESS', 'GREATER_EQUAL', 'LESS_EQUAL'),
@@ -113,6 +121,7 @@ precedence = (
     ('left', 'LSQUARE'),
     ('left', 'NOTIN'),
 )
+
 
 def p_statement_expr(p):
     '''statement : expression'''
@@ -175,26 +184,32 @@ def p_expression_uminus(p):
     "expression : MINUS expression %prec UMINUS"
     p[0] = -p[2]
 
+
 def p_expression_group(p):
     "expression : LPAREN expression RPAREN"
     p[0] = p[2]
+
 
 def p_expression_number(p):
     '''expression : NUMBER'''
     p[0] = p[1]
 
+
 def p_expression_name(p):
     '''expression : NAME'''
     p[0] = p[1]
+
 
 def p_expression_string(p):
     '''expression : STRING'''
     p[0] = p[1]
 
+
 def p_expression_bool(p):
     '''expression : TRUE
                   | FALSE'''
     p[0] = p[1]
+
 
 def p_expression_list_items(p):
     '''expression_list_ex : expression_list_ex expression
@@ -208,6 +223,7 @@ def p_expression_list_items(p):
         p[0] = p[1]
     else:
         p[0] = [p[1]]
+
 
 def p_expression_list_convert(p):
     '''expression_list : expression_list_ex
@@ -223,6 +239,7 @@ def p_expression_in(p):
     "expression : expression IN expression_list"
     p[0] = p[1] in p[3]
 
+
 def p_expression_notin(p):
     "expression : expression NOTIN expression_list"
     p[0] = p[1] not in p[3]
@@ -231,5 +248,6 @@ def p_expression_notin(p):
 def p_error(p):
     print(p)
     print("Syntax error in input!")
+
 
 parser = yacc()
