@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MulanPSL-2.0+
+# Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
+
 # 使用ply库实现一个DSL解释器，能够执行条件语句
 
 from ply.lex import lex
