@@ -1,5 +1,4 @@
 import unittest
-# from when_parser import parse
 from src.core.evaluator.parser.when_parser import parser
 
 class TestWhenParser(unittest.TestCase):    

@@ -13,3 +13,5 @@ merge_configs.egg-info/
 build/
 merge/
 tests/merge/
+parsetab.py
+parser.out

@@ -169,10 +169,8 @@ def transform_key_with_when(key_dict: dict) -> dict:
         when = ""
         for flag in when_statements:
             if flag.startswith("+"):
-                # when += "%%defineFlags.{} ".format(flag[1:])
                 when = "{} %%defineFlags.{}".format(when, flag[1:])
             elif flag.startswith("-"):
-                # when += "not %%defineFlags.{} ".format(flag[1:])
                 when = "{} not %%defineFlags.{}".format(when, flag[1:])
             else:
                 when = "{} {}".format(when, flag.strip())

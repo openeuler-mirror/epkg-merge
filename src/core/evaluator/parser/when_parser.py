@@ -25,20 +25,12 @@ t_LESS = r'<'
 t_GREATER_EQUAL = r'>='
 t_LESS_EQUAL = r'<='
 t_NOT_EQUAL = r'!='
-
-# t_AND = r'and'
 t_AND2 = r'&&'
-# t_OR = r'or'
 t_OR2 = r'\|\|'
-# t_NOT = r'not'
 t_NOT2 = r'!'
-# t_COMMA = r','
 t_STRING = r'\".*?\"'
 t_LSQUARE = r'\['
 t_RSQUARE = r'\]'
-
-
-# t_IN = r'in'
 
 
 def t_NOTIN(t):
@@ -159,7 +151,10 @@ def p_expression_binop(p):
     elif p[2] == '*':
         p[0] = p[1] * p[3]
     elif p[2] == '/':
-        p[0] = p[1] / p[3]
+        if p[3] == 0:
+            p[0] = None
+        else:
+            p[0] = p[1] / p[3]
     elif p[2] == '>':
         p[0] = p[1] > p[3]
     elif p[2] == '<':
