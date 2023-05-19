@@ -103,6 +103,10 @@ types.package.files:type: str
 types.package.files:mergeFunc: merge_policy_concat
 types.package.files:mergeParams: "\n"
 
+types.package.files:rpm_macro_param:type: str
+types.package.files:rpm_macro_param:mergeFunc: merge_policy_concat
+types.package.files:rpm_macro_param:mergeParams: "\n"
+
 types.package.configureFlags:type: str
 types.package.configureFlags:mergeFunc: merge_policy_config_concat
 types.package.configureFlags:mergeParams: " \\\n"
