@@ -5,7 +5,7 @@ registerConfigSpaceForEachFile:
     name: "%%_basename" # can catch spell error if conflict with the name defined in yaml
     docType: base
     includePhase: phase.sh
-    includeRuntimePhase: runtimePhase.sh
+    includeRuntimePhase: runtimePhase.sh runtimePhase.lua
     include: versions.yaml files.yaml
     :referAttrs: types.package
     meta:referAttrs: types.package.meta
