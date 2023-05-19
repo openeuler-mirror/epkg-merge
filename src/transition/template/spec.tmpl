@@ -34,17 +34,17 @@ $print_endif($condition)
 #end for
 #end if
 
-## useFlags
+## defineFlags
 #if 'defineFlags' in $metadata
 #for $condition, $values in $metadata['defineFlags'].items()
 #if $condition == ''
-#for $value in $values
-$value
+#for $key in $values.keys()
+$key
 #end for
 #else
 $parse_when($condition)
-#for $value in $values
-$value
+#for $key in $values.keys()
+$key
 #end for
 $print_endif($condition)
 #end if
