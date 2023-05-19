@@ -47,8 +47,16 @@ def format_subpackage(k, v, format_json, raw_json):
     if raw_json.get(rpm_when_key):
         key = "{} rpmWhen {}".format(key, raw_json.get(rpm_when_key))
 
-    format_json.setdefault(subpackage, {}).setdefault(name, {}) \
-        .setdefault(key, v)
+    subpackage_name = subpackage + "." + name
+
+    if key.startswith("meta."):
+        meta, m_key = key.split(".", 1)
+        format_json.setdefault(subpackage_name, {}).\
+            setdefault(meta, {}).\
+            setdefault(m_key, v)
+    else:
+        format_json.setdefault(subpackage_name, {}).\
+            setdefault(key, v)
 
 
 def format_patchset(k, v, format_json, raw_json):
@@ -62,19 +70,22 @@ def format_source(k, v, format_json, raw_json):
     format_json.setdefault(source, {}) \
         .setdefault(key, v)
 
+
 def format_rpm_global(k, v, format_json, raw_json):
     if "." not in k:
         return
-    source, key = k.split(".", 1)
-    format_json.setdefault(source, {}) \
+    rpm_global, key = k.split(".", 1)
+    format_json.setdefault(rpm_global, {}) \
         .setdefault(key, v)
+
 
 def format_define_flags(k, v, format_json, raw_json):
     if "." not in k:
         return
-    source, key = k.split(".", 1)
-    format_json.setdefault(source, {}) \
+    define_flags, key = k.split(".", 1)
+    format_json.setdefault(define_flags, {}) \
         .setdefault(key, v)
+
 
 def format_rpm_macros(k, v, format_json, raw_json):
     if "." not in k:
@@ -83,6 +94,7 @@ def format_rpm_macros(k, v, format_json, raw_json):
     source, key = k.split(".", 1)
     format_json.setdefault(source, {}) \
         .setdefault(key, v)
+
 
 def format_phase(k, v, format_json, raw_json):
     line_list = v.split(os.linesep)
@@ -99,6 +111,12 @@ def format_phase(k, v, format_json, raw_json):
         format_json.setdefault(k, v)
 
 
+def format_meta(k, v, format_json, raw_json):
+    meta, key = k.split(".", 1)
+    format_json.setdefault(meta, {}) \
+        .setdefault(key, v)
+
+
 format_funcs = {
     "subpackage": format_subpackage,
     "patchset": format_patchset,
@@ -106,7 +124,8 @@ format_funcs = {
     "rpmGlobal": format_rpm_global,
     "defineFlags": format_define_flags,
     "rpmMacros": format_rpm_macros,
-    "phase": format_phase
+    "phase": format_phase,
+    "meta": format_meta,
 }
 
 
