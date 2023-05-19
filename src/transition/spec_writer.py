@@ -5,7 +5,7 @@ import re
 from src.log import log
 from Cheetah.Template import Template
 
-# 单独处理的字段
+# only these keys can be parsed
 STR_KEYS = ('name',
             'version',
             'release',
@@ -74,7 +74,9 @@ RUNTIMEPHASE_KEYS = ('pre',
 
 
 class SpecWriter:
-    def __init__(self, yaml_fpath, metadata={}):
+    def __init__(self, yaml_fpath, metadata=None):
+        if metadata is None:
+            metadata = {}
         self.file_path = yaml_fpath
         self.metadata = metadata
         self.target_metadata = {}
@@ -118,12 +120,9 @@ class SpecWriter:
                 else:
                     condition = ''
                     package_name = main_field[main_field.find('.') + 1:]
-                self.target_metadata['subpackage'].setdefault(package_name, {}).update({condition: self.metadata[main_field]})
-                # if package_name in self.target_metadata['subpackage']:
-                #     self.target_metadata['subpackage'][package_name].update({condition: self.metadata[main_field]})
-                # else:
-                #     self.target_metadata['subpackage'][package_name] = {}
-                #     self.target_metadata['subpackage'][package_name].update({condition: self.metadata[main_field]})
+                self.target_metadata['subpackage'].setdefault(package_name, {}).\
+                    update({condition: self.metadata[main_field]})
+
                 # 将meta字段分解成单独字段
                 if 'meta' in self.target_metadata['subpackage'][package_name][condition]:
                     target_meta = {}
@@ -131,6 +130,7 @@ class SpecWriter:
                         target_meta.update({meta_field: meta_value})
                     del self.target_metadata['subpackage'][package_name][condition]['meta']
                     self.target_metadata['subpackage'][package_name][condition].update(target_meta)
+
                 # 解析子包中所有字段
                 values = {}
                 for sub_filed in self.target_metadata['subpackage'][package_name][condition]:
@@ -139,54 +139,24 @@ class SpecWriter:
                     if sub_filed.__contains__(' rpmWhen '):
                         sub_condition = sub_filed[sub_filed.find(' rpmWhen ') + 1:]
                         sub_filed = sub_filed[0:sub_filed.find(' rpmWhen ')]
-                    if sub_filed in values:
-                        values[sub_filed].update({sub_condition: sub_values})
-                    else:
-                        values.update({sub_filed: {sub_condition: sub_values}})
+                    values.setdefault(sub_filed, {}).update({sub_condition: sub_values})
                 del self.target_metadata['subpackage'][package_name][condition]
                 self.target_metadata['subpackage'][package_name][condition] = values
 
-    def parse_dict_keys(self):
+    def parse_simple_keys(self):
         """
-        {'dict_key': {'condition1': 'value1', 'condition2': 'value2'}
+        {'simple_key': {'condition1': 'value1', 'condition2': 'value2'}}
         :return:
         """
+        KEYS = STR_KEYS + LIST_KEYS + DICT_KEYS
         for main_filed in self.metadata:
-            for key in DICT_KEYS:
+            for key in KEYS:
                 if main_filed.startswith(key):
                     condition = ''
                     if main_filed.__contains__(' rpmWhen '):
                         condition = main_filed[main_filed.find(' rpmWhen ') + 1:]
-                    if key in self.target_metadata:
-                        self.target_metadata[key].update({condition: self.metadata[main_filed]})
-                    else:
-                        self.target_metadata[key] = {condition: self.metadata[main_filed]}
-                    break
-
-    def parse_str_keys(self):
-        for main_filed in self.metadata:
-            for key in STR_KEYS:
-                if main_filed.startswith(key):
-                    condition = ''
-                    if main_filed.__contains__(' rpmWhen '):
-                        condition = main_filed[main_filed.find(' rpmWhen ') + 1:]
-                    if key in self.target_metadata:
-                        self.target_metadata[key].update({condition: self.metadata[main_filed]})
-                    else:
-                        self.target_metadata[key] = {condition: self.metadata[main_filed]}
-                    break
-
-    def parse_list_keys(self):
-        for main_filed in self.metadata:
-            for key in LIST_KEYS:
-                if main_filed.startswith(key):
-                    condition = ''
-                    if main_filed.__contains__(' rpmWhen '):
-                        condition = main_filed[main_filed.find(' rpmWhen ') + 1:]
-                    if key in self.target_metadata:
-                        self.target_metadata[key].update({condition: self.metadata[main_filed]})
-                    else:
-                        self.target_metadata[key] = {condition: self.metadata[main_filed]}
+                    self.target_metadata.setdefault(key, {}).\
+                        update({condition: self.metadata[main_filed]})
                     break
 
     def parse_meta(self):
@@ -210,29 +180,30 @@ class SpecWriter:
                 condition = ''
                 if field.__contains__(' rpmWhen '):
                     condition = field[field.find(' rpmWhen ') + 1:]
-                becond_values = self.metadata[field]
-                target_values = []
+                target_values = self.metadata[field]
                 # todo defineFlags后的值添加为评论
-                for value in becond_values:
-                    if value.startswith('+'):
-                        target_value = '%becond_without ' + value[1:]
-                        target_values.append(target_value)
-                    elif value.startswith('-'):
-                        target_value = '%becond_with ' + value[1:]
-                        target_values.append(target_value)
                 self.target_metadata['defineFlags'][condition] = target_values
+                break
 
     def parse_phase(self):
         # phase. prep build install check clean
         # move configure to build
-        for main_field in list(self.metadata):
+        for main_field in self.metadata:
             if main_field.startswith('phase.configure'):
+                configure_name = main_field.split(".")[-1]
                 if 'phase.build' in list(self.metadata):
-                    self.metadata['phase.build'] = self.metadata[main_field] + self.metadata['phase.build']
-                    self.metadata.pop(main_field)
+                    lines = self.metadata['phase.build'].split("\n")
+                    target_lines = []
+                    for line in lines:
+                        _line = line.strip()
+                        if _line == configure_name:
+                            target_lines.append(self.metadata[main_field])
+                        else:
+                            target_lines.append(line)
+                    self.metadata['phase.build'] = "\n".join(target_lines)
         # move phase. to self.target_metadata
         for main_field in self.metadata:
-            if main_field.startswith('phase.') and not main_field.__contains__(':'):
+            if main_field.startswith('phase.') and 'rpm_macro_param' not in main_field and 'configure' not in main_field:
                 condition = ''
                 param = ''
                 if main_field.__contains__(" rpmWhen "):
@@ -245,11 +216,8 @@ class SpecWriter:
                 if target_param_filed in self.metadata:
                     param = self.metadata[target_param_filed]
                 value = self.metadata[main_field]
-                if target_field in self.target_metadata:
-                    self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
-                else:
-                    self.target_metadata[target_field] = []
-                    self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
+                self.target_metadata.setdefault(target_field, []).\
+                    append({'condition': condition, 'param': param, 'value': value})
 
     def parse_runtimePhase(self):
         """
@@ -275,11 +243,8 @@ class SpecWriter:
                 value = self.metadata[main_field]
                 if target_param_field in self.metadata:
                     param = self.metadata[target_param_field]
-                if target_field in self.target_metadata:
-                    self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
-                else:
-                    self.target_metadata[target_field] = []
-                    self.target_metadata[target_field].append({'condition': condition, 'param': param, 'value': value})
+                self.target_metadata.setdefault(target_field, []). \
+                    append({'condition': condition, 'param': param, 'value': value})
             if main_field.startswith('subpackage.'):
                 if main_field.__contains__(' rpmWhen '):
                     sub_name = main_field[main_field.find('.') + 1:main_field.find(' rpmWhen ')]
@@ -301,13 +266,8 @@ class SpecWriter:
                             if k.__contains__('rpm_macro_param'):
                                 param = param + ' ' + sub_values[k]
                                 break
-                        if target_field in self.target_metadata:
-                            self.target_metadata[target_field].append(
-                                {'condition': condition, 'param': param, 'value': value})
-                        else:
-                            self.target_metadata[target_field] = []
-                            self.target_metadata[target_field].append(
-                                {'condition': condition, 'param': param, 'value': value})
+                        self.target_metadata.setdefault(target_field, []). \
+                            append({'condition': condition, 'param': param, 'value': value})
 
     def parse_files(self):
         """
@@ -472,14 +432,11 @@ class SpecWriter:
     def parse(self):
         self.parse_macros()
         self.parse_meta()
-        self.parse_str_keys()
-        self.parse_list_keys()
-        self.parse_dict_keys()
+        self.parse_simple_keys()
         self.parse_subpackage()
         self.parse_phase()
         self.parse_runtimePhase()
         self.parse_files()
-
 
     def trans_data_to_spec(self, temp_name):
         spec_content = Template(file='template/' + temp_name,
@@ -531,11 +488,3 @@ def generate_spec(file_path):
     spec_writer.parse()
     spec_writer.spec_file = os.path.splitext(spec_writer.file_path)[0] + '.spec'
     spec_writer.trans_data_to_spec()
-
-
-if __name__ == '__main__':
-    yaml_file = 'template/bind.yaml'
-    spec_writer = SpecWriter(yaml_file, {})
-    spec_writer.load_data_from_yaml()
-    spec_writer.parse()
-    spec_writer.trans_data_to_spec('spec.tmpl')
