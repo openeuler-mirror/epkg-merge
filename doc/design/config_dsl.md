@@ -2,7 +2,12 @@
 
 设计原则
 - KISS
+  - 用尽量少的规则，覆盖尽量多的场景。追求通用性和一致性，减少开发成本与用户认知负担
+  - 定义清晰的概念，确定性的语义行为，简便的语法形式
 - understandable
+  - YAML各字段的含义一看便知，不容易产生歧义
+  - 规则符合开发者的一般预期，不要给人以惊奇
+  - 可理解性和理解一致性优于简洁性，以支撑一个robust, scalable的生态大体系
 - enough to meet 80% requirements
 
 ## YAML格式要求: 可脚本处理，包括read/write/update
