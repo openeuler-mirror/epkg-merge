@@ -44,8 +44,14 @@
 - 包含{{ }}的字符串
 - 以"!"结尾的key
 
-{{ python-expression }} 会被替换为 repr(python-expression)
+{{ python-expression }} 会被替换为 print(python-expression) 的结果，
 所以{{ }}中前后多余的空格不会被显示。
+
+Example:
+
+	key: {{ 'hello' }} world
+	=>
+	key: hello world
 
 ## 字段引用
 
