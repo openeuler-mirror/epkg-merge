@@ -143,6 +143,7 @@ docType 按优先级顺序从高到低定义如下：
 	hw-machine
 	hw-board
 	hw-chip
+	hw-arch
 	sw-package
 	base
 
