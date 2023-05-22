@@ -27,13 +27,6 @@ $print_endif($condition)
 #end def
 ########
 ########
-## rpmGlobal
-#if 'rpmGlobal' in $metadata
-#for $name, $body in $metadata['rpmGlobal'].items()
-%global $name $body
-#end for
-#end if
-
 ## defineFlags
 #if 'defineFlags' in $metadata
 #for $condition, $values in $metadata['defineFlags'].items()
@@ -48,6 +41,13 @@ $key
 #end for
 $print_endif($condition)
 #end if
+#end for
+#end if
+
+## rpmGlobal
+#if 'rpmGlobal' in $metadata
+#for $name, $body in $metadata['rpmGlobal'].items()
+%global $name $body
 #end for
 #end if
 
