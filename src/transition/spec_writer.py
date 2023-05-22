@@ -182,9 +182,18 @@ class SpecWriter:
                 condition = ''
                 if field.__contains__(' rpmWhen '):
                     condition = field[field.find(' rpmWhen ') + 1:]
-                target_values = self.metadata[field]
+                becond_dict = self.metadata[field]
+                target_dict = {}
+                for k in becond_dict:
+                    if k.startswith("+"):
+                        target_k = "%becond_without " + k[1:]
+                    elif k.startswith("-"):
+                        target_k = "%becond_with " + k[1:]
+                    else:
+                        target_k = k
+                    target_dict[target_k] = becond_dict[k]
                 # todo defineFlags后的值添加为评论
-                self.target_metadata['defineFlags'][condition] = target_values
+                self.target_metadata['defineFlags'][condition] = target_dict
                 break
 
     def parse_phase(self):
