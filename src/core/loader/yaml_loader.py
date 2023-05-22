@@ -90,8 +90,8 @@ class YamlLoader:
                     result = expand_yaml(transform_result, self._cspath)
                     for k, v in result.items():
                         actual_keys = config_space.add_key(k, v, self._fspath)
-                        if ":" in k:
-                            continue
+                        # if ":" in k:
+                        #     continue
                         for actual_key in actual_keys:
                             config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
 
