@@ -4,6 +4,7 @@ import yaml
 import re
 from src.log import log
 from Cheetah.Template import Template
+from src.transition.template import *
 
 # only these keys can be parsed
 STR_KEYS = ('name',
@@ -80,6 +81,7 @@ class SpecWriter:
         self.file_path = yaml_fpath
         self.metadata = metadata
         self.target_metadata = {}
+        self.spec_file = ""
 
     def load_data_from_yaml(self):
         def _no_number(self, node):
@@ -438,8 +440,8 @@ class SpecWriter:
         self.parse_runtimePhase()
         self.parse_files()
 
-    def trans_data_to_spec(self, temp_name):
-        spec_content = Template(file='template/' + temp_name,
+    def trans_data_to_spec(self):
+        spec_content = Template(file=template_path + "/spec.tmpl",
                                 searchList=[{
                                     'metadata': self.target_metadata,
                                     'parse_when': self.parse_when,
@@ -469,7 +471,9 @@ class SpecWriter:
             return content
 
         spec_content = collation_spec_content(spec_content)
-        print(spec_content)
+        file = open(self.spec_file, "w")
+        file.write(spec_content)
+        file.close()
 
 
 def generate_spec(file_path):
