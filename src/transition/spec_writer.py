@@ -186,9 +186,9 @@ class SpecWriter:
                 target_dict = {}
                 for k in becond_dict:
                     if k.startswith("+"):
-                        target_k = "%becond_without " + k[1:]
+                        target_k = "%bcond_without " + k[1:]
                     elif k.startswith("-"):
-                        target_k = "%becond_with " + k[1:]
+                        target_k = "%bcond_with " + k[1:]
                     else:
                         target_k = k
                     target_dict[target_k] = becond_dict[k]
