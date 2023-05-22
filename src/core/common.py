@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
+import re
 
 
 def is_pycode(val: str):
@@ -48,12 +49,23 @@ def eval_python(val: str):
         raise Exception("pycode parse failed, {}".format(val))
 
 
+def split_sub(k):
+    pattern = r"\d+\.\d+"
+    # 适配glibc: subpackage.glibc-compat-2.17.*
+    if re.search(pattern, k):
+        pattern = r"(\w+)\.(.*\d+)\.(.*$)"
+        match = re.match(pattern, k)
+        if match:
+            return match.groups()
+    return k.split(".", 2)
+
+
 def format_subpackage(k, v, format_json, raw_json):
     if ":rpmWhen" in k:
         return
     if len(k.split(".")) < 3:
         return
-    subpackage, name, key = k.split(".", 2)
+    subpackage, name, key = split_sub(k)
     rpm_when_name = "{}.{}:rpmWhen".format(subpackage, name)
     if raw_json.get(rpm_when_name):
         name = "{} rpmWhen {}".format(name, raw_json.get(rpm_when_name))
