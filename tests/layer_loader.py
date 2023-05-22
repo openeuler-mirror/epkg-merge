@@ -16,12 +16,12 @@ current_dir = os.path.abspath(os.curdir)
 config_file = os.path.join(current_dir, "demo/config.yaml")
 LayerLoader(config_file).load()
 StartUp.startup(config_space)
-p = "python3"
+p = "glibc"
 x = config_space.get_package_format_json(p)
 import yaml
 
 
-with open(f"./{p}.yaml", "w") as f:
+with open(f"./merge/{p}.yaml", "w") as f:
     yaml.SafeDumper.org_represent_str = yaml.SafeDumper.represent_str
     def repr_str(dumper, data):
         if '\n' in data:

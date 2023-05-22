@@ -234,7 +234,7 @@ openEulerTransition -p xxx.spec
 
 ```yaml
 # layer1/pkgs/xxx/xxx.yaml
-useConfigureFlags:
+useFlags:
     +sqlite:
         doc: sqlite3 loadable extension support
         enable: --enable-loadable-sqlite-extensions

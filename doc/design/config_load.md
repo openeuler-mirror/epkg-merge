@@ -47,7 +47,7 @@ index.yaml样例
 		files."%%_filepath".include:
 			name: %%_basename # can catch spell error if conflict with the name defined in yaml
 			includePhase: phase.sh
-			includeRuntimePhase: runtime-phase.sh
+			includeRuntimePhase: runtimePhase.sh
 			include: versions.yaml files.yaml
 			:referAttrs: types.package
 			meta:referAttrs: types.package.meta
@@ -191,9 +191,9 @@ RPM spec的build scriptlets都是shell script，这一般都够用好用。
 	build_xxx
 	build_yyy
 
-## runtime-phase.sh for runtime scriptlets
+## runtimePhase.sh for runtime scriptlets
 
-以下spec字段可存到独立的runtime-phase.sh
+以下spec字段可存到独立的runtimePhase.sh
 体现为脚本中的一个个函数。
 
 	https://rpm-software-management.github.io/rpm/manual/spec.html
@@ -232,6 +232,60 @@ RPM spec的build scriptlets都是shell script，这一般都够用好用。
 		pre:
 		post:
 		...
+
+### 加载 lua scriptlets
+
+先看一个lua样例：
+
+Spec:
+	%post –p <lua>
+	xxx
+
+	%posttrans -e –p <lua>
+	yyy
+
+YAML:
+	runtimePhase:
+		post:rpm_macro_param: -p <lua>
+		post: |
+			xxx
+		posttrans:rpm_macro_param: -e -p <lua>
+		posttrans: |
+			yyy
+
+runtimePhase.lua:
+
+	function post()
+		--:rpm_macro_param: -p <lua>
+		xxx
+
+	function posttrans()
+		--:rpm_macro_param: -e -p <lua>
+		yyy
+
+注意到每个scriptlet可以分别指定语言选项，所以需要定义两个一般化的转换规则：
+
+规则1 spec <> YAML
+spec里的 rpm macro参数，映射为YAML字段的一个`:rpm_macro_param`属性
+
+规则2 YAML <> 分立文件
+YAML里的字段属性
+
+	attr: val
+
+在转为分立文件时，自动转换为注释后的文本行
+
+	--:attr: val (lua)
+	#:attr: val  (shell, %files)
+
+phase/runtimePhase/files等很多宏参数，都可以按照以上规则统一转换。
+
+为了支持多语言，includePhase/includeRuntimePhase应当定义为
+
+	includePhase: phase.sh phase.lua
+	includeRuntimePhase: runtimePhase.sh runtimePhase.lua
+
+它们应当接受一组文件路径，然后依次搜索加载所有文件。
 
 ### 缩进问题
 

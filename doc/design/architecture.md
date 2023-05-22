@@ -380,7 +380,7 @@ data
 	pkgs/rpmbuild/<pkg>/<pkg>.yaml
 	pkgs/rpmbuild/<pkg>/files.yaml
 	pkgs/rpmbuild/<pkg>/phase.sh
-	pkgs/rpmbuild/<pkg>/runtime-phase.sh
+	pkgs/rpmbuild/<pkg>/runtimePhase.sh
 	pkgs/rpmbuild/<pkg>/changelog.md
 
 	test/<scenario1>/<input files>

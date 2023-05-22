@@ -4,6 +4,8 @@ import os
 import yaml
 import copy
 
+from src.core.constant.tokens import IF_TOKEN
+
 
 def transform_include_phase(file):
     if not os.path.exists(file):
@@ -14,6 +16,17 @@ def transform_include_phase(file):
         return parse_shell_file(file_name, content)
 
 
+def transform_include_lua(file):
+    if not os.path.exists(file):
+        return {}
+    with open(file, "r") as f:
+        content = f.readlines()
+        file_name = parse_file_name(file)
+        if file.endswith(".lua"):
+            return parse_lua_file(file_name, content)
+        return parse_shell_file(file_name, content)
+    
+    
 def parse_file_name(file):
     file = os.path.split(file)[-1]
     file_name = file.split(".")[0]
@@ -25,9 +38,16 @@ def parse_shell_file(file_name, content):
     function_name = ""
     function_content = ""
     symbol_count = 0
+    is_first_line = True
+    rpm_macro_param = ""
     for line in content:
         _line = line.rstrip()
         if function_name:
+            if is_first_line and symbol_count:
+                is_first_line = False
+                if "rpm_macro_param" in _line:
+                    rpm_macro_param = _line.split(":")[-1].lstrip()
+                    continue
             if _line == "{":
                 function_content += line
                 symbol_count += 1
@@ -38,7 +58,10 @@ def parse_shell_file(file_name, content):
                     function_content += line
                     continue
                 functions[function_name] = function_content
-                function_name, function_content = "", ""
+                if rpm_macro_param:
+                    function_param = function_name + ":" + "rpm_macro_param"
+                    functions[function_param] = rpm_macro_param
+                function_name, function_content, rpm_macro_param, is_first_line = "", "", "", True
                 continue
             if "(){" in line or "() {" in line:
                 symbol_count += 1
@@ -48,6 +71,34 @@ def parse_shell_file(file_name, content):
             function_name = combinate_function_name(file_name, shell_function_name)
             if function_name and "{" in line:
                 symbol_count += 1
+    return functions
+
+
+def parse_lua_file(file_name, content):
+    functions = {}
+    function_name = ""
+    function_content = ""
+    is_first_line = True
+    rpm_macro_param = ""
+    for line in content:
+        _line = line.rstrip()
+        if function_name:
+            if is_first_line:
+                is_first_line = False
+                if "rpm_macro_param" in _line:
+                    rpm_macro_param = _line.split(":")[-1].lstrip()
+                    continue
+            if _line != "end":
+                function_content += line.lstrip()
+                continue
+            functions[function_name] = function_content
+            if rpm_macro_param:
+                function_param = function_name + ":" + "rpm_macro_param"
+                functions[function_param] = rpm_macro_param
+            function_name, function_content, rpm_macro_param, is_first_line = "", "", "", True
+        else:
+            shell_function_name = get_shell_function_name(line)
+            function_name = combinate_function_name(file_name, shell_function_name)
     return functions
 
 
@@ -91,6 +142,26 @@ def load_yaml(file):
     with open(file) as f:
         return yaml.safe_load(f)
 
+
+def transform_key_with_defineFlags(key_dict: dict) -> dict:
+    res = {}
+    for key, value in key_dict.items():
+        if "defineFlags" not in key:
+            res[key] = value
+            continue
+        last_key = key.split(".")[-1]
+        if last_key.startswith("+"):
+            real_key = key.replace(last_key, last_key[1:])
+            value['value'] = True
+            res[real_key] = value
+        elif last_key.startswith("-"):
+            real_key = key.replace(last_key, last_key[1:])
+            value['value'] = False
+            res[real_key] = value
+        else:
+            res[key] = value
+
+    return res
 
 def transform_key_with_use_configure(key_dict: dict) -> dict:
     res = {}
@@ -137,19 +208,25 @@ def transform_key_with_use_configure(key_dict: dict) -> dict:
 def transform_key_with_when(key_dict: dict) -> dict:
     res = {}
     for key, value in key_dict.items():
-        if "when" not in key:
+        if IF_TOKEN not in key:
             res[key] = value
             continue
-        keys = key.split()
-        real_key = keys[0]
-        use_config_flag = keys[2]
-        if use_config_flag.startswith("+"):
-            when = "%%use.{}".format(use_config_flag[1:])
-        elif use_config_flag.startswith("-"):
-            when = "{{ " + "not %%use.{}".format(use_config_flag[1:]) + " }}"
-        else:
-            when = "%%use.{}".format(use_config_flag)
-        value["when"] = when
+        keys = key.split(IF_TOKEN)
+        real_key = keys[0].strip()
+        when_statement = " ".join(keys[1:]).strip()
+        when_statements = when_statement.split(" ")
+        when = ""
+        for flag in when_statements:
+            if flag.startswith("+"):
+                when = "{} %%defineFlags.{}".format(when, flag[1:])
+            elif flag.startswith("-"):
+                when = "{} not %%defineFlags.{}".format(when, flag[1:])
+            else:
+                when = "{} {}".format(when, flag.strip())
+
+            if "@version" in flag:
+                flag.replace("@version", "%%version")
+        value["when"] = when.strip()
         res[real_key] = value
     return res
 
@@ -197,6 +274,7 @@ def transform_key_with_iuse(key_dict: dict):
 
 def transform_key_default(key, value, fspath):
     transform_list = [
+        transform_key_with_defineFlags,
         transform_key_with_iuse,
         transform_key_with_use_configure,
         transform_key_with_when,

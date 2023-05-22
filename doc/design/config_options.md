@@ -29,6 +29,10 @@ use字段经由如下方式之一对影响构建行为：
 - %%{use.xxx} 宏替换，一般用于phase.xxx
 - 通过transform函数，修改env.xxx，进而影响引用这些env的builder script
 
+可以直接修改CFLAGS等env变量实现的定制，就不要使用use。
+还有一些不宜在包中引入use flags的场景，可以参照如下gentoo指南：
+https://devmanual.gentoo.org/general-concepts/use-flags/#when-not-to-use-use-flags
+
 ## 快速自定义 use 开关量
 
 spec样例
@@ -40,16 +44,16 @@ spec样例
 
 我们希望yaml可以这样写
 	定义参数
-		useFlags:
+		defineFlags:
 			-bootstrap: do initial bootstrap build
 			+ncurses: use ncurses library
 	一般形式
-		useFlags:
+		defineFlags:
 			[+-]<option>: <one-line doc>
 	使用参数
 		key when +ncurses: val
 
-useFlags的底层实现，是通过transform函数添加如下字段
+defineFlags的底层实现，是通过transform函数添加如下字段
 
 	    use.ncurses:type: bool
 	    use.ncurses:default: true
@@ -71,7 +75,7 @@ useFlags的底层实现，是通过transform函数添加如下字段
 
 ## 定义 configure flags
 
-对最常见的 configure flags, 可以特别定义 useConfigureFlags
+对最常见的 configure flags, 可以扩展定义 defineFlags
 
 参照yocto
 
@@ -89,40 +93,27 @@ useFlags的底层实现，是通过transform函数添加如下字段
 
 我们引入如下字段来实现类似功能：
 
-	useConfigureFlags:
-		f1: description-f1, --with-f1,   --without-f1, build-deps-for-f1, runtime-deps-for-f1, runtime-recommends-for-f1, packageconfig-conflicts-for-f1
-		f2: description-f2, --enable-f2, --disable-f2, build-deps-for-f2, runtime-deps-for-f2, runtime-recommends-for-f2, packageconfig-conflicts-for-f2
-
-Can prefix the f1/f2 key with +/- to set default to true/false.
-
-通常 configure with/without或enable/disable flags 是对称的，此时可省略第三项，让工具自动推导。
-后面的几个字段也不常用。所以一般看起来像这样
-
-	useConfigureFlags:
-		f1: description-f1, --with-f1,, build-deps-for-f1 
-		f2: description-f1, --with-f2,, build-deps-for-f2 
-		f3: description-f1, --with-f3,, build-deps-for-f3 
-		f4: description-f1, --with-f4,, build-deps-for-f4 
-		f5: description-f1, --with-f5,, build-deps-for-f5 
-		f6: description-f1, --with-f6,, build-deps-for-f6 
-		f7: description-f1, --with-f7,, build-deps-for-f7 
-
-另一种可选方案类似函数调用的named parameter:
-
-	useConfigureFlags:
+	defineFlags:
 		f1:
 			doc: 		description-f1
-			enable: 	--enable-f1
-			disable: 	--disable-f1
+			values:		# if empty, default to: on, off
+			default:	true
+			when:		f2=xxx	# f1 is only valid when f2 is xxx
+		f1=on:
+			configureFlags: --enable-f1
 			buildRequires: 	build-deps-for-f1 
 			requires: 	runtime-deps-for-f1 
 			recommends: 	runtime-recommends-for-f1
 			conflicts: 	packageconfig-conflicts-for-f1
 		f2:
+			configureFlags: --with-f2=%%{use.f2} # 当有若干values时，用该方式较方便
 
-这一形式稍显罗嗦，但有利于推广，因为小白用户也能一看便知，便能上手使用。
+Can prefix the f1/f2 key with +/- to set default to true/false.
 
-Looks more configurable than Gentoo's DSL:
+这一形式相比yocto稍显罗嗦，类似函数调用的named parameter。
+但灵活性和可演进性强，且有利于推广，因为小白用户也能一看便知大概含义，便能上手使用。
+
+Also more configurable than Gentoo's DSL:
 
 	DEPEND="
 		alsa? (
@@ -139,42 +130,191 @@ Looks more configurable than Gentoo's DSL:
 			>=x11-libs/gdk-pixbuf-2.42.0:2
 		)
 
+## 自动翻转 configure flags
+
+完整的defineFlags定义样例：
+
+	defineFlags:
+		f1=on:
+			configureFlags: --enable-f1
+		f1=off:
+			configureFlags: --disable-f1
+
+可以发现，上述on/off两种情况下的configureFlags有一种对称性。
+这是非常常见的情况，所以一般不必设置off时的configureFlags，让配置框架自动通过翻转f1=on.configureFlags的"enable"为"disable"得到。
+
+翻转推导规则：
+
+	f1=on.configureFlags	=> f1=off.configureFlags
+	================================================
+	--enable-xxx 		=> --disable-xxx
+	--enable-xxx=val	=> --disable-xxx
+	--with-xxx 		=> --without-xxx
+	--with-xxx=val		=> --without-xxx
+	--with-xxx=yes		=> --without-xxx
+	...=yes 		=> ...=no
+	...=true 		=> ...=false
+	...=ON 			=> ...=OFF
+	...=1 			=> ...=0
+
+在上述规则下，可自动推导的情况(例子来自yocto)：
+
+	PACKAGECONFIG[x11] = "--with-x=yes --enable-xlib,--with-x=no --disable-xlib,${X11DEPENDS}"
+	PACKAGECONFIG[arc4] = "ac_cv_lib_bsd_arc4random_buf=yes,ac_cv_lib_bsd_arc4random_buf=no,libbsd"
+	PACKAGECONFIG[hwdb] = "HWDB=yes,HWDB=no,udev"
+	PACKAGECONFIG[egl] = "-Degl=yes, -Degl=no, virtual/egl"
+	PACKAGECONFIG[test-nonsecure] = "-DTEST_NS=ON,-DTEST_NS=OFF"
+	PACKAGECONFIG[gmp] = "--with-gmp=yes, --with-gmp=no, gmp"
+	PACKAGECONFIG[lzo] = "LZO_SUPPORT=1,LZO_SUPPORT=0,lzo"
+	PACKAGECONFIG[gnome] = "-Dgnome=true,-Dgnome=false"
+	PACKAGECONFIG[x11] = "--with-x=yes --enable-xlib,--with-x=no --disable-xlib,${X11DEPENDS}"
+	PACKAGECONFIG[png] = "--with-png=${STAGING_DIR_HOST}${prefix},--without-png,libpng"
+
+不能自动推导的情况有：
+
+	PACKAGECONFIG[userdb] = "--enable-db=db,--enable-db=no,db,"
+	PACKAGECONFIG[x11] = "-Dglx=yes, -Dglx=no -Dx11=false, virtual/libx11 virtual/libgl"
+	PACKAGECONFIG[speexdsp] = "--with-speex=lib,--with-speex=no,speexdsp"
+	PACKAGECONFIG[ipv6] = "--enable-ipv6,--disable-ipv6 gl_cv_socket_ipv6=no,"
+	PACKAGECONFIG[systemd] = "--with-systemdunitdir=${systemd_system_unitdir}/,--with-systemdunitdir="
+	PACKAGECONFIG[msgcat-curses] = "--with-libncurses-prefix=${STAGING_LIBDIR}/..,--disable-curses,ncurses,"
+	PACKAGECONFIG[libunistring] = "--with-libunistring-prefix=${STAGING_LIBDIR}/..,--with-included-libunistring,libunistring"
+
+有的包采用了"--with-xxx=yes => --with-xxx=no" 的翻转形式，但也有个别包的翻转形式是--without-xxx。
+对于autotools来说，两者正常情况下是等价形式。自动翻转统一翻转为--without-xxx，以方便学习使用。
+
 ## 预定义全局use flags
 
 大量的configure flags在各个项目里是通用的。这些可以通过脚本自动生成一组配置文件
 
 	configure_flags/<feature>.yaml
 		cspath: use.<feature>
-		useConfigureFlags:
-			<feature>: ...
+		doc: 		one-line summary string
+		alt: 		feature-altname1, feature-altname2
+		default:	true
+		buildRequires: 	build-deps-for-feature
+		requires: 	runtime-deps-for-feature
 
 然后将它们作为base layer的一部份，由LayerLoader预加载到配置空间。
+上述字段均来自defineFlags的子字段，仅新增了一个alt字段。
 
 参考：Gentoo 定义了369个全局use flags，所有包加起来用了9600+ use flags。
 这么多的use flags，用工具维护更scale，也更靠谱。
 
+## 复用全局预定义use flags
+
+一个软件包，可通过设置useGlobal字段，继承/复用一组全局use flags。
+
+	defineFlags:
+		# inherit 3 flags from pre-defined global use.xxx
+		# setting f3's default to true btw.
+		f1 f2 +f3:
+			useGlobal: true
+
+		f1=on: # can further customize the inherited flag
+		   configureFlags: --enable-f1
+
+可以在key部分写多个feature，从全局use.$feature路径同时继承多个全局feature。
+
+可选前缀+/-表示在本包里默认enable/disable该功能。
 通常应避免指定 per-package defaults -- per-package feature should uniformly
 default to global use default value.
 
-## iuse 字段: 复用全局预定义use
+## 自动猜测 configure flags
 
-一个软件包，可通过iuse字段声明要复用的全局use flags。
+先看一些gentoo的use统计：
 
-Gentoo样例：
+	wfg /c/os/gentoo/gentoo% grep -h 'caps\?' */*/*.ebuild|sc
+	     87         caps? ( sys-libs/libcap )
+	     24         caps? ( sys-libs/libcap-ng )
+	     13                 caps? ( sys-libs/libcap )
+	      4         caps? ( >=sys-libs/libcap-2.1.0 )
+	      3 RDEPEND="caps? ( >=sys-libs/libcap-2.24 )
 
-	app-benchmarks/sysbench/sysbench-1.0.20-r100.ebuild
-		IUSE="+aio attachsql drizzle +largefile mysql postgres test"
+	wfg /c/os/gentoo/gentoo% grep -h 'ncurses\?' */*/*.ebuild|sc
+	     57         ncurses? ( sys-libs/ncurses:0= )
+	     21         ncurses? ( sys-libs/ncurses:= )
+	     16         ncurses? (
+	     11         ncurses? ( >=sys-libs/ncurses-5.2:= )
+	      6         ncurses? ( >=sys-libs/ncurses-5.9-r3:0=[${MULTILIB_USEDEP}] )
+	      6         ncurses? ( sys-libs/ncurses:0 )
+	      5         ncurses? ( sys-libs/ncurses:=[unicode(+)] )
+	      5         ncurses? ( >=sys-libs/ncurses-5.9-r3:0= )
 
-前缀+/-表示默认enable/disable该功能。
+可见一个well known feature，在不同的软件包中，可能buildRequires多种三方库，或者一个库的不同版本。
+这种情况下，可以这样配置
+- 在global use中预定义最常见的buildRequires
+- 一个软件包首先inherit该global flag，然后如有需要，可重定义其buildRequires子字段
 
-## uses 字段：批量设置use flags
+再看另一类差异：
 
-未来如果有需要，可以引入如下字段及transform函数：
+	# use_enable/use_with manual: https://devmanual.gentoo.org/function-reference/query-functions/
+	wfg /c/os/gentoo/gentoo% grep -h 'use_.* caps' */*/*.ebuild|sc
+	     14                 $(use_enable caps linux-caps)
+	     11                 $(use_with caps cap) \
+	      9                 $(use_with caps libcap) \
+	      5                 $(use_enable caps cap) \
+	      4                 $( use_with caps libcap ) \
+	      4                 $(use_enable caps)
+	      3                 $(use_with capstone)
+	      3                 $(use_with caps libcap-ng)
+	      3                 $(use_enable caps libcap) \
+	      3                 $(use_enable caps capabilities) \
+	      2                         $(use_enable caps setpriv)
+	      2                 $(use_enable caps capabilities)
+	      2                         $(use_enable caps capabilities)
+	      2                 $(use_enable caps cap)
 
-	pkgs.<pkg>.uses: +f1 -f2
-=>
-	pkgs.<pkg>.use.f1: true
-	pkgs.<pkg>.use.f2: false
+	wfg /c/os/gentoo/gentoo% grep -h 'use_.* ncurses' */*/*.ebuild|sc
+	     10                 $(use_enable ncurses curses)
+	      9                 $(use_enable ncurses) \
+	      8                 $(use_with ncurses) \
+	      7                 $(use_enable ncurses)
+	      5                 $(use_enable ncurses curses) \
+	      4                 $(use_with ncurses curses)
+	      3                 $(use_with ncurses term) \
+	      3                 $(use_enable ncurses consoleui)
+	      2         local myconf=( $(use_enable ncurses ui) )
+	      2         econf $(use_with ncurses curses)
+	      2         econf $(use_with ncurses)
+	      2                 $(use_with ncurses tinfo)
+	      2                 $(use_enable ncurses term) \
+
+可见同一个well known feature, 如caps，它在一个具体上游软件的configure选项，可以呈现多种形式
+
+动词部分，以下均可能
+
+	--enable/disable
+	--with/without
+
+名词部分，往往有几种常见名称
+
+	--enable-linux-caps
+	--enable-caps
+	--enable-cap
+	--enable-libcap
+	--enable-libcap-ng
+	--enable-capabilities
+
+	--enable-ncurses
+	--enable-curses
+	--enable-term
+	--enable-tinfo
+	--enable-consoleui
+	--enable-ui
+
+以上动词、名词的不同形式，可以通过如下规则，较好的实现自动匹配，从而实现global use flag的较好复用
+- 在global use flag预定义中，不预设configureFlags字段(因为形式太多样化了)，改为设置alt字段(如果有多个名词名字)
+- 当configureFlags未定义，则在alt字段帮助下，在构建环境里通过解析`./configure --help`的输出，动态找到对应的configure option
+
+举例说明。给定global use flag配置
+
+	use.caps.alt: cap, capabilities, linux-caps, libcap, libcap-ng
+
+则一个包继承该global use flag后，一般不需要设置configureFlags，
+而是让构建系统在运行时自动在`./configure --help`输出里寻找如下正则表达式，找到一个即匹配成功：
+
+	--(enable|disable|with|without)-(caps|cap|capabilities|linux-caps|libcap|libcap-ng)
 
 ## 普适选项
 

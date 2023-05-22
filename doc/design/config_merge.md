@@ -103,7 +103,7 @@ YAML内嵌python code表述了各field之间的内在逻辑关系。
 
 用法
 
-	inherit source.path
+	inherit: source.path
 
 从指定的global config-space path继承所有k/v到当前path
 
