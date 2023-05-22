@@ -12,6 +12,21 @@ def is_pycode(val: str):
     return True
 
 
+def remove_tab(val: str):
+    line_list = val.split(os.linesep)
+    if line_list:
+        first_line = line_list[0]
+        tab_count = 0
+        for word in first_line:
+            if word != " ":
+                break
+            tab_count += 1
+        for line_index, line in enumerate(line_list):
+            line_list[line_index] = line.replace(" " * tab_count, "", 1)
+        val = os.linesep.join(line_list)
+    return val
+
+
 def eval_python(val: str):
     import src.core.interpreter.executor
     # result = {
@@ -49,6 +64,8 @@ def format_subpackage(k, v, format_json, raw_json):
 
     subpackage_name = subpackage + "." + name
 
+    if ".runtimePhase." in k:
+        v = remove_tab(v)
     if key.startswith("meta."):
         meta, m_key = key.split(".", 1)
         format_json.setdefault(subpackage_name, {}).\
@@ -97,18 +114,8 @@ def format_rpm_macros(k, v, format_json, raw_json):
 
 
 def format_phase(k, v, format_json, raw_json):
-    line_list = v.split(os.linesep)
-    if line_list:
-        first_line = line_list[0]
-        tab_count = 0
-        for word in first_line:
-            if word != " ":
-                break
-            tab_count += 1
-        for line_index, line in enumerate(line_list):
-            line_list[line_index] = line.replace(" "*tab_count, "", 1)
-        v = os.linesep.join(line_list)
-        format_json.setdefault(k, v)
+    v = remove_tab(v)
+    format_json.setdefault(k, v)
 
 
 def format_meta(k, v, format_json, raw_json):
@@ -125,6 +132,7 @@ format_funcs = {
     "defineFlags": format_define_flags,
     "rpmMacros": format_rpm_macros,
     "phase": format_phase,
+    "runtimePhase": format_phase,
     "meta": format_meta,
 }
 
