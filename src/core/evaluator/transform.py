@@ -13,19 +13,10 @@ def transform_include_phase(file):
     with open(file, "r") as f:
         content = f.readlines()
         file_name = parse_file_name(file)
-        return parse_shell_file(file_name, content)
-
-
-def transform_include_lua(file):
-    if not os.path.exists(file):
-        return {}
-    with open(file, "r") as f:
-        content = f.readlines()
-        file_name = parse_file_name(file)
         if file.endswith(".lua"):
             return parse_lua_file(file_name, content)
         return parse_shell_file(file_name, content)
-    
+
     
 def parse_file_name(file):
     file = os.path.split(file)[-1]
