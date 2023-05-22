@@ -1,5 +1,5 @@
 import unittest
-from src.transition2.yaml2spec import SpecWriter
+from src.transition.spec_writer import SpecWriter
 
 
 class Test(unittest.TestCase):
