@@ -1,10 +1,10 @@
 #def when_str_keys($speckey, $yamlkey)
 #for $condition, $values in $metadata[$yamlkey].items()
 #if $condition == ''
-$speckey:    $values
+$speckey: $values
 #else
 $parse_when($condition)
-$speckey:    $values
+$speckey: $values
 $print_endif($condition)
 #end if
 #end for
@@ -186,7 +186,7 @@ $when_list_keys('requires(posttrans)', 'requiresPosttrans')
 $when_list_keys('BuildConflicts', 'buildConflicts')
 #end if
 
-## Providers
+## Provides
 #if "provides" in $metadata
 $when_list_keys('Provides', 'provides')
 #end if
@@ -327,9 +327,13 @@ $data_when_list_keys('Requires(pretrans)', 'requiresPretrans', $values))
 $data_when_list_keys('Requires(posttrans)', 'requiresPosttrans', $values))
 #end if
 #######################
+## Provides
+#if "provides" in $values
+$data_when_list_keys('Provides', 'provides', $values)
+#end if
 ## Conflicts
 #if "conflicts" in $values
-$data_when_list_keys('Conflicts', 'conflicts', $values))
+$data_when_list_keys('Conflicts', 'conflicts', $values)
 #end if
 ## Obsoletes
 #if "obsoletes" in $values
