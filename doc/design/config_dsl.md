@@ -42,7 +42,7 @@
 
 在此我们约定如下两种情况，解析为python表达式
 - 包含{{ }}的字符串
-- 以"!"结尾的key
+- 以"!"结尾的key (consider in future, if it's proved to be very common case)
 
 {{ python-expression }} 会被替换为 print(python-expression) 的结果，
 所以{{ }}中前后多余的空格不会被显示。
@@ -99,6 +99,41 @@ b) 任意位置的宏替换
 之所以不用%或者%{}，是因为它被RPM spec大量使用了，容易产生混淆。
 
 我们的宏只出现在key/value部分，仍然是合法的YAML，是update友好的。
+
+## 字段引用 (改进版)
+
+以上d/dd, %%/%%%不符合一看便知的原则。可统一为以下字段引用形式
+
+### reference by object path
+
+	pkg.xxx		# 引用本包字段xxx
+	top.yyy		# 引用顶级字段yyy
+
+Examples:
+
+	pkg.version		=> '3.1.0'
+	top.pkgs.bash.version	=> '3.1.0'
+
+### reference by object method
+
+在需要的时候，还可以使用如下函数形式。以pkg为例：
+
+	pkg[key]	# raise error if key doesn't exist
+	pkg.get(key)	# return None if key doesn't exist, or was YAML null
+	pkg.has(key)	# return True/False indicating whether key exists
+
+Examples:
+
+	pkg['version']		=> '3.1.0'
+	pkg.get('version')	=> '3.1.0'
+	pkg.has('version')	=> True
+
+### valid context for references
+
+以上pkg/top字段引用只可以出现在如下两类上下文中
+
+- YAML val: {{ python code }}
+- YAML key: when condition
 
 ## 宏引用不存在的字段
 
