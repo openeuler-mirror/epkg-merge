@@ -268,6 +268,7 @@ class SpecWriter:
                     sub_values = self.metadata[key]
                     param = "-n " + sub_name
                     self.trans_shell(sub_values, spec_key, condition, param)
+
     def trans_shell(self, meta_json, spec_key, condition, param):
         key_param = spec_key + ":rpm_macro_param"
         for key in meta_json:
@@ -293,13 +294,13 @@ class SpecWriter:
                 if target_key not in meta_json:
                     value = ""
                     param += ' ' + meta_json[key]
-                if key.__contains__(' rpmwhen '):
-                    if condition:
-                        condition += ' and ' + key[key.find(' rpmwhen ') + len(' rpmwhen '):]
-                    else:
-                        condition = key[key.find(' rpmwhen '):]
-                self.target_metadata.setdefault(spec_key, []).append(
-                    {'condition': condition, 'param': param, 'value': value})
+                    if key.__contains__(' rpmwhen '):
+                        if condition:
+                            condition += ' and ' + key[key.find(' rpmwhen ') + len(' rpmwhen '):]
+                        else:
+                            condition = key[key.find(' rpmwhen '):]
+                    self.target_metadata.setdefault(spec_key, []).append(
+                        {'condition': condition, 'param': param, 'value': value})
 
     def trans_compile_args(self):
         """
