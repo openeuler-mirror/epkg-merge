@@ -126,14 +126,6 @@ class SpecWriter:
                 self.target_metadata['subpackage'].setdefault(package_name, {}).\
                     update({condition: self.metadata[main_field]})
 
-                # 将meta字段分解成单独字段
-                if 'meta' in self.target_metadata['subpackage'][package_name][condition]:
-                    target_meta = {}
-                    for meta_field, meta_value in self.target_metadata['subpackage'][package_name][condition]['meta'].items():
-                        target_meta.update({meta_field: meta_value})
-                    del self.target_metadata['subpackage'][package_name][condition]['meta']
-                    self.target_metadata['subpackage'][package_name][condition].update(target_meta)
-
                 # 解析子包中所有字段
                 values = {}
                 for sub_filed in self.target_metadata['subpackage'][package_name][condition]:
@@ -169,8 +161,16 @@ class SpecWriter:
         :return:
         """
         if 'meta' in self.metadata:
-            for main_field in self.metadata['meta']:
-                self.metadata[main_field] = self.metadata['meta'][main_field]
+            for key in self.metadata['meta']:
+                self.metadata[key] = self.metadata['meta'][key]
+            del self.metadata['meta']
+        for key in self.metadata:
+            if key.startswith("subpackage"):
+                value = self.metadata[key]
+                if 'meta' in value:
+                    for sub_key in value['meta']:
+                        self.metadata[key][sub_key] = value[sub_key]
+                    del self.metadata[key]['meta']
 
     def format_runtimePhase(self):
         for key in list(self.metadata.keys()):
@@ -417,10 +417,20 @@ class SpecWriter:
             end_str += "%endif\n"
         return end_str
 
+    def convert_double_percent_sign(self):
+        for k, v in self.metadata.items():
+            if type(v) is str:
+                self.metadata[k] = v.replace("\%\%", "%%")
+            if k.startswith("subpackage"):
+                for sub_k, sub_v in self.metadata[k].items():
+                    if type(sub_v) is str:
+                        self.metadata[k][sub_k] = sub_v.replace("\%\%", "%%")
+
     def parse(self):
-        self.parse_macros()
         self.format_meta()
         self.format_runtimePhase()
+        self.convert_double_percent_sign()
+        self.parse_macros()
         self.parse_simple_keys()
         self.parse_subpackage()
         self.parse_phase()
