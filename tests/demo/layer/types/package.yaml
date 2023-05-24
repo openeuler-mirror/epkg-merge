@@ -33,7 +33,7 @@ types.package.use.sqlite:example: True/False
 
 types.package.epoch:type: int
 types.package.epoch:checkFunc: is_between
-types.package.epoch:checkParams: "0,3"
+types.package.epoch:checkParams: "0,100"
 types.package.epoch:mergeFunc: merge_policy_first
 
 types.package.version:type: str
