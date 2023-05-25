@@ -3,6 +3,7 @@
 
 import re
 from src.core.common import is_pycode
+from src.core.constant.tokens import NOT_EXIST
 
 def expand_macro(str_macro, fspath):
     from src.core.config_space import config_space
@@ -23,6 +24,13 @@ def expand_macro(str_macro, fspath):
         if not k.startswith("dd") and k.startswith("d"):
             v = f"{cspath}.{v}"
         sub_values[k] = config_space.get_key(v)
+
+        # defineFlags只需要看 是否真的能够获取到值，如果获取到说明是存在的
+        if ("defineFlags.+" in k) or ("defineFlags.-" in k):
+            if sub_values[k] == NOT_EXIST:
+                sub_values[k] = False
+            else:
+                sub_values[k] = True
     return substitute(str_macro, sub_values)
 
 

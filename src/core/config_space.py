@@ -6,7 +6,9 @@ from src.core.evaluator.merge import merge_values
 from src.core.evaluator.transform import transform_key_default
 from src.core.common import format_package_json
 from src.core.evaluator.check import check_value
+from src.core.constant.tokens import NOT_EXIST
 from src.log import log
+import platform
 
 def make_synchronized(func):
     import threading
@@ -50,11 +52,14 @@ class ConfigSpace(dict):
         if value is not None:
             return value
 
-        values = self.get(f"{key}:values")
-        if values is None:
-            return self.get(f"{key}:default", None)
+        values = self.get(f"{key}:values", NOT_EXIST)
+        if values == NOT_EXIST:
+            return self.get(f"{key}:default", NOT_EXIST)
 
         value = merge_values(key)
+        if value == NOT_EXIST:
+            return NOT_EXIST
+
         if key in ConfigSpace.checked_failed_keys:
             return None
 
@@ -78,10 +83,7 @@ class ConfigSpace(dict):
                 YamlLoader(raw_key, fspath).load()
                 ConfigSpace.fspath_loaded.add(fspath)
         value = self.get_key_value(key)
-        if value is not None:
-            return value
-
-        return ""
+        return value
 
     def add_key(self, key, value, fspath):
         key_info = transform_key_default(key, value, fspath)
@@ -106,6 +108,8 @@ class ConfigSpace(dict):
             if "useConfigureFlags" in key:
                 continue
             value = config_space.get_key(key)
+            if value == NOT_EXIST:
+                continue
             short_key = key.replace(f"{pre_name}.", "")
             package_info[short_key] = value
 
@@ -120,5 +124,9 @@ class ConfigSpace(dict):
         pacakge_json = self.get_package(package_name)
         return format_package_json(pacakge_json)
 
+    def set_arch(self, arch="aarch64"):
+        self.arch = arch
+
 
 config_space = ConfigSpace()
+config_space.arch = platform.machine()
