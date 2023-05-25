@@ -41,7 +41,7 @@ There are 3 options to support this
 Macro can take any form, like below. However best use the same form with
 "language native attributes".
 
-## key reference macros
+## key reference macros (obsolete)
 
 在一个key的value部分和when condition部分，可以以如下形式引用其它key:
 
