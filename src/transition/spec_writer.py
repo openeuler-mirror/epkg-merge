@@ -169,7 +169,7 @@ class SpecWriter:
                 value = self.metadata[key]
                 if 'meta' in value:
                     for sub_key in value['meta']:
-                        self.metadata[key][sub_key] = value[sub_key]
+                        self.metadata[key][sub_key] = value['meta'][sub_key]
                     del self.metadata[key]['meta']
 
     def format_runtimePhase(self):
