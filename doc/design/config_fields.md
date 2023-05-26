@@ -290,7 +290,7 @@ reference：nixpkgs的build phases相当丰富，且一致性较好，值得借�
 对RPM spec，缺省进行Source0 => source.0的映射，也就是使用数字命名。
 
 这样使其它layer容易使用名字来override。
-在phase脚本内也方便引用%%{source.0}，相对而言，原spec引用方式是: %{SOURCE0}
+在phase脚本内也方便引用${{pkg.source.0}}，相对而言，原spec引用方式是: %{SOURCE0}
 
 	source.name1: url
 	source.name1:md5sum:
@@ -350,11 +350,12 @@ btw, the '.' escape rule:
 
 当用户指定了一个version, 对应的会创建如下属性之一，以确定下载方式。
 
-	source.0:sha256: %%{versions.%%{version}.sha256}
+	source.0:sha256: ${{pkg.versions.${{pkg.version}}.sha256}}
+	source.0:sha256: ${{pkg['versions.' + pkg.version + '.sha256']}}  # another form, but not supported for now
 
-	git.0:commit: %%{versions.%%{version}.commit}
-	git.0:branch: %%{versions.%%{version}.branch}
-	git.0:tag: %%{versions.%%{version}.tag}
+	git.0:commit: ${{pkg.versions.${{pkg.version}}.commit}}
+	git.0:branch: ${{pkg.versions.${{pkg.version}}.branch}}
+	git.0:tag: ${{pkg.versions.${{pkg.version}}.tab}}
 
 其中branch/tag不稳定，如需可重复，建议访问git服务，获取和设置当时对应的commit属性。
 
@@ -376,8 +377,8 @@ multi version中，某个具体version的url可以通过
 
 特殊情况source url scheme发生变化：
 
-	source.0: https://github.com/harfbuzz/harfbuzz/releases/download/%%{version}/harfbuzz-%%{version}.tar.xz
-	source.0 when @:2.3.1: http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-%%{version}.tar.bz2
+	source.0: https://github.com/harfbuzz/harfbuzz/releases/download/${{pkg.version}}/harfbuzz-${{pkg.version}}.tar.xz
+	source.0 when @:2.3.1: http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-${{pkg.version}}.tar.bz2
 
 ## patchset 字段
 
@@ -430,7 +431,6 @@ files.yaml:
 ## changelog.md 文件
 
 changelog内容分开存放到changelog.md文件中去。它的内容适合存为 markdown 格式。
-changelog中的%%macro/%%{macro}是为了转义，在独立changelog.md文件中可以还原为%macro/%{macro}。
 
 changelog.md不必加载到YAML，减少解析负担。
 

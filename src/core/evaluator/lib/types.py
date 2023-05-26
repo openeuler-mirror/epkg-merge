@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
+from src.core.constant.tokens import NOT_EXIST
 
 def get_referAttrs(pkg_key):
     from src.core.config_space import config_space
@@ -43,12 +44,12 @@ def get_func(key, func_name, params_name):
     from src.core.config_space import config_space
 
     merge_func = config_space.get_key(f"{key}:{func_name}")
-    if merge_func:
+    if merge_func != NOT_EXIST:
         return merge_func, config_space.get(f"{key}:{params_name}", "")
 
     keys = gen_keys(key)
     for key_item in keys:
         merge_func = config_space.get_key(f"{key_item}:{func_name}")
-        if merge_func:
+        if merge_func != NOT_EXIST:
             return merge_func, config_space.get(f"{key_item}:{params_name}", "")
     return None, ""

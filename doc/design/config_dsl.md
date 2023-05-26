@@ -2,7 +2,12 @@
 
 设计原则
 - KISS
+  - 用尽量少的规则，覆盖尽量多的场景。追求通用性和一致性，减少开发成本与用户认知负担
+  - 定义清晰的概念，确定性的语义行为，简便的语法形式
 - understandable
+  - YAML各字段的含义一看便知，不容易产生歧义
+  - 规则符合开发者的一般预期，不要给人以惊奇
+  - 可理解性和理解一致性优于简洁性，以支撑一个robust, scalable的生态大体系
 - enough to meet 80% requirements
 
 ## YAML格式要求: 可脚本处理，包括read/write/update
@@ -32,17 +37,23 @@
 
 事实上可以在提供update能力的同时，在YAML内(value部分)保有简单逻辑能力：
 
-	key: {{1 if condition else 2}}
+	key: ${{1 if condition else 2}}
 	key!: 1 if condition else 2
 
 在此我们约定如下两种情况，解析为python表达式
-- 包含{{ }}的字符串
-- 以"!"结尾的key
+- 包含${{ }}的字符串
+- 以"!"结尾的key (consider in future, if it's proved to be very common case)
 
-{{ python-expression }} 会被替换为 repr(python-expression)
-所以{{ }}中前后多余的空格不会被显示。
+${{ python-expression }} 会被替换为 print(python-expression) 的结果，
+所以${{ }}中前后多余的空格不会被显示。
 
-## 字段引用
+Example:
+
+	key: ${{ 'hello' }} world
+	=>
+	key: hello world
+
+## 字段引用 (obsolete)
 
 按引用的场合方式，可分为两大类：
 a) python code内无缝替换
@@ -89,7 +100,223 @@ b) 任意位置的宏替换
 
 我们的宏只出现在key/value部分，仍然是合法的YAML，是update友好的。
 
-## 宏引用不存在的字段
+## 字段引用 (改进版)
+
+以上d/dd, %%/%%%不符合一看便知的原则。可统一为以下字段引用形式
+
+### reference by object path
+
+	pkg.xxx		# 引用本包字段xxx
+	top.yyy		# 引用顶级字段yyy
+
+Examples:
+
+	pkg.version		=> '3.1.0'
+	top.pkgs.bash.version	=> '3.1.0'
+
+Example in package tracker3.yaml:
+
+	source:
+	    0: https://download.gnome.org/sources/tracker/3.3/tracker-${{pkg.version}}.tar.xz
+	provides:
+	    - tracker3 = ${{pkg.version}}-${{pkg.release}}
+	obsoletes:
+	    - tracker3 < ${{pkg.version}}
+	conflicts:
+	    - tracker3 < ${{pkg.version}}
+
+	subpackage.libtracker-sparql3:
+	    provides:
+		- libtracker-sparql3 = ${{pkg.version}}-${{pkg.release}}
+	    obsoletes:
+		- libtracker-sparql3 < ${{pkg.version}}
+		- libtracker-control < 2.3.6-10
+		- libtracker-miner < 2.3.6-10
+	    conflicts:
+		- libtracker-sparql3 < ${{pkg.version}}
+
+### reference by object method
+
+在需要的时候，还可以使用如下函数形式。以pkg为例：
+
+	pkg[key]	# raise error if key doesn't exist
+	pkg.get(key)	# return None if key doesn't exist, or was YAML null
+	pkg.has(key)	# return True/False indicating whether key exists
+
+Examples:
+
+	pkg['version']		=> '3.1.0'
+	pkg.get('version')	=> '3.1.0'
+	pkg.has('version')	=> True
+
+### valid context for references
+
+以上pkg/top字段引用只可以出现在如下两类上下文中
+
+- YAML val: ${{ python code }}
+- YAML key: when condition
+
+### design tradeoffs for ${{ }}
+
+为什么选择${{ }}，而不是%%或者其他形式？基本原则是最小化冲突。
+1. ${{ }} 比 %%{} 更容易解析，特别是寻找对应的结束部分}}
+2. 避免RPM spec已使用的宏形式
+3. 避免YAML里容易出问题的符号
+4. 避免shell常见的符号
+5. 避免python常见的符号，预防开发者一不小心在embedded python code里写了一个可被解析为结束符的符号
+
+option1: {{ }}
+problem: 当它是值的开始部分时，会导致YAML加载问题
+
+	var1: hi
+	var2: {{var1}}.txt	# 加载报错，需要加""避免，对用户是个麻烦
+	var3: {{var1}}		# 加载为 {{var1: null}: null}，导致更危险的静默错误
+
+option2: %{} %%{}
+problem: 当它是值的开始部分时，会导致YAML加载问题。同样有YAML问题的是!@#
+problem: 结束符}很容易与python code里常见的}混淆和出错
+problem: RPM spec已占用%, %%
+
+https://rpm-software-management.github.io/rpm/manual/macros.html
+RPM使用了
+
+	%name
+	%{name}
+	%(shell command)
+	%[expression]
+
+	%%也出现了不少，是对%的escape
+
+option3: $[[ ]] $(( )) $<< >>
+problem: 以上三种形式均易与shell code冲突
+
+从以下统计来看，${{ }}是最不容易与python code冲突的
+
+	$ grep '${{' /c/*/*/*/*.py|wc -l
+	0
+	$ grep '{{' /c/*/*/*/*.py|wc -l
+	61
+	$ grep '}}' /c/*/*/*/*.py|wc -l
+	185
+
+	$ grep '>>' /c/*/*/*/*.py|wc -l
+	284
+	$ grep ']]' /c/*/*/*/*.py|wc -l
+	1099
+	$ grep '))' /c/*/*/*/*.py|wc -l
+	13283
+
+	$ grep '\[\[' /c/*/*/*/*.py|wc -l
+	220
+	$ grep '((' /c/*/*/*/*.py|wc -l
+	1101
+
+而且冲突一般很容易解决，把"}}"改成"} }"即可:
+
+	dep_graph = {spec: {}}
+	=>
+	dep_graph = {spec: {} }
+
+只有少数情况才需要加转义
+
+	("hello = '{{foo  }}'", "hello = 'bar'"),
+	=>
+	("hello = '{{foo  }\}'", "hello = 'bar'"),
+
+### design tradeoffs for pkg/top
+
+option1: `_pkg/_top`
+benefit: 不会与用户自定义变量混淆
+problem: python code in yaml是高度面向reference的小代码片段，类似js dom。pkg/top会大量用到，且多数时候就是单纯的值引用。在这种特定上下午下的代码，加前缀带来的不方便更多。
+
+option2: refer to OmegaConf interpolations: absolute by default; relative if prefixed by one or more dots
+benefit: 很自然，少写一些pkg.
+problem: 不容易实现解析代码
+problem: 不是合法的python code
+problem: 没法像pkg/top那样，完美的模拟为object with methods in python code，类似JS DOM(文档对象模型)
+problem: 更容易与python code里的用户变量名混淆
+problem: 相对引用暂无必要。从rpm spec转过来的，基本是本包引用，其他是少量顶级引用
+problem: 相对引用有脆弱性。容易造成copy/paste error
+problem: 相对引用对grep/sed等简易工具不友好
+problem: 不带pkg.限定符，是本文档内的绝对引用，还是相对当前key path的引用? 不同的用户可能理解不一致
+
+	dir1:
+	  var1: 1
+	  var2: ${{var1}}		# some users may assume this form
+	  var3: ${{dir1.var1}}		# some users may assume this form
+
+#### reference: 各语言的字符串插值形式
+
+Examples interpolation in common languages:
+
+	C#             $"{x} plus {y} equals {x + y}"
+	Visual Basic   $"{x} plus {y} equals {x + y}"
+	Python         f"{x} plus {y} equals {x + y}"
+	Scala          s"$x plus $y equals ${x + y}"
+	Groovy         "$x plus $y equals ${x + y}"
+	Kotlin         "$x plus $y equals ${x + y}"
+	JavaScript     `${x} plus ${y} equals ${x + y}`
+	Ruby           "#{x} plus #{y} equals #{x + y}"
+	Swift          "\(x) plus \(y) equals \(x + y)"
+	JAVA	       "\{x} plus \{y} equals \{x + y}"
+
+#### reference: template forms in various DSL
+
+ERB:
+
+	<% @objects.each do |object| %>
+	   <h1><%= object.name %></h1>
+	<% end %>
+
+SLIM:
+
+	div(class="title")
+	  h1 = @object.name
+
+JINJA2:
+
+	{% for user in users %}
+	  <li><a href="{{ user.url }}">{{ user.username }}</a></li>
+	{% endfor %}
+
+JSONNET:
+
+	{ a: 1, b: self.a }
+	{ a: if "a" in super then super.a + b else b, b: 1 }
+
+YGLU: https://github.com/lbovet/yglu/blob/master/README.md
+
+	# $_ refers to the current document root. Can be omitted at the beginning of the expression if it starts with a dot.
+	a: 1
+	b: !? .a + 1
+
+	c: hello,
+	d: world
+	e: !? $_.c.substring(0,1).toUpper() +
+	      $_.c.substring(1) + $_.d
+
+Dynamic YAML: https://github.com/childsish/dynamic-yaml
+
+	project_name: hello-world
+	dirs:
+	    home: /home/user
+	    venv: "{dirs.home}/venvs/{project_name}"
+	exes:
+	    main: "{dirs.bin}/main"
+
+OmegaConf: https://omegaconf.readthedocs.io/en/2.3_branch/usage.html#variable-interpolation
+
+	server:
+	  host: localhost
+	  port: 80
+
+	client:
+	  url: http://${server.host}:${server.port}/
+	  server_port: ${server.port}
+	  # relative interpolation
+	  description: Client of ${.url}
+
+## 宏引用不存在的字段 (obsolete)
 
 当宏引用的key不存在时，系统将报错，以避免拼写错误等造成的静默bug。
 通常空值(YAML null or python None)也意味着数据有问题，系统应当阻止其传播。

@@ -262,7 +262,7 @@ def p_expression_notin(p):
 
 ## 与其他模块的交互
 config-space.get(key): 当key不存在时，能够自动加载yaml，# 理论这一步再get时候就已经开始了，不会再此处才加载
-merge_value(py.code): 再内部展开 %%{} %%%{} d.xxx, dd.xxx；并调用python解释器执行，返回结果
+merge_value(py.code): 再内部展开 ${{ }} pkg.xxx, top.xxx；并调用python解释器执行，返回结果
 
 // 用于values的优先级排序
 config-space.get(yaml:origin?):读取yaml的origin的实现
@@ -276,13 +276,13 @@ config-space.get(yaml:layerPrio):读取yaml的layerprio的实现
 ```python
 # values的值
 values = [{
-  "value": "%%key2 + %%%pkgs.gcc.epol",
+  "value": "${{pkg.key2 + top.pkgs.gcc.epol}}",
   "fspath": "/xx/cc1/x1.yaml",
-  "when": "{{ 1==d.xxx }}"
+  "when": "${{ 1==pkg.xxx }}"
 },{
-  "value": "%%key2 + %%%pkgs.gcc.epol",
+  "value": "${{pkg.key2 + top.pkgs.gcc.epol}}",
   "fspath": "/xx/cc2/x2.yaml",
-  "when": "{{ 2==dd.pkgs.gcc.epol }}"
+  "when": "${{ 2==top.pkgs.gcc.epol }}"
 },]
 ```
 

@@ -16,17 +16,17 @@ OS定制体现为，含代码逻辑的大量YAML文件及python函数库，
 
 baseos/package1.yaml
 	key1: val1
-	key2: {{ python code on d.key1 }}
+	key2: ${{ python code on pkg.key1 }}
 
 layer1/package1.yaml
 	key1: val2
 
 layer2/package1.yaml
-	key2: {{ updated python code on d.key1 }}
+	key2: ${{ updated python code on pkg.key1 }}
 
 after merging
 	key1: val2
-	key2: {{ updated python code on d.key1 }}
+	key2: ${{ updated python code on pkg.key1 }}
 
 must be DAG, error on circle
 	# key1 finalize后，对 key2 求值，得到确定性的json
@@ -225,13 +225,13 @@ YAMLLoader 会把它们加载为
 核心数据结构：
 	维护一个`leaf_key`的DAG hash
 
-		key1: %%{key2} or %%%{key2}
+		key1: ${{pkg.key2}} or ${{top.key2}}
 	=>
 		create DAG edge from key2 to key1
 
 功能：
 	multi-thread 调度执行入度为0的leaf_key求值
-	求值时如发现%%{} %%%{}引用依赖，则按需扩展DAG edge/node
+	求值时如发现${{ }}引用依赖，则按需扩展DAG edge/node
 
 基本流程：
 
@@ -271,10 +271,10 @@ YAMLLoader 会把它们加载为
 			return val
 
 	expand_macro(val):
-		for each %%{} %%%{} referenced key in val:
+		for each pkg.xxx/top.xxx referenced key in val:
 			evaluate_key(ref_key) # XXX: turn into DAG scheduling
-		replace %%{} %%%{} in val
-		replace d.xxx, dd.xxx in python code
+		replace pkg.xxx/top.xxx in val
+		replace pkg.xxx, top.xxx in python code
 		return val
 
 	eval_python(val):
@@ -334,9 +334,9 @@ tiny interpret for simple expressions
 write python class/methods and call python interpreter for non-trivial logics
 on error, save generated standalone python code for easy debug
 define python read-only property
-- d.version
-- d['subpackage.devel.requires'] 
-- dd['pkgs.bash.version'] 
+- pkg.version
+- pkg['subpackage.devel.requires']
+- top['pkgs.bash.version']
 
 ## yaml + pure funcs model
 
