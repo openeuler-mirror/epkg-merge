@@ -11,7 +11,7 @@
 		- path2
 		- path3
 
-LayerLoader 将遍历以上目录，递归加载其下的index.yaml到config_space，
+LayerLoader 将遍历以上目录，递归加载其下的defaults.yaml到config_space，
 完成config_space的初始骨架搭建，为惰性求值做好准备。
 
 ## layer目录结构
@@ -21,15 +21,75 @@ LayerLoader 将遍历以上目录，递归加载其下的index.yaml到config_spa
 	lib/module1.py
 	lib/module2.py
 
-	pkgs1/index.yaml
-	pkgs1/gcc/gcc.yaml
-	pkgs1/llvm/llvm.yaml
+	pkgs/defaults.yaml
+	pkgs/gcc/package.yaml
+	pkgs/llvm/package.yaml
+	pkgs/bash/package.yaml
 
-	pkgs2/index.yaml
-	pkgs2/bash/bash.yaml
-	pkgs2/lftp/lftp.yaml
+## 常见的包目录结构
 
-## index.yaml
+case 1:
+
+	pkgs/pkg1/package.yaml # chain load more files
+	pkgs/pkg1/files.yaml
+	pkgs/pkg1/versions.yaml
+	pkgs/pkg1/defineFlags.yaml
+	pkgs/pkg1/phase.sh
+	pkgs/pkg1/runtimePhase.sh
+	pkgs/pkg1/changelog.md
+	pkgs/pkg1/patches/xxx.patch
+
+	pkgs/pkg2/package.yaml # chain load more files
+	pkgs/pkg2/...
+
+	pkgs/pkg3/package.yaml # chain load more files
+	pkgs/pkg3/...
+
+case 2: a set of generated packages
+
+	pkgs/python-modules/defaults.yaml
+		ondemandLoadFileGlob: *.yaml
+		cspath: pkgs.${{pkg._basename}}
+
+	pkgs/python-modules/pkg1.yaml
+	pkgs/python-modules/pkg2.yaml
+	...
+	pkgs/python-modules/pkg1000.yaml
+
+case 3: per language/build-system defaults
+
+	pkgs/rust/defaults.yaml
+	pkgs/rust/pkg1/package.yaml
+	pkgs/rust/pkg2/package.yaml
+
+	pkgs/cmake/defaults.yaml
+	pkgs/cmake/pkg1.yaml
+	pkgs/cmake/pkg2.yaml
+
+case 4: multi-version packages
+
+简单直接的include common fields:
+
+	pkgs/gcc/common.yaml
+	pkgs/gcc/package.yaml		# depend on gcc-XX; create executable symlink gcc to gcc-XX
+
+	pkgs/gcc-10/package.yaml
+		include: ../gcc/common.yaml
+		version: 10.4.0
+
+	pkgs/gcc-11/package.yaml
+		include: ../gcc/common.yaml
+		version: 11.3.0
+
+但这里的include仅适用于同一代码仓里的互相引用：当有三方层想加一个gcc-12时，找不到可以include的common.yaml
+此时用inherit更合适:
+
+	# 3rd party layer
+	pkgs/gcc-12/package.yaml
+		inherit: pkgs.gcc-11
+		version: 12.2.0
+
+## index.yaml (obsolete)
 
 index.yaml定义所在目录及递归子目录下
 - 配置文件列表（正则表达式）
@@ -54,14 +114,35 @@ index.yaml样例
 			phase:referAttrs: types.package.phase
 			runtimePhase:referAttrs: types.package.runtimePhase
 
-其中的${{ }}宏引用，需要LayerLoader/YAMLLoader支持下面的隐含字段
+## defaults.yaml (obsoletes index.yaml)
+
+defaults.yaml定义缺省字段，它们会被自动合入所在目录及递归子目录下的主yaml文件。
+pkgs/的缺省defaults.yaml定义如下
+
+	ondemandLoadFileGlob: package.yaml	# 按需加载哪些文件名
+	cspath: pkgs.${{pkg._dirname}}		# 加载该YAML文件内的字段到配置空间哪个路径下
+
+	includePhase: phase.sh phase.lua
+	includeRuntimePhase: runtimePhase.*
+	includeFields: files.yaml versions.yaml defineFlags.yaml
+
+	:referAttrs: types.package
+	meta:referAttrs: types.package.meta
+	phase:referAttrs: types.package.phase
+	runtimePhase:referAttrs: types.package.runtimePhase
+
+其中${{ }}里的字段引用，需要LayerLoader/YAMLLoader支持下面的隐含字段
 
 	_filepath: /full/path/to/pkgname/pkgname.yaml
 	_dirname:  /full/path/to/pkgname
 	_filename: pkgname.yaml
 	_basename: pkgname
 
-这些字段可供配置文件引用，LayerLoader/YAMLLoader负责把它们替换为实际值。
+这些字段可供配置文件引用，LayerLoader/YAMLLoader 负责把它们替换为实际值。
+
+ondemandLoadFileGlob+cspath共同决定了按需加载哪些YAML文档到配置空间哪里:
+LayerLoader 会遍历 ondemandLoadFileGlob, 对所有匹配的YAML文件，在配置空间生成 `$cspath.fspath: $_filepath` 映射。
+这样$cspath.xxx字段被引用时，即可被按需加载$cspath.fspath指向的YAML文档。
 
 ## YAMLLoader 加载要点
 
@@ -109,7 +190,7 @@ config files index是索引数据库，包含所有config files的信息
 1) 单个 full config file 包含字段
 	cspath: pkgs.bash
 2) 一组 full config files 按特定方式组织目录结构/文件名，
-然后用一个index.yaml文件来统一描述文件系统路径到配置空间路径的映射规则。
+然后用一个defaults.yaml文件来统一指定cspath.
 最好是不加修改的一对一映射，文件路径直接代表配置路径，方便理解和记忆。
 
 样例1：
@@ -131,7 +212,7 @@ config files index是索引数据库，包含所有config files的信息
 		pkgs.bash.version: v1
 		pkgs.gcc.version: v2
 
-通常不直接在一个个yaml里写`cspath`，而是在index.yaml里对一组文件定义`cspath<=>fspath`双向映射。
+通常不直接在一个个yaml里写`cspath`，而是在defaults.yaml里对一组文件定义`cspath<=>fspath`双向映射。
 
 ## phase.sh for build phases
 
@@ -152,7 +233,7 @@ shell脚本字段，可写到独立的.sh文件中去.
 
 加载phase.sh到config space的过程:
  
-LayerLoader根据index.yaml的以下内容，自动添加
+LayerLoader根据defaults.yaml的以下内容，自动添加
 
 		includePhase: phase.sh
 
