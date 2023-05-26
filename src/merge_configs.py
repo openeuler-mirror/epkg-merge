@@ -6,6 +6,7 @@ import argparse
 import os
 import logging
 import json
+import platform
 
 sys.path.append(os.path.abspath("."))
 
@@ -22,8 +23,12 @@ def main():
     parser.add_argument("-o", "--output", help="which dir the output is redirected to")
     parser.add_argument("-d", "--debug", action="store_true", help="output the run log to the terminal")
     parser.add_argument("-l", "--list-features", help="displays user configuration information")
+    parser.add_argument("-a", "--arch", help="set merge arch")
     args = vars(parser.parse_args())
     list_features_info = {}
+    arch = args.get("config_file", platform.machine())
+    config_space.set_arch(arch)
+
     if args["list_features"]:
         for k in args["list_features"].split(","):
             list_features_info[k] = {}

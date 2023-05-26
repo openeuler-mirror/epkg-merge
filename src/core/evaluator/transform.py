@@ -140,7 +140,7 @@ def transform_key_with_defineFlags(key_dict: dict) -> dict:
         if "defineFlags" not in key:
             res[key] = value
             continue
-        last_key = key.split(".")[-1]
+        last_key = key.split("defineFlags.")[-1]
         if last_key.startswith("+"):
             real_key = key.replace(last_key, last_key[1:])
             value['value'] = True
@@ -208,10 +208,8 @@ def transform_key_with_when(key_dict: dict) -> dict:
         when_statements = when_statement.split(" ")
         when = ""
         for flag in when_statements:
-            if flag.startswith("+"):
-                when = "{} %%defineFlags.{}".format(when, flag[1:])
-            elif flag.startswith("-"):
-                when = "{} not %%defineFlags.{}".format(when, flag[1:])
+            if flag.startswith("+") or flag.startswith("-"):
+                when = "{} %%defineFlags.{}".format(when, flag)
             else:
                 when = "{} {}".format(when, flag.strip())
 
@@ -265,7 +263,7 @@ def transform_key_with_iuse(key_dict: dict):
 
 def transform_key_default(key, value, fspath):
     transform_list = [
-        transform_key_with_defineFlags,
+        # transform_key_with_defineFlags,
         transform_key_with_iuse,
         transform_key_with_use_configure,
         transform_key_with_when,

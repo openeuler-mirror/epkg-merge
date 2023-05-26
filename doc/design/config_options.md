@@ -26,7 +26,7 @@
 	    key:checkParams
 
 use字段经由如下方式之一对影响构建行为：
-- %%{use.xxx} 宏替换，一般用于phase.xxx
+- ${{pkg.use.xxx}} 宏替换，一般用于phase.xxx
 - 通过transform函数，修改env.xxx，进而影响引用这些env的builder script
 
 可以直接修改CFLAGS等env变量实现的定制，就不要使用use。
@@ -106,7 +106,7 @@ defineFlags的底层实现，是通过transform函数添加如下字段
 			recommends: 	runtime-recommends-for-f1
 			conflicts: 	packageconfig-conflicts-for-f1
 		f2:
-			configureFlags: --with-f2=%%{use.f2} # 当有若干values时，用该方式较方便
+			configureFlags: --with-f2=${{pkg.use.f2}} # 当有若干values时，用该方式较方便
 
 Can prefix the f1/f2 key with +/- to set default to true/false.
 
@@ -374,7 +374,7 @@ YAML
 => transform to
 	env.configureFlags: --enable-ssl
 => used by build phase script
-	phase.configure: %configure %%{env.configureFlags} 
+	phase.configure: %configure ${{pkg.env.configureFlags}}
 
 新spec
 	%conf

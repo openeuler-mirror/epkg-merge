@@ -7,6 +7,7 @@ from src.core.common import is_pycode, eval_python
 from src.core.evaluator.lib.merge_funcs import sort_doctype
 from src.log import log
 from src.core.evaluator.parser.when_parser import parser
+from src.core.constant.tokens import NOT_EXIST
 
 def cmp(v_left, v_right):
     from src.core.config_space import config_space
@@ -78,7 +79,7 @@ def convert_val(val, fspath):
 
 def get_val(val, fspath):
     if val is None:
-        return True
+        return None
     if type(val) is not list:
         return convert_val(val, fspath)
     temp_val = []
@@ -90,7 +91,7 @@ def get_val(val, fspath):
 
 def merge_with_func(merge_func, merge_params, values_all):
     current = ""
-
+    have_value = False
     for cur_value in values_all:
         fspath = cur_value.get('fspath')
         try:
@@ -100,15 +101,23 @@ def merge_with_func(merge_func, merge_params, values_all):
             log.error(f"expand {cur_value.get('when')} failed!")
             when_value = False
 
+        if when_value == NOT_EXIST:
+            continue
+
         if when_statement:
-            when_result = parser.parse(when_value, debug=True)
+            when_result = parser.parse(when_value)
             if not when_result or str(when_result).upper() == "FALSE":
                 continue
+        have_value = True
         raw_value = cur_value.get("value", "")
         value = get_val(raw_value, fspath)
         current, is_continue = merge_func(current, value, merge_params)
         if not is_continue:
             break
+
+    if not have_value:
+        return NOT_EXIST
+
     return current
 
 

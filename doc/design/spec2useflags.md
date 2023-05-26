@@ -1,7 +1,7 @@
 # spec2yaml中新增python逻辑对%configure块进行解析
 
 - 扫描其中的--enable-xxx --disable-xxx --with-xxx --without-xxx
-- 取出其中的固定选项，存入 YAML env.configureFlags，然后用%%{env.configureFlags}替代之
+- 取出其中的固定选项，存入 YAML env.configureFlags，然后用${{pkg.env.configureFlags}}替代之
 - 受with macro控制的条件选项，安排YAML对应的defineFlags，并定义传入macro
 
 	defineFlags:
@@ -19,7 +19,7 @@ rpmGlobal里的宏定义，会被yaml2spec加到spec的最前面。此处定义_
 	defineFlags:
 		$flag:
 	rpmMacros:
-		- "%define $flag %%{use.$flag}"
+		- "%define $flag ${{pkg.use.$flag}}"
 
 此处需要把rpmMacros下原来的那行%define/%global替换掉。
 未来也可以考虑抽取到rpmGlobal，把可定制项往rpmGlobal集中。
@@ -43,7 +43,7 @@ spec input:
 yaml output:
 
 	phase.build:
-		%configure %%{env.configureFlags} \
+		%configure ${{pkg.env.configureFlags}} \
 		%if %{build_pdf_doc}
 			   --enable-doxygen-pdf \
 		%else
@@ -59,7 +59,7 @@ yaml output:
 			default: false
 	rpmMacros:
 		# 替换掉原来的 - %global build_pdf_doc 0
-		- "%global build_pdf_doc %%{use.build_pdf_doc}"
+		- "%global build_pdf_doc ${{pkg.use.build_pdf_doc}}"
 
 Notes: spec 里
 		%if %{build_pdf_doc}
@@ -89,7 +89,7 @@ Then we'll be able to expand %{} in YAML like this
 
 	%{xxx}
 =>
-	%%{rpmGlobal.xxx}
+	${{pkg.rpmGlobal.xxx}}
 
 For example,
 
@@ -111,9 +111,9 @@ to YAML file
 
 The macro in the above key can be expanded as follows
 
-  %{pcs_snmp_pkg_name}
+  %{pcs_snmp_pkg_name}}
   =>
-  %%{rpmGlobal.pcs_snmp_pkg_name}
+  ${{pkg.rpmGlobal.pcs_snmp_pkg_name}}
   =>
   pcs-snmp
 

@@ -41,11 +41,11 @@ index.yaml样例
 	configFilesPattern: (?<_pkgname>[-0-9a-z]+)/\1\.yaml
 	registerConfigSpaceForEachFile:
 		# 建立key=>file mapping，用于延迟加载
-		pkgs.%%_basename.fspath: %%_filepath
+		pkgs.${{pkg._basename}}.fspath: ${{pkg._filepath}}
 
 		# 定义适用于本组文件的公共字段/属性
-		files."%%_filepath".include:
-			name: %%_basename # can catch spell error if conflict with the name defined in yaml
+		files."${{pkg._filepath}}".include:
+			name: ${{pkg._basename}} # can catch spell error if conflict with the name defined in yaml
 			includePhase: phase.sh
 			includeRuntimePhase: runtimePhase.sh
 			include: versions.yaml files.yaml
@@ -54,7 +54,7 @@ index.yaml样例
 			phase:referAttrs: types.package.phase
 			runtimePhase:referAttrs: types.package.runtimePhase
 
-其中的%%宏引用，需要LayerLoader/YAMLLoader支持下面的隐含字段
+其中的${{ }}宏引用，需要LayerLoader/YAMLLoader支持下面的隐含字段
 
 	_filepath: /full/path/to/pkgname/pkgname.yaml
 	_dirname:  /full/path/to/pkgname
@@ -74,15 +74,15 @@ index.yaml样例
 
 
 4) 对YAML字段:
-- 替换key中的%%宏
+- 替换key中的${{ }}宏
 - 如有:checkFunc属性，执行检查函数
 - 如有:transformFunc属性，执行变换函数以引入额外字段
 - value 原封不动加入 :values 属性，同时加入相关信息
 
 	key:values +=
 			{
-				value: %%key
-				origin: %%fspath
+				value: ${{pkg.key}}
+				origin: ${{pkg.fspath}}
 				when: when_cond
 			}
 
@@ -90,10 +90,10 @@ index.yaml样例
 
 6) 在配置空间注册文件信息，以便merge时取用
 
-	files."%%fspath".cspath:
-	files."%%fspath".docType:
-	files."%%fspath".layerName:
-	files."%%fspath".layerPrio:
+	files."${{pkg.fspath}}".cspath:
+	files."${{pkg.fspath}}".docType:
+	files."${{pkg.fspath}}".layerName:
+	files."${{pkg.fspath}}".layerPrio:
 
 ## config file <<==>> config space 模型
 
@@ -323,7 +323,6 @@ scriptlets内部或者外部，都可能有%if/%endif条件。这些使得.sh看
 	$ build?+xxx() { echo ; }
 	$ build?-xxx() { echo ; }
 	$ build?xxx=yyy() { echo ; }
-	$ build?%%xxx!=y() { echo ; }
 	$ build?arch=a,b,c() { echo ; }
 	$ build?@1.1:1.2() { echo ; }
 

@@ -76,7 +76,7 @@ def t_FALSE(t):
 
 
 def t_NAME(t):
-    r'[a-zA-Z_][a-zA-Z0-9_]*\s*'
+    r'[a-zA-Z_][a-zA-Z0-9_-]*\s*'
     t.type = 'NAME'
     t.value = str(t.value).strip()
     return t
@@ -108,13 +108,14 @@ precedence = (
     ('left', 'NOT'),
     ('left', 'NOT2'),
     ('nonassoc', 'EQUAL', 'EQUAL2', 'NOT_EQUAL', 'GREATER', 'LESS', 'GREATER_EQUAL', 'LESS_EQUAL'),
-    ('left', 'IN'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE'),
     ('right', 'UMINUS'),
     ('nonassoc', 'STRING'),
     ('left', 'LSQUARE'),
+    ('left', 'IN'),
     ('left', 'NOTIN'),
+
 )
 
 
@@ -235,17 +236,25 @@ def p_expression_list_convert(p):
 
 def p_expression_in(p):
     "expression : expression IN expression_list"
+    from src.core.config_space import config_space
+    if p[1] == "arch":
+        p[1] = config_space.arch
     p[0] = p[1] in p[3]
 
 
 def p_expression_notin(p):
     "expression : expression NOTIN expression_list"
+    from src.core.config_space import config_space
+    if p[1] == "arch":
+        p[1] = config_space.arch
     p[0] = p[1] not in p[3]
 
 
 def p_error(p):
-    print(p)
     print("Syntax error in input!")
 
 
 parser = yacc()
+
+if __name__ == '__main__':
+    parser.parse("arch in x86_64 arm64", debug=True)
