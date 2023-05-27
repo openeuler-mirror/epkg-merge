@@ -32,10 +32,15 @@ class YamlLoader:
         result = self.load_inherit(result)
         for k, v in result.items():
             actual_keys = config_space.add_key(k, v, self._fspath)
-            if ":" in k:
+            if ":" in k and ":rpm" not in k:
                 continue
             for actual_key in actual_keys:
-                config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
+                keys_cur = config_space.get(f"{self._cspath}:loadedKeys", [])
+                if not keys_cur:
+                    config_space[f"{self._cspath}:loadedKeys"] = keys_cur
+                if actual_key not in keys_cur:
+                    keys_cur.append(actual_key)
+                # config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
 
     def load_inherit(self, package_info):
         final_package_info = {}
@@ -93,7 +98,11 @@ class YamlLoader:
                         if ":" in k:
                             continue
                         for actual_key in actual_keys:
-                            config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
+                            keys_cur = config_space.get(f"{self._cspath}:loadedKeys", [])
+                            if not keys_cur:
+                                config_space[f"{self._cspath}:loadedKeys"] = keys_cur
+                            if actual_key not in keys_cur:
+                                keys_cur.append(actual_key)
 
     def _register_fspath_info(self) -> None:
         from src.core.config_space import config_space

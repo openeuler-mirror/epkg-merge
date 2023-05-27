@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
+import re
 
 
 def is_pycode(val: str):
@@ -39,6 +40,12 @@ def format_subpackage(k, v, format_json, raw_json):
     if len(k.split(".")) < 3:
         return
     subpackage, name, key = k.split(".", 2)
+    pattern = r"\d+.\d+"
+    if re.search(pattern, k):
+        pattern_k = r"(\w+)\.(.*\d+)\.(.*$)"
+        match = re.match(pattern_k, k)
+        if match:
+            subpackage, name, key = match.groups()
     rpm_when_name = "{}.{}:rpmWhen".format(subpackage, name)
     if raw_json.get(rpm_when_name):
         name = "{} rpmWhen {}".format(name, raw_json.get(rpm_when_name))
@@ -47,8 +54,8 @@ def format_subpackage(k, v, format_json, raw_json):
     if raw_json.get(rpm_when_key):
         key = "{} rpmWhen {}".format(key, raw_json.get(rpm_when_key))
 
-    format_json.setdefault(subpackage, {}).setdefault(name, {}) \
-        .setdefault(key, v)
+    sub_name = "{}.{}".format(subpackage, name)
+    format_json.setdefault(sub_name, {}).setdefault(key, v)
 
 
 def format_patchset(k, v, format_json, raw_json):
