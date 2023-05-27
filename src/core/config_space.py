@@ -88,7 +88,7 @@ class ConfigSpace(dict):
     def add_key(self, key, value, fspath):
         key_info = transform_key_default(key, value, fspath)
         for k, v in key_info.items():
-            if ":" in k:
+            if ":" in k and ":rpm_macro_param" not in k:
                 self[k] = v["value"]
                 continue
             self.setdefault(f"{k}:values", []).append(v)
