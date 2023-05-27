@@ -53,6 +53,39 @@ spec样例
 	使用参数
 		key when +ncurses: val
 
+Examples:
+
+	variant("apps", default=True, description="Install the HELICS apps executables")
+	variant("apps_lib", default=True, description="Install the HELICS apps library")
+	variant("benchmarks", default=False, description="Install the HELICS benchmarks")
+	variant("c_shared", default=True, description="Install the C shared library")
+	variant("cxx_shared", default=True, description="Install the CXX shared library")
+	variant("zmq", default=True, description="Enable ZeroMQ core types")
+	variant("tcp", default=True, description="Enable TCP core types")
+	variant("udp", default=True, description="Enable UDP core type")
+	variant("ipc", default=True, description="Enable IPC core type")
+	variant(
+	    "encryption",
+	    default=True,
+	    when="@3.2.0:",
+	    description="Enable support for encrypted communication",
+	)
+
+=>
+
+	defineFlags:
+		+apps:       Install the HELICS apps executables
+		+apps_lib:   Install the HELICS apps library
+		-benchmarks: Install the HELICS benchmarks
+		+c_shared:   Install the C shared library
+		+cxx_shared: Install the CXX shared library
+		+zmq: Enable ZeroMQ core types
+		+tcp: Enable TCP core types
+		+udp: Enable UDP core type
+		+ipc: Enable IPC core type
+	defineFlags when @3.2.0::
+		+encryption: Enable support for encrypted communication
+
 defineFlags的底层实现，是通过transform函数添加如下字段
 
 	    use.ncurses:type: bool
