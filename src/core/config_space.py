@@ -113,12 +113,7 @@ class ConfigSpace(dict):
             short_key = key.replace(f"{pre_name}.", "")
             package_info[short_key] = value
 
-        sorted_keys = sorted(package_info.keys())
-
-        package_info_sorted = {}
-        for key in sorted_keys:
-            package_info_sorted[key] = package_info[key]
-        return package_info_sorted
+        return package_info
 
     def get_package_format_json(self, package_name):
         pacakge_json = self.get_package(package_name)
