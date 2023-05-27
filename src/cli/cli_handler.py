@@ -5,6 +5,7 @@ import os
 import shutil
 import yaml
 from src.core.config_space import ConfigSpace
+from src.transition import spec_writer
 
 def handle_load(file):
     from src.core.loader.layer_loader import LayerLoader
@@ -39,7 +40,7 @@ def handle_output(package_name, content, output):
         yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
         yaml.safe_dump(content, f, allow_unicode='uft-8', sort_keys=False)
 
-    os.system(f"openEulerTransition -t {file}")
+    spec_writer.generate_spec(file)
 
     for path in ConfigSpace.fspath_loaded:
         package_path, file_name = os.path.split(path)

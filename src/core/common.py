@@ -13,6 +13,21 @@ def is_pycode(val: str):
     return True
 
 
+def remove_tab(val: str):
+    line_list = val.split(os.linesep)
+    if line_list:
+        first_line = line_list[0]
+        tab_count = 0
+        for word in first_line:
+            if word != " ":
+                break
+            tab_count += 1
+        for line_index, line in enumerate(line_list):
+            line_list[line_index] = line.replace(" " * tab_count, "", 1)
+        val = os.linesep.join(line_list)
+    return val
+
+
 def eval_python(val: str):
     import src.core.interpreter.executor
     # result = {
@@ -34,18 +49,23 @@ def eval_python(val: str):
         raise Exception("pycode parse failed, {}".format(val))
 
 
+def split_sub(k):
+    pattern = r"\d+\.\d+"
+    # 适配glibc: subpackage.glibc-compat-2.17.*
+    if re.search(pattern, k):
+        pattern = r"(\w+)\.(.*\d+)\.(.*$)"
+        match = re.match(pattern, k)
+        if match:
+            return match.groups()
+    return k.split(".", 2)
+
+
 def format_subpackage(k, v, format_json, raw_json):
     if ":rpmWhen" in k:
         return
     if len(k.split(".")) < 3:
         return
-    subpackage, name, key = k.split(".", 2)
-    pattern = r"\d+.\d+"
-    if re.search(pattern, k):
-        pattern_k = r"(\w+)\.(.*\d+)\.(.*$)"
-        match = re.match(pattern_k, k)
-        if match:
-            subpackage, name, key = match.groups()
+    subpackage, name, key = split_sub(k)
     rpm_when_name = "{}.{}:rpmWhen".format(subpackage, name)
     if raw_json.get(rpm_when_name):
         name = "{} rpmWhen {}".format(name, raw_json.get(rpm_when_name))
@@ -54,8 +74,18 @@ def format_subpackage(k, v, format_json, raw_json):
     if raw_json.get(rpm_when_key):
         key = "{} rpmWhen {}".format(key, raw_json.get(rpm_when_key))
 
-    sub_name = "{}.{}".format(subpackage, name)
-    format_json.setdefault(sub_name, {}).setdefault(key, v)
+    subpackage_name = subpackage + "." + name
+
+    if ".runtimePhase." in k:
+        v = remove_tab(v)
+    if key.startswith("meta."):
+        meta, m_key = key.split(".", 1)
+        format_json.setdefault(subpackage_name, {}).\
+            setdefault(meta, {}).\
+            setdefault(m_key, v)
+    else:
+        format_json.setdefault(subpackage_name, {}).\
+            setdefault(key, v)
 
 
 def format_patchset(k, v, format_json, raw_json):
@@ -69,19 +99,22 @@ def format_source(k, v, format_json, raw_json):
     format_json.setdefault(source, {}) \
         .setdefault(key, v)
 
+
 def format_rpm_global(k, v, format_json, raw_json):
     if "." not in k:
         return
-    source, key = k.split(".", 1)
-    format_json.setdefault(source, {}) \
+    rpm_global, key = k.split(".", 1)
+    format_json.setdefault(rpm_global, {}) \
         .setdefault(key, v)
+
 
 def format_define_flags(k, v, format_json, raw_json):
     if "." not in k:
         return
-    source, key = k.split(".", 1)
-    format_json.setdefault(source, {}) \
+    define_flags, key = k.split(".", 1)
+    format_json.setdefault(define_flags, {}) \
         .setdefault(key, v)
+
 
 def format_rpm_macros(k, v, format_json, raw_json):
     if "." not in k:
@@ -91,19 +124,16 @@ def format_rpm_macros(k, v, format_json, raw_json):
     format_json.setdefault(source, {}) \
         .setdefault(key, v)
 
+
 def format_phase(k, v, format_json, raw_json):
-    line_list = v.split(os.linesep)
-    if line_list:
-        first_line = line_list[0]
-        tab_count = 0
-        for word in first_line:
-            if word != " ":
-                break
-            tab_count += 1
-        for line_index, line in enumerate(line_list):
-            line_list[line_index] = line.replace(" "*tab_count, "", 1)
-        v = os.linesep.join(line_list)
-        format_json.setdefault(k, v)
+    v = remove_tab(v)
+    format_json.setdefault(k, v)
+
+
+def format_meta(k, v, format_json, raw_json):
+    meta, key = k.split(".", 1)
+    format_json.setdefault(meta, {}) \
+        .setdefault(key, v)
 
 
 format_funcs = {
@@ -113,7 +143,9 @@ format_funcs = {
     "rpmGlobal": format_rpm_global,
     "defineFlags": format_define_flags,
     "rpmMacros": format_rpm_macros,
-    "phase": format_phase
+    "phase": format_phase,
+    "runtimePhase": format_phase,
+    "meta": format_meta,
 }
 
 

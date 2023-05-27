@@ -95,8 +95,13 @@ class YamlLoader:
                     result = expand_yaml(transform_result, self._cspath)
                     for k, v in result.items():
                         actual_keys = config_space.add_key(k, v, self._fspath)
+                        # 过滤属性
                         if ":" in k:
-                            continue
+                            # 白名单
+                            if "rpm_macro_param" in k:
+                                pass
+                            else:
+                                continue
                         for actual_key in actual_keys:
                             keys_cur = config_space.get(f"{self._cspath}:loadedKeys", [])
                             if not keys_cur:

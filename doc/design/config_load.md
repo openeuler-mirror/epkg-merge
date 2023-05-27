@@ -37,9 +37,7 @@ case 1:
 	pkgs/pkg1/phase.sh
 	pkgs/pkg1/runtimePhase.sh
 	pkgs/pkg1/changelog.md
-	pkgs/pkg1/files/xxx.patch
-	pkgs/pkg1/files/xxx.service
-	pkgs/pkg1/files/xxx.conf
+	pkgs/pkg1/patches/xxx.patch
 
 	pkgs/pkg2/package.yaml # chain load more files
 	pkgs/pkg2/...
@@ -145,14 +143,6 @@ pkgs/的缺省defaults.yaml定义如下
 ondemandLoadFileGlob+cspath共同决定了按需加载哪些YAML文档到配置空间哪里:
 LayerLoader 会遍历 ondemandLoadFileGlob, 对所有匹配的YAML文件，在配置空间生成 `$cspath.fspath: $_filepath` 映射。
 这样$cspath.xxx字段被引用时，即可被按需加载$cspath.fspath指向的YAML文档。
-
-特殊情况: 一个用户定制层里，如果只定制pkg1的phase/files等字段，那么他可能不写package.yaml
-
-	pkgs/pkg1/phase.yaml
-	pkgs/pkg1/files.yaml
-
-option1) 强制要求用户写一个空的package.yaml文件（不推荐）
-option2) 在LayerLoader代码里检测这种情况，如果一个pkgs子目录没有package.yaml，但有defaults.yaml里includeXxx文件，则仍然自动加载之。
 
 ## YAMLLoader 加载要点
 

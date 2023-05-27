@@ -13,9 +13,11 @@ def transform_include_phase(file):
     with open(file, "r") as f:
         content = f.readlines()
         file_name = parse_file_name(file)
+        if file.endswith(".lua"):
+            return parse_lua_file(file_name, content)
         return parse_shell_file(file_name, content)
 
-
+    
 def parse_file_name(file):
     file = os.path.split(file)[-1]
     file_name = file.split(".")[0]
@@ -27,9 +29,16 @@ def parse_shell_file(file_name, content):
     function_name = ""
     function_content = ""
     symbol_count = 0
+    is_first_line = True
+    rpm_macro_param = ""
     for line in content:
         _line = line.rstrip()
         if function_name:
+            if is_first_line and symbol_count:
+                is_first_line = False
+                if "rpm_macro_param" in _line:
+                    rpm_macro_param = _line.split(":")[-1].lstrip()
+                    continue
             if _line == "{":
                 function_content += line
                 symbol_count += 1
@@ -40,7 +49,10 @@ def parse_shell_file(file_name, content):
                     function_content += line
                     continue
                 functions[function_name] = function_content
-                function_name, function_content = "", ""
+                if rpm_macro_param:
+                    function_param = function_name + ":" + "rpm_macro_param"
+                    functions[function_param] = rpm_macro_param
+                function_name, function_content, rpm_macro_param, is_first_line = "", "", "", True
                 continue
             if "(){" in line or "() {" in line:
                 symbol_count += 1
@@ -50,6 +62,34 @@ def parse_shell_file(file_name, content):
             function_name = combinate_function_name(file_name, shell_function_name)
             if function_name and "{" in line:
                 symbol_count += 1
+    return functions
+
+
+def parse_lua_file(file_name, content):
+    functions = {}
+    function_name = ""
+    function_content = ""
+    is_first_line = True
+    rpm_macro_param = ""
+    for line in content:
+        _line = line.rstrip()
+        if function_name:
+            if is_first_line:
+                is_first_line = False
+                if "rpm_macro_param" in _line:
+                    rpm_macro_param = _line.split(":")[-1].lstrip()
+                    continue
+            if _line != "end":
+                function_content += line.lstrip()
+                continue
+            functions[function_name] = function_content
+            if rpm_macro_param:
+                function_param = function_name + ":" + "rpm_macro_param"
+                functions[function_param] = rpm_macro_param
+            function_name, function_content, rpm_macro_param, is_first_line = "", "", "", True
+        else:
+            shell_function_name = get_shell_function_name(line)
+            function_name = combinate_function_name(file_name, shell_function_name)
     return functions
 
 
