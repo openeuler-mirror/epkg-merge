@@ -26,7 +26,7 @@ def main():
     parser.add_argument("-a", "--arch", help="set merge arch")
     args = vars(parser.parse_args())
     list_features_info = {}
-    arch = args.get("config_file", platform.machine())
+    arch = args.get("arch", platform.machine())
     config_space.set_arch(arch)
 
     if args["list_features"]:
