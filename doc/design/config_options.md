@@ -413,6 +413,14 @@ default to global use default value.
 
 	--(enable|disable|with|without)-(caps|cap|capabilities|linux-caps|libcap|libcap-ng)
 
+## cmakeVars
+
+与configureVars类似，但是实现起来更简单。
+
+        defineFlags:
+                -curses:
+                  cmakeVars: LLDB_DISABLE_CURSES
+
 ## 普适选项
 
 每个包都可以有的定制项，不需要列到use下去。例如
@@ -575,6 +583,136 @@ YAML
 => used by build phase script
 
 	phase.configure: %add_configure_flags ./configure ...
+
+## build.cmakeFlags
+
+从以下样例看，spack的cmake_args()可以较好的转换为YAML表述。
+
+/c/os/spack/lib/spack/spack/build_systems/cmake.py
+
+            Given a package with:
+
+            .. code-block:: python
+
+                variant('cxxstd', default='11', values=('11', '14'),
+                        multi=False, description='')
+                variant('shared', default=True, description='')
+                variant('swr', values=any_combination_of('avx', 'avx2'),
+                        description='')
+
+            calling this function like:
+
+            .. code-block:: python
+
+                [self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+                 self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+                 self.define_from_variant('SWR')]
+
+            will generate the following configuration options:
+
+            .. code-block:: console
+
+                ["-DBUILD_SHARED_LIBS:BOOL=ON",
+                 "-DCMAKE_CXX_STANDARD:STRING=14",
+                 "-DSWR:STRING=avx;avx2]
+
+            for ``<spec-name> cxxstd=14 +shared swr=avx,avx2``
+
+/c/os/spack/var/spack/repos/builtin/packages/crmc/package.py
+
+    def cmake_args(self):
+        args = [
+            "-D__PYTHIA__=ON",
+            "-D__SIBYLL__=ON",
+            "-D__PHOJET__=ON",
+            "-D__DPMJET__=ON",
+            "-D__QGSJETII04__=ON",
+            "-DCMAKE_CXX_FLAGS=-std=c++" + self.spec["root"].variants["cxxstd"].value,
+        ]
+        if self.spec.satisfies("@1.6.0:"):
+            args.append("-D__HIJING__=ON")
+        if self.spec.satisfies("%gcc@9:") or self.spec.satisfies("%clang@13:"):
+            args.append("-DCMAKE_Fortran_FLAGS=-fallow-argument-mismatch")
+
+=>
+
+	build.cmakeFlags:
+		__PYTHIA__: true
+		__SIBYLL__: true
+		__PHOJET__: true
+		__DPMJET__: true
+		__QGSJETII04__: true
+		CMAKE_CXX_FLAGS: -std=c++${{top.pkgs.root.use.cxxstd}}
+	build.cmakeFlags when @1.6.0::
+		__HIJING__: true
+        build.cmakeFlags when %gcc@9: or %clang@13::
+		CMAKE_Fortran_FLAGS: -fallow-argument-mismatch
+
+/c/os/spack/var/spack/repos/builtin/packages/ccache/package.py
+
+    def cmake_args(self):
+        return [
+            self.define("ENABLE_TESTING", False),
+            self.define("ENABLE_DOCUMENTATION", False),
+            self.define_from_variant("REDIS_STORAGE_BACKEND", "redis"),
+            self.define("ZSTD_FROM_INTERNET", False),
+            self.define("HIREDIS_FROM_INTERNET", False),
+        ]
+
+=>
+
+	build.cmakeFlags:
+		ENABLE_TESTING: false
+		ENABLE_DOCUMENTATION: false
+		REDIS_STORAGE_BACKEND: redis
+		ZSTD_FROM_INTERNET: false
+		HIREDIS_FROM_INTERNET: false
+
+/c/os/spack/var/spack/repos/builtin/packages/hydrogen/package.py
+
+	"-DHydrogen_USE_64BIT_INTS:BOOL=%s" % ("+int64" in spec),
+	"-DHydrogen_ENABLE_MPC:BOOL=%s" % ("+mpfr" in spec),
+	"-DHydrogen_ENABLE_CUB=%s" % ("+cuda" in spec or "+rocm" in spec),
+	"-DHydrogen_ENABLE_CUDA=%s" % ("+cuda" in spec),
+
+=>
+
+	build.cmakeFlags:
+		Hydrogen_USE_64BIT_INTS: ${{pkg.use.int64}}
+		Hydrogen_ENABLE_MPC:     ${{pkg.use.mpfr}}
+		Hydrogen_ENABLE_CUB:     ${{pkg.use.cuda or pkg.use.rocm}}
+		Hydrogen_ENABLE_CUDA:    ${{pkg.use.cuda}}
+
+### YAML 转 spec
+
+参照build.configureFlags的转换。
+
+### spec 转 YAML
+
+/c/os/fedora/lldb/lldb.spec
+
+        %cmake  -GNinja \
+                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                -DCMAKE_SKIP_RPATH:BOOL=ON \
+                -DLLVM_LINK_LLVM_DYLIB:BOOL=ON \
+                -DLLVM_CONFIG:FILEPATH=/usr/bin/llvm-config-%{__isa_bits} \
+                -DLLDB_DISABLE_CURSES:BOOL=OFF \
+                -DLLDB_DISABLE_LIBEDIT:BOOL=OFF \
+                -DLLDB_DISABLE_PYTHON:BOOL=OFF \
+
+=>
+
+        phase.cmake:
+                %cmake  -GNinja \
+                        -DLLVM_CONFIG:FILEPATH=/usr/bin/llvm-config-%{__isa_bits} \
+
+        build.cmakeFlags:
+                        CMAKE_BUILD_TYPE: RelWithDebInfo
+                        CMAKE_SKIP_RPATH: true
+                        LLVM_LINK_LLVM_DYLIB: true
+                        LLDB_DISABLE_CURSES: false
+                        LLDB_DISABLE_LIBEDIT: false
+                        LLDB_DISABLE_PYTHON: false
 
 ## YAML定制打通rpm spec宏定制
 
