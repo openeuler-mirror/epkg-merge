@@ -456,9 +456,106 @@ wfg /c/NixOS/nixpkgs/pkgs% git grep -ho '[a-zA-Z]\+Flags'|sc
      22 supportFlags
      22 nativeToolchainFlags
 
-## env.configureFlags spec转YAML定制
+## build.configureFlags
+
+### 直接定制
+
+有些configure选项，适合在package.yaml中直接定义或者定制，而不必提供use选项给最终用户。
+基本形态是key/val，其中val的类型是bool/string两者之一。
+样例
+
+	build.configureFlags:
+		--enable-static: false
+		--enable-pulse: true
+		--enable-alsa: true
+		--enable-null: true
+		--enable-oss: false
+		--with-builtin: dso
+		--with-systemdsystemunitdir: /usr/lib/systemd/system
+
+### 从defineFlags间接定制
+
+通过transform func完成如下两条路径的转换
+
+路径1)
+
+	defineFlags.f1.configureVars
+	=>
+	defineFlags.f1.configureOptions
+	=>
+	build.configureFlags
+
+样例
+
+	defineFlags:
+		libunistring=true.configureOptions: --with-libunistring-prefix=${STAGING_LIBDIR}/..
+		test-nonsecure.configureVars: -DTEST_NS=ON/OFF
+		gnome.configureVars: -Dgnome=true/false
+		lzo.configureVars: LZO_SUPPORT=1/0
+		ipv6.configureVars: --enable-ipv6
+	=> # when bool value is true
+	build.configureFlags:
+		--with-libunistring-prefix: ${STAGING_LIBDIR}/..
+		-DTEST_NS: ON
+		-Dgnome: 'true'
+		LZO_SUPPORT: '1'
+		--enable-ipv6: true
+
+路径2)
+
+	defineFlags.caps.configureAlts: cap capabilities linux-caps libcap libcap-ng
+	=>
+	build.configureFlags:
+		(caps|cap|capabilities|linux-caps|libcap|libcap-ng): true
+
+以正则表达式标记所有alternative feature names，让spec脚本在构建环境中动态匹配configure option。
+
+	$ re='(a|b)'
+	$ [[ --enable-a =~ --(enable|disable|with|without)-$re ]] && echo ${BASH_REMATCH}
+	--enable-a
+
+对于多subpackage多configure的包，事实上路径1也需要做这样的动态匹配，将同一个configure option应用到多个configure上去，或者过滤掉不适用于本configure的options.
+
+### 转换为spec
+
+build.configureFlags里的k/v，应当转为spec里的宏定义，并由`%add_configure_flags`转为实际的configure命令参数。
+
+1) 定义 per-package macro
+
+	build.configureFlags:
+		--enable-static: false
+		--enable-ipv6: true
+		--with-libunistring-prefix: ${STAGING_LIBDIR}/..
+		-DTEST_NS: ON
+		-Dgnome: 'true'
+		LZO_SUPPORT: '1'
+		(caps|cap|capabilities|linux-caps|libcap|libcap-ng): true
+	=>
+	%global build_configure_flags \
+		--disable-static	\
+		--enable-ipv6		\
+		--with-libunistring-prefix=${STAGING_LIBDIR}/..	\
+		-DTEST_NS=ON		\
+		-Dgnome=true		\
+		LZO_SUPPORT=1		\
+		(caps|cap|capabilities|linux-caps|libcap|libcap-ng)=yes
+
+注意其中的configureFlags value，如果是字符串，则是最终形态。如果是bool值，则做简单的变换。
+
+2) 定义 global macro
+
+	%define %add_configure_flags as shell code:
+		read ./configure --help output
+		for each item in %build_configure_flags
+		  if match: add to $configure_options
+		  run ./configure $configure_options
+
+	add %add_configure_flags to head of %configure
+
+### spec转YAML转spec 全流程
 
 原spec
+
 	%conf
 	%configure \
 	%if %with_ssl
@@ -467,19 +564,17 @@ wfg /c/NixOS/nixpkgs/pkgs% git grep -ho '[a-zA-Z]\+Flags'|sc
 
 YAML
 
-	use.ssl: true
+	use.ssl: true # way to customize
+	defineFlags.-ssl.configureVars: --enable-ssl
+
 => transform to
-	env.configureFlags: --enable-ssl
+
+	build.configureFlags:
+		--enable-ssl: true
+
 => used by build phase script
-	phase.configure: %configure ${{pkg.env.configureFlags}}
 
-新spec
-	%conf
-	%configure --enable-ssl
-
-未来自研builder，可使用环境变量形式
-
-	./configure ${env_configureFlags}
+	phase.configure: %add_configure_flags ./configure ...
 
 ## YAML定制打通rpm spec宏定制
 
