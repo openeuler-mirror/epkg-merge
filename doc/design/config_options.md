@@ -128,21 +128,21 @@ defineFlags的底层实现，是通过transform函数添加如下字段
 
 	defineFlags:
 		f1:
-			doc: 		description-f1
-			values:		# default to bool values: true false; otherwise is a list of words
-			default:	true
-			when:		f2=xxx	# f1 is only valid when f2 is xxx
+			doc:              description-f1
+			values:           # default to bool values: true false; otherwise is a list of words
+			default:          true
+			when:             f2=xxx  # f1 is only valid when f2 is xxx
+			configureVars:    --enable-f1		# 适用于绝大部分情况，自动拼装configure选项
 		f1=true:
-			configureFlags: --enable-f1
-			buildRequires: 	build-deps-for-f1 
-			requires: 	runtime-deps-for-f1 
-			recommends: 	runtime-recommends-for-f1
-			conflicts: 	packageconfig-conflicts-for-f1
-		f2:
-			configureFlags: --with-f2=${{pkg.use.f2}} # 当有若干values时，用该方式较方便
+			buildRequires:    build-deps-for-f1
+			requires:         runtime-deps-for-f1
+			recommends:       runtime-recommends-for-f1
+			conflicts:        packageconfig-conflicts-for-f1
+		+f2:  # can prefix the key with +/- to set default to true/false
+			configureVars:    --with-f2
+		f3:
+			configureOptions: --with-f3=${{pkg.use.f3}}	# 少数情况下，需手动拼装configure选项
 
-Can prefix the f1/f2 key with +/- to set default to true/false.
- 
 Trade-offs: on/off vs true/false
 
 - on/off: may be more user friendly, as external user interface
@@ -174,89 +174,142 @@ Also more configurable than Gentoo's DSL:
 			>=x11-libs/gdk-pixbuf-2.42.0:2
 		)
 
-## 自动翻转 configure flags
+## 自动拼装 configure options
 
-完整的defineFlags定义样例：
+样例：
 
 	defineFlags:
 		f1=true:
-			configureFlags: --enable-f1
+			configureOptions: --enable-f1
 		f1=false:
-			configureFlags: --disable-f1
+			configureOptions: --disable-f1
+			configureOptions: --enable-f1=no # 与上一行等价
 
-可以发现，上述true/false两种情况下的configureFlags有一种对称性。
-这是非常常见的情况，所以一般不必设置false时的configureFlags，让配置框架自动通过翻转f1=true.configureFlags的"enable"为"disable"得到。
+可以发现，上述true/false两种情况下的configureOptions有一种对称性。
+这是非常常见的情况，所以一般不必分别设置f1=true/false时的configureOptions，让配置框架自动从configureVars拼装得到。
 
-翻转推导规则：
+自动拼装规则：
 
-	f1=true.configureFlags	=> f1=false.configureFlags
-	================================================
-	--enable-xxx 		=> --disable-xxx
-	--enable-xxx=val	=> --disable-xxx
-	--with-xxx 		=> --without-xxx
-	--with-xxx=val		=> --without-xxx
-	--with-xxx=yes		=> --without-xxx
-	...=yes 		=> ...=no
-	...=true 		=> ...=false
-	...=ON 			=> ...=OFF
-	...=1 			=> ...=0
+0) configureVars 不能为--disable/--without，因为只能套用如下带参数的--enable/--with形式
 
-在上述规则下，可自动推导的情况(例子来自yocto)：
+	$ ./configure --help
+	Usage: ./configure [OPTION]... [VAR=VALUE]...
 
+	Optional Features:
+	  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+	  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+
+	Optional Packages:
+	  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+	  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+
+1) type = word list
+
+	f1.configureVars: --enable-xxx
+	<=> 等价于/实现为
+	f1.configureOptions: --enable-xxx=${{pkg.use.f1}}
+
+2) type = bool
+
+	f1.configureVars: --enable-xxx
+	<=>
+	f1.configureOptions: --enable-xxx=${{'yes' if pkg.use.f1 else 'no'}}
+
+3) type = bool with value hint
+
+	f1.configureVars: --enable-xxx=ON/OFF	# separator: /
+	<=>
+	f1.configureOptions: --enable-xxx=${{'ON' if pkg.use.f1 else 'OFF'}}
+
+在上述规则下，参照yocto样例，可自动推导的情况 (使用configureVars):
+
+	PACKAGECONFIG[gmp] = "--with-gmp=yes, --with-gmp=no, gmp"
 	PACKAGECONFIG[x11] = "--with-x=yes --enable-xlib,--with-x=no --disable-xlib,${X11DEPENDS}"
 	PACKAGECONFIG[arc4] = "ac_cv_lib_bsd_arc4random_buf=yes,ac_cv_lib_bsd_arc4random_buf=no,libbsd"
 	PACKAGECONFIG[hwdb] = "HWDB=yes,HWDB=no,udev"
 	PACKAGECONFIG[egl] = "-Degl=yes, -Degl=no, virtual/egl"
+	=> (type=bool)
+	gmp.configureVars: --with-gmp
+	x11.configureVars: --with-x --enable-xlib
+	arc4.configureVars: ac_cv_lib_bsd_arc4random_buf
+	hwdb.configureVars: HWDB
+	egl.configureVars: -Degl
+
+	PACKAGECONFIG[systemd] = "--with-systemdunitdir=${systemd_system_unitdir}/,--with-systemdunitdir="
+	PACKAGECONFIG[userdb] = "--enable-db=db,--enable-db=no,db,"
+	PACKAGECONFIG[speexdsp] = "--with-speex=lib,--with-speex=no,speexdsp"
+	PACKAGECONFIG[png] = "--with-png=${STAGING_DIR_HOST}${prefix},--without-png,libpng"
+	=> (type=word list)
+	systemd.configureVars: --with-systemdunitdir		# values: ${systemd_system_unitdir}/ ''
+	userdb.configureVars: --enable-db			# values: db no
+	speexdsp.configureVars: --with-speex			# values: lib no
+	png.configureVars: --with-png				# values: ${STAGING_DIR_HOST}${prefix} no
+
+加hint后可自动推导的情况 (使用configureVars):
+
 	PACKAGECONFIG[test-nonsecure] = "-DTEST_NS=ON,-DTEST_NS=OFF"
-	PACKAGECONFIG[gmp] = "--with-gmp=yes, --with-gmp=no, gmp"
 	PACKAGECONFIG[lzo] = "LZO_SUPPORT=1,LZO_SUPPORT=0,lzo"
 	PACKAGECONFIG[gnome] = "-Dgnome=true,-Dgnome=false"
-	PACKAGECONFIG[x11] = "--with-x=yes --enable-xlib,--with-x=no --disable-xlib,${X11DEPENDS}"
-	PACKAGECONFIG[png] = "--with-png=${STAGING_DIR_HOST}${prefix},--without-png,libpng"
+	=>
+	test-nonsecure.configureVars: -DTEST_NS=ON/OFF
+	lzo.configureVars: LZO_SUPPORT=1/0
+	gnome.configureVars: -Dgnome=true/false
 
-不能自动推导的情况有：
+部分选项可推导的情况 (需同时使用configureVars和configureOptions):
 
-	PACKAGECONFIG[userdb] = "--enable-db=db,--enable-db=no,db,"
 	PACKAGECONFIG[x11] = "-Dglx=yes, -Dglx=no -Dx11=false, virtual/libx11 virtual/libgl"
-	PACKAGECONFIG[speexdsp] = "--with-speex=lib,--with-speex=no,speexdsp"
 	PACKAGECONFIG[ipv6] = "--enable-ipv6,--disable-ipv6 gl_cv_socket_ipv6=no,"
-	PACKAGECONFIG[systemd] = "--with-systemdunitdir=${systemd_system_unitdir}/,--with-systemdunitdir="
+	=>
+	x11.configureVars: -Dglx
+	x11=false.configureOptions: -Dx11=false
+
+	ipv6.configureVars: --enable-ipv6
+	ipv6=false.configureOptions: gl_cv_socket_ipv6=no
+
+不能自动推导的情况有 (使用configureOptions):
+
 	PACKAGECONFIG[msgcat-curses] = "--with-libncurses-prefix=${STAGING_LIBDIR}/..,--disable-curses,ncurses,"
 	PACKAGECONFIG[libunistring] = "--with-libunistring-prefix=${STAGING_LIBDIR}/..,--with-included-libunistring,libunistring"
+	=>
+	msgcat-curses=true.configureOptions: --with-libncurses-prefix=${STAGING_LIBDIR}/..
+	msgcat-curses=false.configureOptions: --disable-curses
+	libunistring=true.configureOptions: --with-libunistring-prefix=${STAGING_LIBDIR}/..
+	libunistring=false.configureOptions: --with-included-libunistring
 
-有的包采用了"--with-xxx=yes => --with-xxx=no" 的翻转形式，但也有个别包的翻转形式是--without-xxx。
-对于autotools来说，两者正常情况下是等价形式。自动翻转统一翻转为--without-xxx，以方便学习使用。
-
-## 预定义全局use flags
+## 预定义全局 commonFlags
 
 大量的configure flags在各个项目里是通用的。这些可以通过脚本自动生成一组配置文件
 
 	configure_flags/<feature>.yaml
-		cspath: use.<feature>
-		doc: 		one-line summary string
-		alt: 		feature-altname1, feature-altname2
-		default:	true
-		buildRequires: 	build-deps-for-feature
-		requires: 	runtime-deps-for-feature
+		cspath: commonFlags.<feature>
+		doc:            one-line summary string
+		configureAlts:  feature-altname1 feature-altname2	# 仅推荐全局使用，在构建期自动拼装configure选项
+		default:        true
+		buildRequires:  build-deps-for-feature
+		requires:       runtime-deps-for-feature
 
 然后将它们作为base layer的一部份，由LayerLoader预加载到配置空间。
-上述字段均来自defineFlags的子字段，仅新增了一个alt字段。
+上述字段均来自defineFlags的子字段，仅新增了一个configureAlts字段。
 
 参考：Gentoo 定义了369个全局use flags，所有包加起来用了9600+ use flags。
 这么多的use flags，用工具维护更scale，也更靠谱。
 
-## 复用全局预定义use flags
+区别解析
+- configureVars/configureAlts: 都用于自动拼装，如果两者都定义了，那么优先使用前者。因为configureAlts一般继承自全局定义且把自动拼装推迟到构建环境里，如果包里定义了更确切的configureVars，优先使用之。
+- configureOptions: 手动指定少数configure选项，可与上述字段共存。
+
+## 复用全局预定义 commonFlags
 
 一个软件包，可通过设置useGlobal字段，继承/复用一组全局use flags。
 
 	defineFlags:
-		# inherit 3 flags from pre-defined global use.xxx
+		# inherit 3 flags from pre-defined global commonFlags.xxx
 		# setting f3's default to true btw.
 		f1 f2 +f3:
 			useGlobal: true
 
-		f1=true: # can further customize the inherited flag
-		   configureFlags: --enable-f1
+		f1: # can further customize the inherited flag
+		   configureVars: --enable-f1
 
 可以在key部分写多个feature，从全局use.$feature路径同时继承多个全局feature。
 
@@ -264,7 +317,7 @@ Also more configurable than Gentoo's DSL:
 通常应避免指定 per-package defaults -- per-package feature should uniformly
 default to global use default value.
 
-## 自动猜测 configure flags
+## 自动猜测 configure options
 
 先看一些gentoo的use统计：
 
@@ -287,7 +340,7 @@ default to global use default value.
 
 可见一个well known feature，在不同的软件包中，可能buildRequires多种三方库，或者一个库的不同版本。
 这种情况下，可以这样配置
-- 在global use中预定义最常见的buildRequires
+- 在global commonFlags中预定义最常见的buildRequires
 - 一个软件包首先inherit该global flag，然后如有需要，可重定义其buildRequires子字段
 
 再看另一类差异：
@@ -348,14 +401,14 @@ default to global use default value.
 	--enable-ui
 
 以上动词、名词的不同形式，可以通过如下规则，较好的实现自动匹配，从而实现global use flag的较好复用
-- 在global use flag预定义中，不预设configureFlags字段(因为形式太多样化了)，改为设置alt字段(如果有多个名词名字)
-- 当configureFlags未定义，则在alt字段帮助下，在构建环境里通过解析`./configure --help`的输出，动态找到对应的configure option
+- 在global commonFlags预定义中，不预设configureVars字段(因为形式太多样化了)，改为设置configureAlts字段(如果有多个名词名字)
+- 当configureVars未定义，则在configureAlts字段帮助下，在构建环境里通过解析`./configure --help`的输出，动态找到对应的configure option
 
 举例说明。给定global use flag配置
 
-	use.caps.alt: cap, capabilities, linux-caps, libcap, libcap-ng
+	commonFlags.caps.configureAlts: cap capabilities linux-caps libcap libcap-ng
 
-则一个包继承该global use flag后，一般不需要设置configureFlags，
+则一个包继承该全局configureAlts后，一般不需要设置configureVars，
 而是让构建系统在运行时自动在`./configure --help`输出里寻找如下正则表达式，找到一个即匹配成功：
 
 	--(enable|disable|with|without)-(caps|cap|capabilities|linux-caps|libcap|libcap-ng)
