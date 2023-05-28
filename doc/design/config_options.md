@@ -129,10 +129,10 @@ defineFlags的底层实现，是通过transform函数添加如下字段
 	defineFlags:
 		f1:
 			doc: 		description-f1
-			values:		# if empty, default to: on, off
+			values:		# default to bool values: true false; otherwise is a list of words
 			default:	true
 			when:		f2=xxx	# f1 is only valid when f2 is xxx
-		f1=on:
+		f1=true:
 			configureFlags: --enable-f1
 			buildRequires: 	build-deps-for-f1 
 			requires: 	runtime-deps-for-f1 
@@ -142,6 +142,17 @@ defineFlags的底层实现，是通过transform函数添加如下字段
 			configureFlags: --with-f2=${{pkg.use.f2}} # 当有若干values时，用该方式较方便
 
 Can prefix the f1/f2 key with +/- to set default to true/false.
+ 
+Trade-offs: on/off vs true/false
+
+- on/off: may be more user friendly, as external user interface
+- true/false: standard bool type, more consistent and transfer-able,
+  internal implement friendly, making the below value passing possible:
+
+	build.cmakeFlags:
+		Hydrogen_ENABLE_MPC:     ${{pkg.use.mpfr}}
+		Hydrogen_ENABLE_CUB:     ${{pkg.use.cuda or pkg.use.rocm}}
+		Hydrogen_ENABLE_CUDA:    ${{pkg.use.cuda}}
 
 这一形式相比yocto稍显罗嗦，类似函数调用的named parameter。
 但灵活性和可演进性强，且有利于推广，因为小白用户也能一看便知大概含义，便能上手使用。
@@ -168,17 +179,17 @@ Also more configurable than Gentoo's DSL:
 完整的defineFlags定义样例：
 
 	defineFlags:
-		f1=on:
+		f1=true:
 			configureFlags: --enable-f1
-		f1=off:
+		f1=false:
 			configureFlags: --disable-f1
 
-可以发现，上述on/off两种情况下的configureFlags有一种对称性。
-这是非常常见的情况，所以一般不必设置off时的configureFlags，让配置框架自动通过翻转f1=on.configureFlags的"enable"为"disable"得到。
+可以发现，上述true/false两种情况下的configureFlags有一种对称性。
+这是非常常见的情况，所以一般不必设置false时的configureFlags，让配置框架自动通过翻转f1=true.configureFlags的"enable"为"disable"得到。
 
 翻转推导规则：
 
-	f1=on.configureFlags	=> f1=off.configureFlags
+	f1=true.configureFlags	=> f1=false.configureFlags
 	================================================
 	--enable-xxx 		=> --disable-xxx
 	--enable-xxx=val	=> --disable-xxx
@@ -244,7 +255,7 @@ Also more configurable than Gentoo's DSL:
 		f1 f2 +f3:
 			useGlobal: true
 
-		f1=on: # can further customize the inherited flag
+		f1=true: # can further customize the inherited flag
 		   configureFlags: --enable-f1
 
 可以在key部分写多个feature，从全局use.$feature路径同时继承多个全局feature。
