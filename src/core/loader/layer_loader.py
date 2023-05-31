@@ -132,7 +132,6 @@ class _LayerConfigLoader:
                 for k, v in result.items():
                     config_space[k] = v
 
-
     def _load_rpmrc(self) -> None:
         rpmrc_path = os.path.join(self._layer_path, str(Directory.RPMRC.value))
         if not os.path.isdir(rpmrc_path):
@@ -148,14 +147,16 @@ class _LayerConfigLoader:
             rpmrc_file_path = os.path.join(rpmrc_path, rpmrc_file)
             result = expand_yaml(yaml.safe_load(open(rpmrc_file_path, encoding="utf-8")))
             for k, v in result.items():
-                config_space["rpmrc_config"][k] = v
+                value = [{"value": v, "fspath": rpmrc_file_path, "when": None}]
+                config_space["rpmGlobal." + k] = value
         if os.path.exists(os.path.join(rpmrc_path, "macros.d")):
             for method in os.listdir(os.path.join(rpmrc_path, "macros.d")):
                 if method.endswith(".yaml"):
                     method_rpmrc = os.path.join(rpmrc_path, "macros.d", method)
                     result = expand_yaml(yaml.safe_load(open(method_rpmrc, encoding="utf-8")))
                     for k, v in result.items():
-                        config_space["rpmrc_config"][k] = v
+                        value = [{"value": v, "fspath": method_rpmrc, "when": None}]
+                        config_space["rpmGlobal." + k] = value
 
 
 class _ElementConfigLoader:
