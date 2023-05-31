@@ -142,7 +142,7 @@ class _LayerConfigLoader:
         rpmrc_path_list = [
             "rpmrc.yaml",
             os.path.join("openEuler", "rpmrc.yaml"),
-            os.path.join("platform", "0-linux".format(self.arch), "rpmrc.yaml")
+            os.path.join("platform", "{0}-linux".format(self.arch), "rpmrc.yaml")
         ]
         for rpmrc_file in rpmrc_path_list:
             rpmrc_file_path = os.path.join(rpmrc_path, rpmrc_file)
