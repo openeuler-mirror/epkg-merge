@@ -42,7 +42,7 @@ def main():
     log.addHandler(console_handler)
 
     if args["config_file"]:
-        handle_load(args["config_file"])
+        handle_load(args["config_file"], arch)
         StartUp.startup(config_space)
     if args["packages"]:
         packages = args["packages"].split()

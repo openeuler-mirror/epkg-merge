@@ -7,9 +7,9 @@ import yaml
 from src.core.config_space import ConfigSpace
 from src.transition import spec_writer
 
-def handle_load(file):
+def handle_load(file, arch):
     from src.core.loader.layer_loader import LayerLoader
-    LayerLoader(file).load()
+    LayerLoader(file).load(arch)
 
 
 def handle_package(package, config_space):

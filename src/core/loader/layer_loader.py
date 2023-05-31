@@ -23,7 +23,7 @@ class LayerLoader:
         self._config_file = config_file
         self._dir_name = os.path.dirname(os.path.abspath(config_file))
 
-    def load(self) -> None:
+    def load(self, arch) -> None:
         with self.__LOCK:
             log.info(f"Loading layers with main config: '{self._config_file}'")
             layers: Dict[str, List[str]] = yaml.safe_load(open(self._config_file, encoding="utf-8"))
@@ -32,17 +32,18 @@ class LayerLoader:
                     f"Invalid main config: can't find yaml key '{MainConfigKey.LAYERS.value}' or empty value")
 
             for layer in layers.get(str(MainConfigKey.LAYERS.value)):
-                _LayerConfigLoader(layer, os.path.join(self._dir_name, layer)).load()
+                _LayerConfigLoader(layer, os.path.join(self._dir_name, layer), arch).load()
             log.info(f"Successfully load layers with main config: '{self._config_file}'")
 
 
 class _LayerConfigLoader:
-    def __init__(self, layer: str, layer_path: str) -> None:
+    def __init__(self, layer: str, layer_path: str, target_arch: str) -> None:
         if not os.path.isdir(layer_path):
             raise LoadException(f"The path of layer '{layer}' [{layer_path}] is not a directory")
 
         self._layer = layer
         self._layer_path = layer_path
+        self.arch = target_arch
 
     def load(self) -> None:
         log.info(f"Loading layer: '{self._layer}' with layer path: '{self._layer_path}'")
@@ -50,6 +51,7 @@ class _LayerConfigLoader:
         self._load_python_libs()
         self._load_use()
         self._load_types()
+        self._load_rpmrc()
         log.info(f"Successfully load layer: '{self._layer}' with layer path: '{self._layer_path}'")
 
     def _load_pkgs(self) -> None:
@@ -129,6 +131,31 @@ class _LayerConfigLoader:
                 result = expand_yaml(yaml.safe_load(open(os.path.join(types_path, f), encoding="utf-8")))
                 for k, v in result.items():
                     config_space[k] = v
+
+
+    def _load_rpmrc(self) -> None:
+        rpmrc_path = os.path.join(self._layer_path, str(Directory.RPMRC.value))
+        if not os.path.isdir(rpmrc_path):
+            return
+        from src.core.config_space import config_space
+        config_space["rpmrc_config"] = {}
+        rpmrc_path_list = [
+            "rpmrc.yaml",
+            os.path.join("openEuler", "rpmrc.yaml"),
+            os.path.join("platform", "0-linux".format(self.arch), "rpmrc.yaml")
+        ]
+        for rpmrc_file in rpmrc_path_list:
+            rpmrc_file_path = os.path.join(rpmrc_path, rpmrc_file)
+            result = expand_yaml(yaml.safe_load(open(rpmrc_file_path, encoding="utf-8")))
+            for k, v in result.items():
+                config_space["rpmrc_config"][k] = v
+        if os.path.exists(os.path.join(rpmrc_path, "macros.d")):
+            for method in os.listdir(os.path.join(rpmrc_path, "macros.d")):
+                if method.endswith(".yaml"):
+                    method_rpmrc = os.path.join(rpmrc_path, "macros.d", method)
+                    result = expand_yaml(yaml.safe_load(open(method_rpmrc, encoding="utf-8")))
+                    for k, v in result.items():
+                        config_space["rpmrc_config"][k] = v
 
 
 class _ElementConfigLoader:
