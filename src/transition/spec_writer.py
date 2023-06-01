@@ -104,7 +104,7 @@ class SpecWriter:
             log.error('Empty yaml file: %s' % self.file_path)
 
     def load_change_log(self):
-        changelog_path = self.file_path.replace(os.path.basename(self.file_path), "change_log.md")
+        changelog_path = self.file_path.replace(os.path.basename(self.file_path), "changelog.md")
         if os.path.exists(changelog_path):
             with open(changelog_path, "r") as c:
                 self.change_log = c.read()

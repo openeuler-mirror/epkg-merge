@@ -43,19 +43,17 @@ $print_endif($condition)
 #end if
 #end for
 #end if
-
 ## rpmGlobal
 #if 'rpmGlobal' in $metadata
 #for $name, $body in $metadata['rpmGlobal'].items()
 %global $name $body
 #end for
 #end if
-
 ##rpmMacros
 #if 'rpmMacros' in $metadata
 $metadata['rpmMacros']
 #end if
-
+################# Main info
 #if 'name' in $metadata
 $when_str_keys('Name', 'name')
 #end if
