@@ -148,7 +148,7 @@ class _LayerConfigLoader:
             result = expand_yaml(yaml.safe_load(open(rpmrc_file_path, encoding="utf-8")))
             for k, v in result.items():
                 value = [{"value": v, "fspath": rpmrc_file_path, "when": None}]
-                config_space["rpmGlobal." + k] = value
+                config_space["rpmGlobal." + k + ":value"] = value
         if os.path.exists(os.path.join(rpmrc_path, "macros.d")):
             for method in os.listdir(os.path.join(rpmrc_path, "macros.d")):
                 if method.endswith(".yaml"):
@@ -156,7 +156,7 @@ class _LayerConfigLoader:
                     result = expand_yaml(yaml.safe_load(open(method_rpmrc, encoding="utf-8")))
                     for k, v in result.items():
                         value = [{"value": v, "fspath": method_rpmrc, "when": None}]
-                        config_space["rpmGlobal." + k] = value
+                        config_space["rpmGlobal." + k + ":value"] = value
 
 
 class _ElementConfigLoader:
