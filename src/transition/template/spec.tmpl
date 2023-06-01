@@ -433,5 +433,10 @@ $print_trigger($trigger)
 ############################ files
 #if 'files' in $metadata
 $print_script('files')
+#end if
 
+############################ changelog
+#if $changelog != ""
+%changelog
+$changelog
 #end if
