@@ -79,6 +79,18 @@ l3.key1 {prev => l2.key1}
 So that one can replace item of an exact layer.
 So that one can insert item after an exact layer.
 
+## origin/update 包文件的自动识别
+
+一个YAML文件，可以定义一个软件包，也可以对另一个软件包做局部修改。
+我们用如下两个概念加以区分：
+- origin package file是一个软件包的原始定义。
+- update package file是对（第三方）原始定义的补充与修改。
+它们可以类比yocto里的bb与bbappend文件。
+
+这里我们不采用bb/bbappend这样，以文件后缀名来区分origin/update，而是认为可以自动判断：
+如果一个YAML包文件里定义了meta.xxx (spec:Summary/License/URL)这些字段，那么就认为它是origin package。
+因为这些字段一旦定义，一般第三方没必要去修改。
+
 ## 通常在baseos、origin package YAML内描述多版本、多架构处理逻辑
 
 描述特定版本、架构的处理(如打patch)逻辑
@@ -110,19 +122,6 @@ YAML内嵌python code表述了各field之间的内在逻辑关系。
 功能对比:
 - inherit 要求等待 source.path 所有相关文件load结束，非常适合带抽象的全局引用
 - include 在当前YAML文件加载时立即执行，只适合引用当前目录下的强相关/附属文件
-
-
-## origin/update 包文件的自动识别
-
-一个YAML文件，可以定义一个软件包，也可以对另一个软件包做局部修改。
-我们用如下两个概念加以区分：
-- origin package file是一个软件包的原始定义。
-- update package file是对（第三方）原始定义的补充与修改。
-它们可以类比yocto里的bb与bbappend文件。
-
-这里我们不采用bb/bbappend这样，以文件后缀名来区分origin/update，而是认为可以自动判断：
-如果一个YAML包文件里定义了meta.xxx (spec:Summary/License/URL)这些字段，那么就认为它是origin package。
-因为这些字段一旦定义，一般第三方没必要去修改。
 
 ## merge 优先级
 
