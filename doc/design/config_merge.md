@@ -175,6 +175,62 @@ How do I choose the appropriate "layer type" for my layer?
     Miscellaneous: if your layer doesn't fall into any other category you can choose this type; however there shouldn't be too many miscellaneous layers and it may be an indication that the purpose isn't well defined or that you should consider splitting the layer.
 
 
+## 取值空间极其删减
+
+对一个包的一个字段的定制，涉及以下几个维度
+1) default value(s): 取值范围是客观的，值的先后顺序可以是主观的
+   - :type
+   - :default
+   - :defaults/:values/:ranges
+2) 客观约束: 在baseos描述现实世界的各类约束，依赖以及非法组合
+   - :excludes
+3) 主观意愿: 在各layer表达定制需求
+   - :append/:prepend
+   - :remove/:replace
+
+在(1)中，当一个字段的:type为bool时，以下两者等价
+
+	:default: true
+	:defaults: [true, false]
+
+## excludes 字段
+
+这是一种用户友好形式，以简单灵活的方式，定义一组非法组合。
+实现中会通过transform函数，转换为对应字段的:excludes属性。
+
+其取值为数组，其中每个item由1-3部分构成，基本形式如下
+
+	excludes:
+	- simple-condition  when multi-condition  // message
+
+其中的
+- simple-condition 是必选项，表达一个字段的取值条件
+- when multi-condition 是可选项，表达一个when condition
+- // message 是可选项，表示提示消息
+
+样例
+
+```
+	conflicts("%clang@:7")
+	conflicts("%gcc@:5.0", when="@8:")
+	conflicts("%oneapi@:2022.1.0", when="+fortran")
+	conflicts("+openmp", when="%clang", msg="OpenMP not available for the clang compiler")
+	conflicts("+openmp", when="%pgi", msg="OpenMP not available for the pgi compiler")
+	conflicts("+shared", when="platform=darwin %gcc")
+	conflicts("cxxstd=14", when="@1.8:")
+	conflicts("platform=darwin", msg="ALSA only works for Linux")
+=>
+	excludes:
+	- %clang@:7
+	- %gcc@:5.0             when @8:
+	- %oneapi@:2022.1.0     when +fortran
+	- +openmp               when %clang     // OpenMP not available for the clang compiler
+	- +openmp               when %pgi       // OpenMP not available for the pgi compiler
+	- +shared               when platform=darwin %gcc
+	- cxxstd=14             when @1.8:
+	- platform=darwin                       // ALSA only works for Linux
+```
+
 ## merge overrides: append/prepend/remove/replace属性及参数
 
 把value放入key的append/prepend属性中去
