@@ -79,10 +79,10 @@ l3.key1 {prev => l2.key1}
 So that one can replace item of an exact layer.
 So that one can insert item after an exact layer.
 
-## 通常在base package YAML内描述多版本、多架构处理逻辑
+## 通常在baseos、origin package YAML内描述多版本、多架构处理逻辑
 
 描述特定版本、架构的处理(如打patch)逻辑
-这些是软件包本身属性，应该在base package定义，方便各overlay/project共享。
+这些是软件包本身属性，应该在origin package定义，方便各overlay/project共享。
 
 各overlay/project主要聚焦定制option (expected customization)，
 以及原package未考虑到情形的fixup  (unexpected customization)。
