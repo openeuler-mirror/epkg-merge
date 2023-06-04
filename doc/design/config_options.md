@@ -143,6 +143,11 @@ defineFlags的底层实现，是通过transform函数添加如下字段
 		f3:
 			configureOptions: --with-f3=${{pkg.use.f3}}	# 少数情况下，需手动拼装configure选项
 
+其中when字段的value，与一般key中的when condition一样。典型的use case有
+
+	defineFlags.cuda_arch.when: +cuda	# 当use.cuda打开时，use.cuda_arch才有意义
+	defineFlags.cuda.when: @1.1:		# 当version >= 1.1时，才支持use.cuda option
+
 Trade-offs: on/off vs true/false
 
 - on/off: may be more user friendly, as external user interface
