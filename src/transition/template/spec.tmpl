@@ -51,7 +51,9 @@ $print_endif($condition)
 #end if
 ##rpmMacros
 #if 'rpmMacros' in $metadata
+#if '%package' not in $metadata['rpmMacros']
 $metadata['rpmMacros']
+#end if
 #end if
 ################# Main info
 #if 'name' in $metadata
@@ -203,6 +205,13 @@ $when_list_keys('Obsoletes', 'obsoletes')
 #if 'description' in $metadata
 %description
 $metadata['description']['']
+#end if
+
+##rpmMacros
+#if 'rpmMacros' in $metadata
+#if '%package' in $metadata['rpmMacros']
+$metadata['rpmMacros']
+#end if
 #end if
 
 ####
