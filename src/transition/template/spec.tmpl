@@ -107,8 +107,18 @@ $print_endif($condition)
 #end if
 
 #if "includeSource" in $metadata
-#for $isc in $metadata['includeSource']
-%include    $isc
+#for $condition, $values in $metadata['includeSource'].items()
+#if $condition == ''
+#for $value in $values
+%include $value
+#end for
+#else
+$parse_when($condition)
+#for $value in $values
+%include $value
+#end for
+$print_endif($condition)
+#end if
 #end for
 #end if
 
@@ -319,19 +329,19 @@ $data_when_list_keys('Suggests', 'suggests', $values)
 $data_when_list_keys('Requires(pre)', 'requiresPre', $values)
 #end if
 #if "requiresPost" in $values
-$data_when_list_keys('Requires(post)', 'requiresPost', $values))
+$data_when_list_keys('Requires(post)', 'requiresPost', $values)
 #end if
 #if "requiresPreun" in $values
-$data_when_list_keys('Requires(preun)', 'requiresPreun', $values))
+$data_when_list_keys('Requires(preun)', 'requiresPreun', $values)
 #end if
 #if "requiresPostun" in $values
-$data_when_list_keys('Requires(Postun)', 'requiresPostun', $values))
+$data_when_list_keys('Requires(Postun)', 'requiresPostun', $values)
 #end if
 #if "requiresPretrans" in $values
-$data_when_list_keys('Requires(pretrans)', 'requiresPretrans', $values))
+$data_when_list_keys('Requires(pretrans)', 'requiresPretrans', $values)
 #end if
 #if "requiresPosttrans" in $values
-$data_when_list_keys('Requires(posttrans)', 'requiresPosttrans', $values))
+$data_when_list_keys('Requires(posttrans)', 'requiresPosttrans', $values)
 #end if
 #######################
 ## Provides
