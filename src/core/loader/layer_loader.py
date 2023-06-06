@@ -137,7 +137,6 @@ class _LayerConfigLoader:
         if not os.path.isdir(rpmrc_path):
             return
         from src.core.config_space import config_space
-        config_space["rpmrc_config"] = {}
         rpmrc_path_list = [
             "rpmrc.yaml",
             os.path.join("openEuler", "rpmrc.yaml"),
@@ -145,18 +144,21 @@ class _LayerConfigLoader:
         ]
         for rpmrc_file in rpmrc_path_list:
             rpmrc_file_path = os.path.join(rpmrc_path, rpmrc_file)
+            if not os.path.exists(rpmrc_file_path):
+                log.warn("Don't have this arch in rpmrc")
+                continue
             result = expand_yaml(yaml.safe_load(open(rpmrc_file_path, encoding="utf-8")))
             for k, v in result.items():
-                value = [{"value": v, "fspath": rpmrc_file_path, "when": None}]
-                config_space["rpmGlobal." + k + ":value"] = value
+                rpmrc_key = "rpmGlobal.{}".format(k)
+                config_space.add_key(rpmrc_key, v, rpmrc_file_path)
         if os.path.exists(os.path.join(rpmrc_path, "macros.d")):
             for method in os.listdir(os.path.join(rpmrc_path, "macros.d")):
                 if method.endswith(".yaml"):
                     method_rpmrc = os.path.join(rpmrc_path, "macros.d", method)
                     result = expand_yaml(yaml.safe_load(open(method_rpmrc, encoding="utf-8")))
                     for k, v in result.items():
-                        value = [{"value": v, "fspath": method_rpmrc, "when": None}]
-                        config_space["rpmGlobal." + k + ":value"] = value
+                        rpmrc_key = "rpmGlobal.{}".format(k)
+                        config_space.add_key(rpmrc_key, v, method_rpmrc)
 
 
 class _ElementConfigLoader:
