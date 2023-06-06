@@ -401,6 +401,7 @@ patches经常是有一个版本适用范围的，可以用when condition来限�
 广义上，构建系统、单元测试框架的DSL也是语言，所以也一起列在这里。
 
 这些语言和构建测试DSL，是一个软件的基本属性，可以自动检测，且衍生出对很多其他字段的默认定义。
+例如build.toolchain:values属性、buildRequires、requires
 
 ## files 字段
 

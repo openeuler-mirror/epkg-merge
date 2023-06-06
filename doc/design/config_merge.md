@@ -181,7 +181,7 @@ How do I choose the appropriate "layer type" for my layer?
 1) default value(s): 取值范围是客观的，值的先后顺序可以是主观的
    - :type
    - :default
-   - :defaults/:values/:ranges
+   - :values/:ranges
 2) 客观约束: 在baseos描述现实世界的各类约束，依赖以及非法组合
    - :excludes
 3) 主观意愿: 在各layer表达定制需求
@@ -191,7 +191,7 @@ How do I choose the appropriate "layer type" for my layer?
 在(1)中，当一个字段的:type为bool时，以下两者等价
 
 	:default: true
-	:defaults: [true, false]
+	:values: [true, false]
 
 ## excludes 字段
 

@@ -434,7 +434,145 @@ default to global use default value.
 	buildRequires
 	...
 
-## 编译选项
+# global lang/toolchains fields
+
+In global namespace, define fields:
+
+```
+        lang:
+                C:
+                        toolchains: gcc clang
+                C++:
+                        toolchains: gcc clang
+                Autotools:
+                        buildRequires: autoconf automake make libtool pkgconfig
+                CMake:
+                        buildRequires: cmake
+
+        toolchains:
+                gcc.buildRequires: gcc
+                gcc.build:
+                        cc:           gcc
+                        cpp:          gcc -E
+                        cxx:          g++
+                        ld:           ld
+                        ar:           ar
+                        as:           as
+                        nm:           nm
+                        objcopy:      objcopy
+                        objdump:      objdump
+                        ranlib:       ranlib
+                        strip:        strip
+                clang.buildRequires: clang
+                clang.build:
+                        cc:           clang
+                        cpp:          clang -E
+                        cxx:          clang++
+                        ld:           clang
+                        ar:           llvm-ar
+                        as:           llvm-ar
+                        nm:           llvm-nm
+                        objcopy:      llvm-objcopy
+                        objdump:      llvm-objdump
+                        ranlib:       llvm-ranlib
+                        readelf:      llvm-readelf
+                        strings:      llvm-strings
+                        strip:        llvm-strip
+```
+
+References:
+
+/c/os/yocto/meta-clang/classes/clang.bbclass
+
+	CC:toolchain-clang  = "${CCACHE}${HOST_PREFIX}clang ${HOST_CC_ARCH}${TOOLCHAIN_OPTIONS}"
+	CXX:toolchain-clang = "${CCACHE}${HOST_PREFIX}clang++ ${HOST_CC_ARCH}${TOOLCHAIN_OPTIONS}"
+	CPP:toolchain-clang = "${CCACHE}${HOST_PREFIX}clang ${HOST_CC_ARCH}${TOOLCHAIN_OPTIONS} -E"
+	CCLD:toolchain-clang = "${CCACHE}${HOST_PREFIX}clang ${HOST_CC_ARCH}${TOOLCHAIN_OPTIONS}"
+	RANLIB:toolchain-clang = "${HOST_PREFIX}llvm-ranlib"
+	AR:toolchain-clang = "${HOST_PREFIX}llvm-ar"
+	NM:toolchain-clang = "${HOST_PREFIX}llvm-nm"
+	OBJDUMP:toolchain-clang = "${HOST_PREFIX}llvm-objdump"
+	OBJCOPY:toolchain-clang = "${HOST_PREFIX}llvm-objcopy"
+	#STRIP:toolchain-clang = "${HOST_PREFIX}llvm-strip"
+	STRINGS:toolchain-clang = "${HOST_PREFIX}llvm-strings"
+	READELF:toolchain-clang = "${HOST_PREFIX}llvm-readelf"
+
+	CXXFLAGS:append:toolchain-clang = " ${LIBCPLUSPLUS}"
+	LDFLAGS:append:toolchain-clang = " ${COMPILER_RT} ${LIBCPLUSPLUS}"
+
+	TUNE_CCARGS:remove:toolchain-clang = "-meb"
+	TUNE_CCARGS:remove:toolchain-clang = "-mel"
+
+
+/usr/lib/rpm/macros
+
+	#==============================================================================
+	# ---- Build system path macros.
+	#
+	%__ar                   ar
+	%__as                   as
+	%__cc                   gcc
+	%__cpp                  gcc -E
+	%__cxx                  g++
+	%__ld                   /usr/bin/ld
+	%__nm                   /usr/bin/nm
+	%__objcopy              /usr/bin/objcopy
+	%__objdump              /usr/bin/objdump
+	%__ranlib               ranlib
+	%__remsh                %{__rsh}
+	%__strip                /usr/bin/strip
+
+
+https://wiki.gentoo.org/wiki/Clang
+
+	/etc/portage/make.conf  Setting the system compiler to Clang
+
+	CFLAGS="${CFLAGS} -flto=thin"
+	CXXFLAGS="${CXXFLAGS} -flto=thin"
+	# -O2 in LDFLAGS refers to binary size optimization during linking, it is NOT related to the -O levels of the compiler
+	LDFLAGS="${LDFLAGS} -Wl,-O2 -Wl,--as-needed"
+
+	CC="clang"
+	CXX="clang++"
+	AR="llvm-ar"
+	NM="llvm-nm"
+	RANLIB="llvm-ranlib"
+
+/c/os/spack/lib/spack/spack/compilers/clang.py
+
+## build.toolchain 选择编译器
+
+方案1 (prefer)
+
+```
+	(top) lang.C.toolchains: gcc clang
+	(pkg) languages: C
+	=>
+	(pkg) build.toolchain:values: gcc clang
+```
+
+场景1: 若要定制所有包的编译器，如LLVM平行宇宙计划，可以设置全局 lang.C.toolchains 为"clang gcc"
+场景2: 若要定制某个包的编译器，可以直接设置该包的 build.toolchain
+
+方案2
+
+1) 全局定义编译器的优先级
+
+	(top) build.compilerOrder: clang gcc icc	# 优先使用clang
+
+2) 软件包定义支持的编译器集合（一般由软件包定义的languages默认推导出来）
+
+	(pkg) supportedCompilers: gcc clang
+
+(1,2) 叠加，推导出
+
+	(pkg) build.toolchain:values: clang gcc
+
+通过方案1/2得到:values属性后，经由excludes，去掉不可行的values。
+再经人工定制，得到最终的pkg.build.toolchain值。该值用于从top.toolchains.$toolchain下继承缺省的cc等一系列key/val。
+交叉编译不需要在此处定制cc等值，而应当在构建系统调度器决定调度worker后，下发job前或者在worker内根据目标环境做一次交叉编译定制。
+
+## build.编译选项
 
 这些编译器选项，由各底层构建脚本开放给上层定制:
 
@@ -442,7 +580,7 @@ default to global use default value.
 
 各build system可将其经由transform机制自动加入所辖各包的env字段，对第三方开放定制。
 
-## 构建选项
+## build.构建选项
 
 参考nixpkgs的Flags列表，这些由各build system自动加入相应包的env字段。
 普遍使用的，可以全局预定义，各包按需引用。
@@ -801,7 +939,7 @@ YAML
 	     25 %ifarch sparcv9 ppc
 	     25 %ifarch %{arm} aarch64
 	     24 %if 0%{?rhel} && 0%{?rhel} < 8
-	     
+
 	  wfg /c/fedora% grep -ho -E -e '%[_a-zA-Z][_a-zA-Z0-9]+' -e '%{[?_a-zA-Z][ :_a-zA-Z0-9]+}' */*.spec |sort | uniq -c | sort -nr
 	  55340 %{tl_version}
 	  20165 %{name}
@@ -924,7 +1062,7 @@ https://www.gentoo.org/support/use-flags/
 		if use static ; then
 			myconf+=( --disable-dynamic )
 			append-ldflags -static
-		fi             
+		fi
 
 ## reference: nixos
 
@@ -944,7 +1082,7 @@ https://ryantm.github.io/nixpkgs/stdenv/stdenv/
 		  features of bash, ksh, and tcsh were incorporated into zsh;
 		  many original features were added.
 
-		  http://www.zsh.org/   
+		  http://www.zsh.org/
 
 
 /c/buildroot/package/zsh/zsh.mk
