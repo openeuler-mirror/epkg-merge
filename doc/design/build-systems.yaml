@@ -1,0 +1,170 @@
+# Instructions to Generate the YAML:
+#
+#     Create a YAML structure with a list of build systems.
+#     For each build system add the following fields:
+#         name: The name of the build system
+#         command: The command name used for the build system
+#         rpm_package: The RPM package name that provides the build system
+#         file_suffix: The file suffix associated with the build system
+#         file_name (optional): The file name or indicator in the source code (if applicable).
+#
+# the build systems can be:
+# - makefile
+# - ant
+# - maven
+# - scons
+# - waf
+# # Build-script generation
+# - autotools
+# - cmake
+# - meson
+# - qmake
+# - sip
+# # Language-specific (if the language has only one build system, the name field should match the language name)
+# - clojure
+# - go
+# - guile
+# - haskell
+# - julia
+# - lua
+# - node
+# - ocaml
+# - octave
+# - perl
+# - python
+# - r
+# - racket
+# - ruby
+# - rust
+# # Other
+# - bundle
+# - cuda
+# - emacs
+# - font
+# - gtk
+# - intel
+# - qt
+# - rocm
+# - texlive
+
+
+- name: Makefile
+  command: make
+  rpm_package: make
+  file_name: Makefile
+
+- name: Ant
+  command: ant
+  rpm_package: ant
+  file_name: build.xml
+
+- name: Maven
+  command: mvn
+  rpm_package: maven
+  file_name: pom.xml
+
+- name: SCons
+  command: scons
+  rpm_package: scons
+  file_name: SConstruct, SConscript
+
+- name: Waf
+  command: waf
+  rpm_package: waf
+  file_name: wscript
+
+- name: Autotools
+  command: autoreconf
+  rpm_package: autotools
+  file_suffix: .ac, .am
+
+- name: CMake
+  command: cmake
+  rpm_package: cmake
+  file_name: CMakeLists.txt
+
+- name: Meson
+  command: meson
+  rpm_package: meson
+  file_name: meson.build
+
+- name: Qmake
+  command: qmake
+  rpm_package: qt-devel
+  file_name: .pro
+
+- name: SIP
+  command: sip
+  rpm_package: sip
+  file_suffix: .sip
+
+- name: Clojure
+  command: lein
+  rpm_package: leiningen
+  file_name: project.clj
+
+- name: Go
+  command: go build
+  rpm_package: golang
+  file_name: .go
+
+- name: Guile
+  command: guile
+  rpm_package: guile
+  file_suffix: .scm
+
+- name: Haskell
+  command: cabal
+  rpm_package: ghc
+  file_suffix: .cabal, .hs
+
+- name: Julia
+  command: julia
+  rpm_package: julia
+  file_name: .jl
+
+- name: Lua
+  command: lua
+  rpm_package: lua
+  file_name: .lua
+
+- name: Node.js
+  command: npm
+  rpm_package: nodejs
+  file_name: package.json
+
+- name: OCaml
+  command: ocamlbuild
+  rpm_package: ocaml
+  file_suffix: .ml
+
+- name: Octave
+  command: octave
+  rpm_package: octave
+  file_suffix: .m
+
+- name: Perl
+  command: perl
+  rpm_package: perl
+  file_suffix: .pl, .pm
+
+- name: Python
+  command: python
+  rpm_package: python3
+  file_suffix: .py
+
+- name: R
+  command: Rscript
+  rpm_package: R
+  file_suffix: .R, .Rmd
+
+- name: Racket
+  command: racket
+  rpm_package: racket
+  file_suffix: .rkt
+
+- name: Ruby
+  command: ruby
+  rpm_package: ruby
+  file_suffix: .rb
+

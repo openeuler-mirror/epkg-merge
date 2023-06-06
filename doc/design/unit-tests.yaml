@@ -1,0 +1,136 @@
+# Describe common unit test frameworks in YAML format. For each test framework,
+# include the following fields:
+#         name: The name of the test framework.
+#         language: The programming language associated with the test framework.
+#         command: The command name used to execute the tests.
+#         rpm_package: The RPM package name that provides the test framework.
+#         file_path: The file path name in the source code that indicates the use of this framework.
+# The test commands can be: busted, cargo test, catch2, googletest, go test,
+#   HUnit, jest, JUnit, minitest, mocha, nunit, Pester, pytest, QuickCheck,
+#   rspec, Test::More, testthat, unittest, XCTest, xunit
+
+
+- name: Busted
+  language: Lua
+  command: busted
+  rpm_package: busted
+  top_level_dir: spec
+
+- name: CargoTest
+  language: Rust
+  command: cargo test
+  rpm_package: cargo
+  top_level_dir: tests
+
+- name: Catch2
+  language: C++
+  command: catch2
+  rpm_package: catch2
+  file_name: "*_test.cpp"
+
+- name: GoogleTest
+  language: C++
+  command: gtest
+  rpm_package: googletest
+  file_name: "*_test.cpp"
+
+- name: GoTest
+  language: Go
+  command: go test
+  rpm_package: golang
+  top_level_dir: test
+
+- name: HUnit
+  language: Haskell
+  command: hunit
+  rpm_package: HUnit
+  file_name: "*Test.hs"
+
+- name: Jest
+  language: JavaScript
+  command: jest
+  rpm_package: jest
+  file_name: "*.test.js"
+
+- name: JUnit
+  language: Java
+  command: junit
+  rpm_package: junit
+  file_name: "*Test.java"
+
+- name: Minitest
+  language: Ruby
+  command: minitest
+  rpm_package: ruby-minitest
+  top_level_dir: test
+
+- name: Mocha
+  language: JavaScript
+  command: mocha
+  rpm_package: mocha
+  file_name: "*.test.js"
+
+- name: NUnit
+  language: .NET
+  command: nunit
+  rpm_package: mono-nunit
+  file_name: "*Test.cs"
+
+- name: Pester
+  language: PowerShell
+  command: pester
+  rpm_package: pester
+  top_level_dir: tests
+
+# https://docs.pytest.org/en/7.1.x/explanation/goodpractices.html
+- name: PyTest
+  language: Python
+  command: pytest
+  rpm_package: python3-pytest
+  top_level_dir: tests
+  file_name: "test_*.py", "*_test.py"
+
+- name: QuickCheck
+  language: Haskell
+  command: quickcheck
+  rpm_package: QuickCheck
+  file_name: "*Spec.hs"
+
+# https://stackoverflow.com/questions/14180003/rspec-naming-conventions-for-files-and-directory-structure
+- name: RSpec
+  language: Ruby
+  command: rspec
+  rpm_package: ruby-rspec
+  top_level_dir: spec
+  file_name: "*_spec.rb"
+
+- name: Test::More
+  language: Perl
+  command: prove
+  rpm_package: perl-Test-Simple
+  file_name: "*_test.t"
+
+- name: Testthat
+  language: R
+  command: testthat
+  rpm_package: R-testthat
+  file_name: "*test.R"
+
+- name: Unittest
+  language: Python
+  command: unittest
+  rpm_package: python3-unittest
+  file_name: "*test.py"
+
+- name: XCTest
+  language: Swift
+  command: xctest
+  rpm_package: xctest
+  file_name: "*Tests.swift"
+
+- name: XUnit
+  language: .NET
+  command: xunit
+  rpm_package: xunit
+  file_name: "*Test.cs"
+
