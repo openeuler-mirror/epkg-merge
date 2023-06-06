@@ -459,8 +459,14 @@ In global namespace, define fields:
         lang:
                 C:
                         toolchains: gcc clang
+                        build.optflags: ${{top.rpmrc.__global_compiler_flags}} ${{top.rpmrc.arch_optflags}}
+                        # keep in sync with https://gitee.com/openeuler/openEuler-rpm-config/blob/master/macros
+                        build.cflags:   ${{pkg.build.optflags}}
+                        build.cxxflags: ${{pkg.build.optflags}} -fexceptions
+                        build.fflags:   ${{pkg.build.optflags}} -fexceptions -I%{_fmoddir}
+                        build.ldflags:  -Wl,-z,relro %{_ld_as_needed_flags} %{_ld_symbols_flags} %{_hardened_ldflags}
                 C++:
-                        toolchains: gcc clang
+                        inherit: ${{top.lang.C}}
                 Autotools:
                         buildRequires: autoconf automake make libtool pkgconfig
                 CMake:
@@ -479,6 +485,8 @@ In global namespace, define fields:
                         objcopy:      objcopy
                         objdump:      objdump
                         ranlib:       ranlib
+                        readelf:      readelf
+                        strings:      strings
                         strip:        strip
                 clang.buildRequires: clang
                 clang.build:
