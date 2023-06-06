@@ -21,5 +21,9 @@ setup(
     install_requires=[
         'PyYAML>=3.0',
         'ply>=3.11'
-    ]
+    ],
+    data_files=[
+        ("", ["src/transition/template/meta.tmpl",
+              "src/transition/template/spec.tmpl"]),
+    ],
 )

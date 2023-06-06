@@ -88,7 +88,7 @@ class ConfigSpace(dict):
     def add_key(self, key, value, fspath):
         key_info = transform_key_default(key, value, fspath)
         for k, v in key_info.items():
-            if ":" in k:
+            if ":" in k and ":rpm_macro_param" not in k:
                 self[k] = v["value"]
                 continue
             self.setdefault(f"{k}:values", []).append(v)
@@ -113,12 +113,7 @@ class ConfigSpace(dict):
             short_key = key.replace(f"{pre_name}.", "")
             package_info[short_key] = value
 
-        sorted_keys = sorted(package_info.keys())
-
-        package_info_sorted = {}
-        for key in sorted_keys:
-            package_info_sorted[key] = package_info[key]
-        return package_info_sorted
+        return package_info
 
     def get_package_format_json(self, package_name):
         pacakge_json = self.get_package(package_name)

@@ -38,6 +38,7 @@ LIST_KEYS = ('exclusiveArch',
              'requiresPosttrans',
              'buildConflicts',
              'provides',
+             'conflicts',
              'includeSource'
              )
 
@@ -83,6 +84,7 @@ class SpecWriter:
         self.metadata = metadata
         self.target_metadata = {}
         self.spec_file = ""
+        self.change_log = ""
 
     def load_data_from_yaml(self):
         def _no_number(self, node):
@@ -100,6 +102,12 @@ class SpecWriter:
         except TypeError:
             # empty can lead here
             log.error('Empty yaml file: %s' % self.file_path)
+
+    def load_change_log(self):
+        changelog_path = self.file_path.replace(os.path.basename(self.file_path), "changelog.md")
+        if os.path.exists(changelog_path):
+            with open(changelog_path, "r") as c:
+                self.change_log = c.read()
 
     def parse_subpackage(self):
         """
@@ -169,7 +177,7 @@ class SpecWriter:
                 value = self.metadata[key]
                 if 'meta' in value:
                     for sub_key in value['meta']:
-                        self.metadata[key][sub_key] = value[sub_key]
+                        self.metadata[key][sub_key] = value['meta'][sub_key]
                     del self.metadata[key]['meta']
 
     def format_runtimePhase(self):
@@ -441,7 +449,8 @@ class SpecWriter:
                                 searchList=[{
                                     'metadata': self.target_metadata,
                                     'parse_when': self.parse_when,
-                                    'print_endif': self.print_endif
+                                    'print_endif': self.print_endif,
+                                    'changelog': self.change_log
                                 }]).respond()
 
         def collation_spec_content(content):
@@ -485,6 +494,7 @@ def generate_spec(file_path):
     file_name = os.path.basename(file_path)
     spec_writer = SpecWriter(yaml_fpath=file_name, metadata={})
     spec_writer.load_data_from_yaml()
+    spec_writer.load_change_log()
     spec_writer.parse()
     spec_writer.spec_file = os.path.splitext(spec_writer.file_path)[0] + '.spec'
     spec_writer.trans_data_to_spec()

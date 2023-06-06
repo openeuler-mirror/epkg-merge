@@ -29,3 +29,4 @@ class Directory(Enum):
     LIBS = "libs"
     USE = "use"
     TYPES = "types"
+    RPMRC = "rpmrc"

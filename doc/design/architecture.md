@@ -110,7 +110,7 @@ project layout:
 
 	use/<feature>.yaml
 
-	pkgs/<build_system1>/index.yaml
+	pkgs/<build_system1>/defaults.yaml
 	pkgs/<build_system1>/bash/bash.yaml
 	pkgs/<build_system1>/lftp/lftp.yaml
 
@@ -165,7 +165,7 @@ output:
 		files.*
 		*.files
 action:
-	for each index.yaml in layer dir
+	for each defaults.yaml in layer dir
 		register all yaml files
 		register all lib/xxx.py
 		register layer info to layers.xxx
@@ -405,7 +405,8 @@ DSL
 register layer config files
 
 	LayerLoader
-	- find/load index.yaml
+	- find/load defaults.yaml
+	- virtually add a default defaults.yaml file to the well known dir pkgs/
 
 delayed evaluation
 

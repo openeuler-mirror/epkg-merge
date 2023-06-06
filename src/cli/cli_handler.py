@@ -7,9 +7,9 @@ import yaml
 from src.core.config_space import ConfigSpace
 from src.transition import spec_writer
 
-def handle_load(file):
+def handle_load(file, arch):
     from src.core.loader.layer_loader import LayerLoader
-    LayerLoader(file).load()
+    LayerLoader(file).load(arch)
 
 
 def handle_package(package, config_space):
@@ -38,7 +38,7 @@ def handle_output(package_name, content, output):
             return dumper.org_represent_str(data)
 
         yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
-        yaml.safe_dump(content, f, allow_unicode='uft-8')
+        yaml.safe_dump(content, f, allow_unicode='uft-8', sort_keys=False)
 
     spec_writer.generate_spec(file)
 

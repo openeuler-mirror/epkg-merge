@@ -43,19 +43,19 @@ $print_endif($condition)
 #end if
 #end for
 #end if
-
 ## rpmGlobal
 #if 'rpmGlobal' in $metadata
 #for $name, $body in $metadata['rpmGlobal'].items()
 %global $name $body
 #end for
 #end if
-
 ##rpmMacros
 #if 'rpmMacros' in $metadata
+#if '%package' not in $metadata['rpmMacros']
 $metadata['rpmMacros']
 #end if
-
+#end if
+################# Main info
 #if 'name' in $metadata
 $when_str_keys('Name', 'name')
 #end if
@@ -205,6 +205,13 @@ $when_list_keys('Obsoletes', 'obsoletes')
 #if 'description' in $metadata
 %description
 $metadata['description']['']
+#end if
+
+##rpmMacros
+#if 'rpmMacros' in $metadata
+#if '%package' in $metadata['rpmMacros']
+$metadata['rpmMacros']
+#end if
 #end if
 
 ####
@@ -433,5 +440,10 @@ $print_trigger($trigger)
 ############################ files
 #if 'files' in $metadata
 $print_script('files')
+#end if
 
+############################ changelog
+#if $changelog != ""
+%changelog
+$changelog
 #end if

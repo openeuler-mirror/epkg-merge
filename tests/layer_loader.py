@@ -16,7 +16,7 @@ current_dir = os.path.abspath(os.curdir)
 config_file = os.path.join(current_dir, "demo/config.yaml")
 LayerLoader(config_file).load()
 StartUp.startup(config_space)
-config_space.set_arch()
+config_space.set_arch("x86_64")
 p = "glibc"
 x = config_space.get_package_format_json(p)
 import yaml
@@ -31,4 +31,4 @@ with open(f"./merge/{p}.yaml", "w+") as f:
     yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
     # yaml.safe_dump(x, sys.stdout)
 
-    yaml.safe_dump(x, f, allow_unicode='uft-8')
+    yaml.safe_dump(x, f, allow_unicode='uft-8', sort_keys=False)
