@@ -28,9 +28,9 @@ reference: define vs. global
 ## compiler cflags 定制
 
 	rpmGlobal:
-		__cc: ${{pkg.env.compiler}}
-		build_cflags: ${{pkg.env.cflags}}
-		build_cxxflags: ${{pkg.env.cxxflags}}
+		__cc: ${{pkg.build.cc}}
+		build_cflags: ${{pkg.build.cflags}}
+		build_cxxflags: ${{pkg.build.cxxflags}}
 
 ## reference: 定制相关 rpm macros
 

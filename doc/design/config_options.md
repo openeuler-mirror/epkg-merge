@@ -4,7 +4,8 @@
 它们大体上可以分为以下几类
 - 固定字段
 - 构建脚本接受的phase.xxx
-- 构建脚本接受的env.xxx
+- 构建脚本接受的env.xxx (建议少用)
+- build flags
 - use flags
 
 其中，用户一般希望能够
@@ -27,9 +28,9 @@
 
 use字段经由如下方式之一对影响构建行为：
 - ${{pkg.use.xxx}} 宏替换，一般用于phase.xxx
-- 通过transform函数，修改env.xxx，进而影响引用这些env的builder script
+- 通过transform函数，修改build.xxx/env.xxx，进而影响引用这些选项的builder script
 
-可以直接修改CFLAGS等env变量实现的定制，就不要使用use。
+可以直接修改build.cflags等变量实现的定制，就不要使用use。
 还有一些不宜在包中引入use flags的场景，可以参照如下gentoo指南：
 https://devmanual.gentoo.org/general-concepts/use-flags/#when-not-to-use-use-flags
 
@@ -576,14 +577,20 @@ https://wiki.gentoo.org/wiki/Clang
 
 这些编译器选项，由各底层构建脚本开放给上层定制:
 
-          cflags, cxxflags, fflags, cppflags, ldflags, ldlibs
-
-各build system可将其经由transform机制自动加入所辖各包的env字段，对第三方开放定制。
+```
+	build:
+		cflags:
+		cxxflags:
+		fflags:
+		cppflags:
+		ldflags:
+		ldlibs
+```
 
 ## build.构建选项
 
-参考nixpkgs的Flags列表，这些由各build system自动加入相应包的env字段。
-普遍使用的，可以全局预定义，各包按需引用。
+参考nixpkgs的Flags列表，这些可以放在build字段下，供各build system使用。
+普遍使用的，可以全局预定义，自动设置默认值，各包按需引用。
 
 wfg /c/NixOS/nixpkgs/pkgs% git grep -ho '[a-zA-Z]\+Flags'|sc
    1889 configureFlags

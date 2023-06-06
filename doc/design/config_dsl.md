@@ -642,8 +642,8 @@ YAML python code里禁止自行import libs。只能使用python语言服务沙�
 			use.f1:type: bool
 			use.f1:default: true/false if f1 starts_with +/-
 			use.f1:doc: this is some xxx feature
-			env.configureFlags when +f1: --with-f1
-			env.configureFlags when -f1: --without-f1
+			build.configureFlags when +f1: --with-f1
+			build.configureFlags when -f1: --without-f1
 			buildRequires when +f1: build-deps-for-f1
 			requires when +f1: runtime-deps-for-f1
 			recommends when +f1: runtime-recommends-for-f1

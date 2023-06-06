@@ -1,7 +1,7 @@
 # spec2yaml中新增python逻辑对%configure块进行解析
 
 - 扫描其中的--enable-xxx --disable-xxx --with-xxx --without-xxx
-- 取出其中的固定选项，存入 YAML env.configureFlags，然后用${{pkg.env.configureFlags}}替代之
+- 取出其中的固定选项，存入 YAML build.configureFlags，然后用${{pkg.build.configureFlags}}替代之
 - 受with macro控制的条件选项，安排YAML对应的defineFlags，并定义传入macro
 
 	defineFlags:
@@ -43,13 +43,13 @@ spec input:
 yaml output:
 
 	phase.build:
-		%configure ${{pkg.env.configureFlags}} \
+		%configure ${{pkg.build.configureFlags}} \
 		%if %{build_pdf_doc}
 			   --enable-doxygen-pdf \
 		%else
 			   --disable-doxygen-pdf \
 		%endif
-	env.configureFlags: |
+	build.configureFlags: |
 			--disable-static 
 			--disable-doxygen-ps 
 			--enable-doxygen-html 
