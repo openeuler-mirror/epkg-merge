@@ -37,13 +37,18 @@ https://devmanual.gentoo.org/general-concepts/use-flags/#when-not-to-use-use-fla
 ## 快速自定义 use 开关量
 
 spec样例
+
+```
 	定义参数
 		%bcond_with bootstrap	# defaults value to 0
 		%bcond_without ncurses	# defaults value to 1
 	使用参数
 		%if %{with ncurses}
+```
 
 我们希望yaml可以这样写
+
+```
 	定义参数
 		defineFlags:
 			-bootstrap: do initial bootstrap build
@@ -53,6 +58,7 @@ spec样例
 			[+-]<option>: <one-line doc>
 	使用参数
 		key when +ncurses: val
+```
 
 Examples:
 
@@ -155,10 +161,12 @@ Trade-offs: on/off vs true/false
 - true/false: standard bool type, more consistent and transfer-able,
   internal implement friendly, making the below value passing possible:
 
+```
 	build.cmakeFlags:
 		Hydrogen_ENABLE_MPC:     ${{pkg.use.mpfr}}
 		Hydrogen_ENABLE_CUB:     ${{pkg.use.cuda or pkg.use.rocm}}
 		Hydrogen_ENABLE_CUDA:    ${{pkg.use.cuda}}
+```
 
 这一形式相比yocto稍显罗嗦，类似函数调用的named parameter。
 但灵活性和可演进性强，且有利于推广，因为小白用户也能一看便知大概含义，便能上手使用。
@@ -198,6 +206,7 @@ Also more configurable than Gentoo's DSL:
 
 0) configureVars 不能为--disable/--without，因为只能套用如下带参数的--enable/--with形式
 
+```
 	$ ./configure --help
 	Usage: ./configure [OPTION]... [VAR=VALUE]...
 
@@ -208,24 +217,31 @@ Also more configurable than Gentoo's DSL:
 	Optional Packages:
 	  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
 	  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+```
 
 1) type = word list
 
+```
 	f1.configureVars: --enable-xxx
 	<=> 等价于/实现为
 	f1.configureOptions: --enable-xxx=${{pkg.use.f1}}
+```
 
 2) type = bool
 
+```
 	f1.configureVars: --enable-xxx
 	<=>
 	f1.configureOptions: --enable-xxx=${{'yes' if pkg.use.f1 else 'no'}}
+```
 
 3) type = bool with value hint
 
+```
 	f1.configureVars: --enable-xxx=ON/OFF	# separator: /
 	<=>
 	f1.configureOptions: --enable-xxx=${{'ON' if pkg.use.f1 else 'OFF'}}
+```
 
 在上述规则下，参照yocto样例，可自动推导的情况 (使用configureVars):
 
@@ -589,9 +605,10 @@ https://wiki.gentoo.org/wiki/Clang
 
 ## build.构建选项
 
-参考nixpkgs的Flags列表，这些可以放在build字段下，供各build system使用。
+参考nixpkgs的Flags列表，这些可以定义相应的build.xxx字段，供各build system使用。
 普遍使用的，可以全局预定义，自动设置默认值，各包按需引用。
 
+```
 wfg /c/NixOS/nixpkgs/pkgs% git grep -ho '[a-zA-Z]\+Flags'|sc
    1889 configureFlags
    1626 makeFlags
@@ -613,6 +630,7 @@ wfg /c/NixOS/nixpkgs/pkgs% git grep -ho '[a-zA-Z]\+Flags'|sc
      23 makeMakerFlags
      22 supportFlags
      22 nativeToolchainFlags
+```
 
 ## build.configureFlags
 
@@ -680,6 +698,7 @@ build.configureFlags里的k/v，应当转为spec里的宏定义，并由`%add_co
 
 1) 定义 per-package macro
 
+```
 	build.configureFlags:
 		--enable-static: false
 		--enable-ipv6: true
@@ -697,11 +716,13 @@ build.configureFlags里的k/v，应当转为spec里的宏定义，并由`%add_co
 		-Dgnome=true		\
 		LZO_SUPPORT=1		\
 		(caps|cap|capabilities|linux-caps|libcap|libcap-ng)=yes
+```
 
 注意其中的configureFlags value，如果是字符串，则是最终形态。如果是bool值，则做简单的变换。
 
 2) 定义 global macro
 
+```
 	%define %add_configure_flags as shell code:
 		read ./configure --help output
 		for each item in %build_configure_flags
@@ -709,6 +730,7 @@ build.configureFlags里的k/v，应当转为spec里的宏定义，并由`%add_co
 		  run ./configure $configure_options
 
 	add %add_configure_flags to head of %configure
+```
 
 ### spec转YAML转spec 全流程
 
@@ -870,19 +892,23 @@ YAML
 备选思路：难度大的情况，根据YAML field定义rpm macro，spec里继续按原样引用macro
 
 条件判断
+
 	%if
 	%ifarch
 	%ifnarch
 
 开关定义
+
 	%bcond_with
 	%bcond_without
 
 包内宏定义
+
 	%global
 	%define
 
 样例
+
 	%if %{with bootstrap}
 	%global golang_bootstrap 0
 	%else

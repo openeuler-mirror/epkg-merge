@@ -162,17 +162,17 @@ docType 按优先级顺序从高到低定义如下：
 
 2) layerPrio number不好理解、把握、协调。因而我们在它之上新增一个docType维度的排序，将priority number置于次要地位。如果必要，进一步替代priority number的可能办法是，对well known layers，协调设置它们之间的依赖关系，作为merge排序依据。
 
-references
+references:
 这里我们把yocto 的 layer type 细分为了 doc type.
 
-https://www.openembedded.org/wiki/Layers_FAQ
+`https://www.openembedded.org/wiki/Layers_FAQ`
 How do I choose the appropriate "layer type" for my layer?
 
-    Base: this is really only for oe-core and meta-oe, i.e. the base metadata for the build system.
-    Machine (BSP): if your layer primarily exists to add support for additional machine(s), use this type.
-    Software: if your layer primarily provides recipes for building additional software, use this type.
-    Distribution: if your layer primarily provides policy configuration for a distribution (conf/distro/*), which may include customised/additional recipes for the distribution, then choose this type.
-    Miscellaneous: if your layer doesn't fall into any other category you can choose this type; however there shouldn't be too many miscellaneous layers and it may be an indication that the purpose isn't well defined or that you should consider splitting the layer.
+- Base: this is really only for oe-core and meta-oe, i.e. the base metadata for the build system.
+- Machine (BSP): if your layer primarily exists to add support for additional machine(s), use this type.
+- Software: if your layer primarily provides recipes for building additional software, use this type.
+- Distribution: if your layer primarily provides policy configuration for a distribution (`conf/distro/*`), which may include customised/additional recipes for the distribution, then choose this type.
+- Miscellaneous: if your layer doesn't fall into any other category you can choose this type; however there shouldn't be too many miscellaneous layers and it may be an indication that the purpose isn't well defined or that you should consider splitting the layer.
 
 
 ## 取值空间极其删减
@@ -341,21 +341,30 @@ define-refine
 各layer都做加法，且是condition限定下的加法。
 只在最后用户侧做必要的减法。
 这样可以有效避免中间layers 做+/-的conflicts
+
+```
 eg.
 	layer A want +CONFIG_XXX
 	layer B want -CONFIG_XXX
+```
 
 对数组类型，mergePolicy=append|prepend类型的字段，多处地方的条件配置，最后效果是做加法，等同于||
+
+```
 	repo-a
 		cflags when cond1: -g
 	repo-b
 		cflags when cond2: -g
 =>
 		cflags when cond1 || cond2: -g
+```
 
 对于用户，若想修正，做减法即可：
+
+```
 	user-config
 		cflags:remove: -g
+```
 
 然后考虑更好的长期方案，给repo-a/b提交补丁，完善其cond1/cond2。
 长期推动各方认真思考和改进condition，避免无脑+/-，置社区于浑沌。
