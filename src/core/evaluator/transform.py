@@ -267,7 +267,7 @@ def transform_key_default(key, value, fspath):
         transform_key_with_iuse,
         transform_key_with_use_configure,
         transform_key_with_when,
-        transform_key_with_rpmWhen
+        # transform_key_with_rpmWhen
     ]
     value_key = {
         "value": value,
