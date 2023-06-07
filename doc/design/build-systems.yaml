@@ -88,7 +88,7 @@
   rpm_package: meson
   file_name: meson.build
 
-- name: Qmake
+- name: QMake
   command: qmake
   rpm_package: qt-devel
   file_name: .pro
