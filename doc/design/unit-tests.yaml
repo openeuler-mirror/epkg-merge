@@ -88,7 +88,7 @@
   command: pytest
   rpm_package: python3-pytest
   top_level_dir: tests
-  file_name: "test_*.py", "*_test.py"
+  file_name: "test_*.py, *_test.py"
 
 - name: QuickCheck
   language: Haskell
