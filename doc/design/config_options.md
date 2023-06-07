@@ -576,8 +576,8 @@ https://wiki.gentoo.org/wiki/Clang
 	(pkg) build.toolchain:values: gcc clang
 ```
 
-场景1: 若要定制所有包的编译器，如LLVM平行宇宙计划，可以设置全局 lang.C.toolchains 为"clang gcc"
-场景2: 若要定制某个包的编译器，可以直接设置该包的 build.toolchain
+- 场景1: 若要定制所有包的编译器，如LLVM平行宇宙计划，可以设置全局 lang.C.toolchains 为"clang gcc"
+- 场景2: 若要定制某个包的编译器，可以直接设置该包的 build.toolchain
 
 方案2
 

@@ -198,6 +198,12 @@ How do I choose the appropriate "layer type" for my layer?
 这是一种用户友好形式，以简单灵活的方式，定义一组非法组合。
 实现中会通过transform函数，转换为对应字段的:excludes属性。
 
+一个字段的多个:excludes属性，会在特定when场景下，把其:values可能取值空间不断减少。
+
+同样的多个requires/buildRequires
+1. for the same pkg: 追加version range，合并时取交集
+2. for different pkg: 追加pkg
+
 其取值为数组，其中每个item由1-3部分构成，基本形式如下
 
 	excludes:
