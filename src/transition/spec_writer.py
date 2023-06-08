@@ -466,8 +466,9 @@ class SpecWriter:
                 if re.search("\n%if.*\n%if.*\n", temp_text) is not None:
                     cutter1 = re.findall("\n%if.*\n%if.*\n", temp_text)[0]
                     temp_text = temp_text.split(cutter1)[1]
-                    body_text = temp_text.replace("%endif\n", "")
-                    content = content.replace(temp_text, body_text)
+                    if len(re.findall("%if", temp_text)) != len(re.findall("%endif", temp_text)):
+                        body_text = temp_text.replace("%endif\n", "")
+                        content = content.replace(temp_text, body_text)
             if re.search(r"\n\s*\\b", content) is not None:
                 some_texts = re.findall(r"\n\s*\\b", content)
                 for some_text in some_texts:
