@@ -253,10 +253,12 @@ merge顺序:
 	merge(prepend-values, normal-values, append-values)
 
 移除整个key：
-	key:remove:
+
+	key:remove: true
 
 移除key里的一项内容：
-	key:remove: item
+
+	key:remove: item	# remove an item from array, or a substring from string
 
 remove item动作会在files load后，merge前进行。
 remove key动作可以视情况优化提前。
