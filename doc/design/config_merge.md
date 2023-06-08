@@ -193,12 +193,16 @@ How do I choose the appropriate "layer type" for my layer?
 	:default: true
 	:values: [true, false]
 
-## excludes 字段
+## excludes/keeps 字段
 
 这是一种用户友好形式，以简单灵活的方式，定义一组非法组合。
 实现中会通过transform函数，转换为对应字段的:excludes属性。
 
 一个字段的多个:excludes属性，会在特定when场景下，把其:values可能取值空间不断减少。
+:excludes的减少方式是对可能取值空间打洞，:keeps的减少方式是取交集。后者行为更像requires，适合表达这样的约束:
+
+	keeps:
+	- %gcc  # this pkg only supports gcc compiler, please exclude all others
 
 同样的多个requires/buildRequires
 1. for the same pkg: 追加version range，合并时取交集
