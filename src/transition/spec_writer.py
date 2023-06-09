@@ -411,18 +411,19 @@ class SpecWriter:
             judgement = judgement[0:-1]
         return judgement
 
-    def print_endif(self, condition):
+    def print_endif(self, condition, files=""):
         """
         在spec中，一个%if条件对应一个%endif,
         condition存在多个条件嵌套，例如：rpmWhen arch in x86 rpmrpmWhen +benchtests,
         所以根据rpmWhen的个数确定%endif的个数
-        :param conditon:
+        :param condition:
+        :param files:
         :return:
         """
         end_str = ''
         results = re.findall("rpmWhen", condition)
-        inline_conditions = re.findall("%if", condition)
-        inline_endif = re.findall("%endif", condition)
+        inline_conditions = re.findall("%if", files)
+        inline_endif = re.findall("%endif", files)
         end_count = len(inline_conditions) - len(inline_endif) if len(inline_conditions) > len(inline_endif) else 0
         for _ in results:
             end_str += "%endif\n"
