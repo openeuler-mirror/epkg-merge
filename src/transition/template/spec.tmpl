@@ -399,7 +399,13 @@ $item['value']
 $parse_when($item['condition'])
 %$script_name $item['param']
 $item['value']#slurp
+#if $script_name == "files"
+#if $script_name in $metadata
+$print_endif($item['condition'], $item['value'])
+#end if
+#else
 $print_endif($item['condition'])
+#end if
 #end if
 #end for
 #end if
