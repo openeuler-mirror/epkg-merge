@@ -421,7 +421,12 @@ class SpecWriter:
         """
         end_str = ''
         results = re.findall("rpmWhen", condition)
+        inline_conditions = re.findall("%if", condition)
+        inline_endif = re.findall("%endif", condition)
+        end_count = len(inline_conditions) - len(inline_endif) if len(inline_conditions) > len(inline_endif) else 0
         for _ in results:
+            end_str += "%endif\n"
+        for _ in range(end_count):
             end_str += "%endif\n"
         return end_str
 
