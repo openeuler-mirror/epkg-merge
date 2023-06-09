@@ -226,6 +226,9 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
         if "rpmWhen" not in key:
             res[key] = value
             continue
+        elif "subpackage." not in key:
+            res[key] = value
+            continue
         key_info = key.split(" rpmWhen ")
         subpackage = key_info[0]
         if "." in key_info[1]:
@@ -267,7 +270,7 @@ def transform_key_default(key, value, fspath):
         transform_key_with_iuse,
         transform_key_with_use_configure,
         transform_key_with_when,
-        # transform_key_with_rpmWhen
+        transform_key_with_rpmWhen
     ]
     value_key = {
         "value": value,
