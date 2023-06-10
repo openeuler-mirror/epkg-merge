@@ -413,14 +413,22 @@ $print_endif($condition)
 #for $item in $metadata[$script_name]
 #if $item['condition'] == ''
 %$script_name $item['param']
+#if $script_name == "files"
+$print_value($item['value'])
+#else
 $item['value']
+#end if
 #else
 $parse_when($item['condition'])
 %$script_name $item['param']
+#if $script_name == "files"
+$print_value($item['value'])
+#else
 $item['value']#slurp
+#end if
 #if $script_name == "files"
 #if $script_name in $metadata
-$print_endif($item['condition'], $item['value'])
+$print_endif($item['condition'])
 #end if
 #else
 $print_endif($item['condition'])
