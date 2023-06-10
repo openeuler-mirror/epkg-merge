@@ -411,25 +411,35 @@ class SpecWriter:
             judgement = judgement[0:-1]
         return judgement
 
-    def print_endif(self, condition, files=""):
+    def print_endif(self, condition):
         """
         在spec中，一个%if条件对应一个%endif,
         condition存在多个条件嵌套，例如：rpmWhen arch in x86 rpmrpmWhen +benchtests,
         所以根据rpmWhen的个数确定%endif的个数
         :param condition:
-        :param files:
         :return:
         """
         end_str = ''
         results = re.findall("rpmWhen", condition)
-        inline_conditions = re.findall("%if", files)
-        inline_endif = re.findall("%endif", files)
-        end_count = len(inline_conditions) - len(inline_endif) if len(inline_conditions) > len(inline_endif) else 0
         for _ in results:
             end_str += "%endif\n"
-        for _ in range(end_count):
-            end_str += "%endif\n"
         return end_str
+
+    def print_value(self, value):
+        """
+        输出spec内容时，有可能存在不合理逻辑的情况，可以在这里做整理
+        :param value:
+        :return:
+        """
+        inline_conditions = re.findall("%if", value)
+        inline_endif = re.findall("%endif", value)
+        end_count = len(inline_conditions) - len(inline_endif)
+        if end_count >= 0:
+            for _ in range(end_count):
+                value += "%endif\n"
+        else:
+            value = value.replace("%endif\n", "", abs(end_count))
+        return value
 
     def convert_double_percent_sign(self):
         for k, v in self.metadata.items():
@@ -456,6 +466,7 @@ class SpecWriter:
                                     'metadata': self.target_metadata,
                                     'parse_when': self.parse_when,
                                     'print_endif': self.print_endif,
+                                    'print_value': self.print_value,
                                     'changelog': self.change_log
                                 }]).respond()
 
