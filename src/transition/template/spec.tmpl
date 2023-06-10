@@ -46,6 +46,13 @@ $print_endif($condition)
 ## rpmGlobal
 #if 'rpmGlobal' in $metadata
 #for $name, $body in $metadata['rpmGlobal'].items()
+#if type($body) == str
+#if $body.startswith("%{?")
+#if $body.endswith("}")
+#continue
+#end if
+#end if
+#end if
 %global $name $body
 #end for
 #end if
@@ -54,6 +61,18 @@ $print_endif($condition)
 #if '%package' not in $metadata['rpmMacros']
 $metadata['rpmMacros']
 #end if
+#end if
+######### rpmGlobal
+#if 'rpmGlobal' in $metadata
+#for $name, $body in $metadata['rpmGlobal'].items()
+#if type($body) == str
+#if $body.startswith("%{?")
+#if $body.endswith("}")
+%global $name $body
+#end if
+#end if
+#end if
+#end for
 #end if
 ################# Main info
 #if 'name' in $metadata
