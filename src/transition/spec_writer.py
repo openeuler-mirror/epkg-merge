@@ -233,7 +233,7 @@ class SpecWriter:
                     for line in lines:
                         _line = line.strip()
                         if _line == configure_name:
-                            target_lines.append(self.metadata[main_field])
+                            target_lines.append(self.metadata[main_field].strip())
                         else:
                             target_lines.append(line)
                     self.metadata['phase.build'] = "\n".join(target_lines)
