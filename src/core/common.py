@@ -157,6 +157,8 @@ def format_package_json(package_json):
         if k in filter:
             continue
         first_key = k.split(".", 1)[0]
+        if " rpmWhen " in first_key:
+            first_key = first_key.split("rpmWhen")[0].strip()
         func = format_funcs.get(first_key)
         if func is None:
             format_json[k] = v
