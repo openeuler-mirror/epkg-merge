@@ -112,7 +112,7 @@ def is_version(key, value, check_func, check_params):
     # it should startwith and end with a integer, and filled with ingeter and '.' between them.
     if "%" in str(value):
         return None
-    if re.match("^[a-zA-Z0-9.]*[a-zA-Z0-9]$", str(value)):
+    if re.match("^[a-zA-Z0-9_.]*[a-zA-Z0-9]$", str(value)):
         return None
 
     err_code = {
