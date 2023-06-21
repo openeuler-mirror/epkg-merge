@@ -20,6 +20,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'PyYAML>=3.0',
+        'Cheetah3==3.2.6.post2',
         'ply>=3.11'
     ],
     data_files=[
