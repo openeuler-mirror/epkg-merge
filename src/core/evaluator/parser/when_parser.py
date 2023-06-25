@@ -181,6 +181,9 @@ def p_expression_binop(p):
 
 def p_expression_uminus(p):
     "expression : MINUS expression %prec UMINUS"
+    if type(p[2]) is str:
+        p[0] = "-{}".format(p[2])
+        return
     p[0] = -p[2]
 
 

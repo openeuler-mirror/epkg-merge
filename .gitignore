@@ -15,3 +15,6 @@ merge/
 tests/merge/
 parsetab.py
 parser.out
+tests/demo/*
+tests/
+/tests/demo/

@@ -14,13 +14,17 @@ from src.core.common import format_package_json
 
 current_dir = os.path.abspath(os.curdir)
 config_file = os.path.join(current_dir, "demo/config.yaml")
-LayerLoader(config_file).load()
+LayerLoader(config_file).load("x86_64")
 StartUp.startup(config_space)
 config_space.set_arch("x86_64")
-p = "glibc"
+p = "qt5-qtbase"
 x = config_space.get_package_format_json(p)
 import yaml
 
+# if not "./merge".is_dir():
+#     "./merge".mkdir(parents=True)
+if not os.path.exists("./merge"):
+    os.makedirs("./merge")
 
 with open(f"./merge/{p}.yaml", "w+") as f:
     yaml.SafeDumper.org_represent_str = yaml.SafeDumper.represent_str
