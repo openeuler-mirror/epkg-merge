@@ -1,3 +1,4 @@
+import copy
 import os
 
 import yaml
@@ -220,6 +221,47 @@ class SpecWriter:
                 # todo defineFlags后的值添加为评论
                 self.target_metadata['defineFlags'][condition] = target_dict
                 break
+
+
+    def merge_compile_flags(self):
+        # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
+        for main_field in self.metadata.copy():
+            if not re.fullmatch("build\.(configure|cmake)\w*\.Flags", main_field):
+                continue
+            func_name = "phase." + main_field.split(".")[1]
+            if func_name not in self.metadata:
+                continue
+            func_body = self.metadata.get(func_name).strip()
+            if func_body.endswith("\\"):
+                tmp_body = func_body
+                last_line = ""
+            else:
+                tmp_body, _, last_line = func_body.rpartition(os.linesep)
+            flags = copy.deepcopy(self.metadata.get(main_field))
+            tmp_body += os.linesep
+            if re.fullmatch("build\.configure\w*\.Flags", main_field):
+                prefix = ""
+            elif re.fullmatch("build\.cmake\w*\.Flags", main_field):
+                prefix = "-D"
+            else:
+                continue
+            for flag, value in flags.items():
+                if isinstance(value, bool):
+                    if prefix == "-D":
+                        value = "ON" if value else "OFF"
+                    else:
+                        value = "yes" if value else "no"
+                if " rpmWhen " in flag:
+                    base_key = flag.split(" rpmWhen ")[0]
+                    conditions = flag.split(" rpmWhen ")[1:]
+                    for condition in conditions:
+                        tmp_body += f'%if {condition}{os.linesep}'
+                    tmp_body += f"    {prefix}{base_key}={value} \\{os.linesep}" + f"%endif{os.linesep}" * len(conditions)
+                else:
+                    tmp_body += f"    {prefix}{flag}={value} \\{os.linesep}"
+            if last_line == "":
+                tmp_body = tmp_body.rstrip().rstrip("\\") + os.linesep
+            self.metadata[func_name] = tmp_body + last_line
 
     def parse_phase(self):
         # phase. prep build install check clean
@@ -457,6 +499,7 @@ class SpecWriter:
         self.parse_macros()
         self.parse_simple_keys()
         self.parse_subpackage()
+        self.merge_compile_flags()
         self.parse_phase()
         self.parse_shell()
 

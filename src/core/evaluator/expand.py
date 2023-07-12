@@ -8,7 +8,7 @@ from src.core.constant.tokens import NOT_EXIST
 def expand_macro(str_macro, fspath):
     from src.core.config_space import config_space
     str_macro += " "
-    patterns = [r'(%%%?{?(.+?)[}" "\s])']
+    patterns = [r'(%%%?{?(.+?)[}" "\s])', '(\${{([-\.\w]+)}})']
     if is_pycode(str_macro):
         patterns.append(r'(dd?\.(.+?)[" "\s])')
     macro_keys = {}
@@ -23,6 +23,13 @@ def expand_macro(str_macro, fspath):
             v = f"{cspath}.{v}"
         if not k.startswith("dd") and k.startswith("d"):
             v = f"{cspath}.{v}"
+        if k.startswith("${{") and k.endswith("}}"):
+            if k.startswith("${{rpmrc."):
+                v = v.replace("rpmrc.", "rpmGlobal.")
+            elif k.startswith("${{pkg."):
+                v = v.replace("pkg.", f"{cspath}.")
+            else:
+                v = f"{cspath}.{v}"
         sub_values[k] = config_space.get_key(v)
 
         # defineFlags只需要看 是否真的能够获取到值，如果获取到说明是存在的

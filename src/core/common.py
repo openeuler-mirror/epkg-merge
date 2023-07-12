@@ -2,13 +2,20 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
 import re
+from src.log import log
 
 
 def is_pycode(val: str):
     val = val.strip()
-    if not val.startswith("{{"):
+    if not val.startswith("${{"):
         return False
     if not val.endswith("}}"):
+        return False
+    tmp_val = val.replace("${{", "", 1).replace("}}", "")
+    try:
+        eval(tmp_val)
+    except Exception as e:
+        log.info(str(e))
         return False
     return True
 
@@ -136,6 +143,15 @@ def format_meta(k, v, format_json, raw_json):
         .setdefault(key, v)
 
 
+def format_compile_flags(k, v, format_json, raw_json):
+    if ".Flags." not in k:
+        return
+    if "build." not in k:
+        return
+    build, key = k.split(".Flags.", 1)
+    format_json.setdefault(f'{build}.Flags', {}).setdefault(key, v)
+
+
 format_funcs = {
     "subpackage": format_subpackage,
     "patchset": format_patchset,
@@ -146,6 +162,7 @@ format_funcs = {
     "phase": format_phase,
     "runtimePhase": format_phase,
     "meta": format_meta,
+    "build": format_compile_flags,
 }
 
 
