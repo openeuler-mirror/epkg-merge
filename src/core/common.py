@@ -118,6 +118,25 @@ def format_rpm_global(k, v, format_json, raw_json):
 def format_define_flags(k, v, format_json, raw_json):
     if "." not in k:
         return
+    if isinstance(v, dict):
+        compile_name = ""
+        option = ""
+        for param, val in v.items():
+            if re.fullmatch("configure\w*\.(options|vars)", param):
+                compile_name = param.split(".")[0]
+                option = val
+                break
+        if not compile_name:
+            log.error("error customization: {0}".format(k))
+            return
+        condition = v.get("when", "")
+        default = v.get("default", "")
+        if "options" in param and "=" in val:
+            option, default = val.split("=", 1)
+        if condition:
+            option += " when " condition
+        format_json.setdefault(f'build.{compile_name}.flags', {}).setdefault(option, default)
+        return
     define_flags, key = k.split(".", 1)
     format_json.setdefault(define_flags, {}) \
         .setdefault(key, v)
