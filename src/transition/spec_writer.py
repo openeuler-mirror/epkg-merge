@@ -236,7 +236,11 @@ class SpecWriter:
                 tmp_body = func_body
                 last_line = ""
             else:
-                tmp_body, _, last_line = func_body.rpartition(os.linesep)
+                if os.linesep not in func_body:
+                    tmp_body = func_body
+                    last_line = ""
+                else:
+                    tmp_body, _, last_line = func_body.rpartition(os.linesep)
             flags = copy.deepcopy(self.metadata.get(main_field))
             tmp_body += os.linesep
             if re.fullmatch("build\.configure\w*\.Flags", main_field):
@@ -267,7 +271,7 @@ class SpecWriter:
         # phase. prep build install check clean
         # move configure to build
         for main_field in self.metadata:
-            if main_field.startswith('phase.configure'):
+            if re.match("phase\.(configure|cmake).*", main_field):
                 configure_name = main_field.split(".")[-1]
                 if 'phase.build' in list(self.metadata):
                     lines = self.metadata['phase.build'].split("\n")
