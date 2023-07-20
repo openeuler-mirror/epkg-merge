@@ -238,6 +238,8 @@ class SpecWriter:
             else:
                 if os.linesep not in func_body:
                     tmp_body = func_body
+                    if not tmp_body.endswith("\\"):
+                        tmp_body += " \\"
                     last_line = ""
                 else:
                     tmp_body, _, last_line = func_body.rpartition(os.linesep)
@@ -264,7 +266,7 @@ class SpecWriter:
                 else:
                     tmp_body += f"    {prefix}{flag}={value} \\{os.linesep}"
             if last_line == "":
-                tmp_body = tmp_body.rstrip().rstrip("\\") + os.linesep
+                tmp_body = tmp_body.rstrip() + os.linesep
             self.metadata[func_name] = tmp_body + last_line
 
     def parse_phase(self):
