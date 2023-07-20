@@ -134,7 +134,7 @@ def format_define_flags(k, v, format_json, raw_json):
         if "options" in param and "=" in val:
             option, default = val.split("=", 1)
         if condition:
-            option += " when " condition
+            option += " when " + condition
         format_json.setdefault(f'build.{compile_name}.flags', {}).setdefault(option, default)
         return
     define_flags, key = k.split(".", 1)
