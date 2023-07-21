@@ -163,12 +163,12 @@ def format_meta(k, v, format_json, raw_json):
 
 
 def format_compile_flags(k, v, format_json, raw_json):
-    if ".Flags." not in k:
+    if ".flags." not in k:
         return
     if "build." not in k:
         return
-    build, key = k.split(".Flags.", 1)
-    format_json.setdefault(f'{build}.Flags', {}).setdefault(key, v)
+    build, key = k.split(".flags.", 1)
+    format_json.setdefault(f'{build}.flags', {}).setdefault(key, v)
 
 
 format_funcs = {
