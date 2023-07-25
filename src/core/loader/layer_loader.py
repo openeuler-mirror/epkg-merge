@@ -4,9 +4,7 @@ import os
 import re
 import threading
 from typing import Any, Dict, List
-
 import yaml
-
 from src.core.loader.lib.enums import Config, MainConfigKey, Directory, IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
@@ -44,6 +42,21 @@ class _LayerConfigLoader:
         self._layer = layer
         self._layer_path = layer_path
         self.arch = target_arch
+        self.index_config = {
+            "configFilesPattern": "(?P<_pkgname>[-0-9a-zA-Z_.]+)(/|\\)package\.yaml",
+            "registerConfigSpaceForEachFile": {"pkgs.${{pkg._basename}}:fspath": "${{pkg._filepath}}",
+            "files.${{pkg._filepath}}": {
+                "name": "${{pkg._basename}}", # can catch spell error if conflict with the name defined in yaml
+                "docType": "base",
+                "includePhase": "phase.sh",
+                "includeRuntimePhase": "runtimePhase.sh runtimePhase.lua",
+                "include": "versions.yaml files.yaml defineFlags.yaml",
+                ":referAttrs": "types.package",
+                "meta:referAttrs": "types.package.meta",
+                "phase:referAttrs": "types.package.phase",
+                "runtimePhase:referAttrs": "types.package.runtimePhase"}
+            }
+        }
 
     def load(self) -> None:
         log.info(f"Loading layer: '{self._layer}' with layer path: '{self._layer_path}'")
@@ -62,12 +75,8 @@ class _LayerConfigLoader:
         self._load_pkgs_index_yaml(pkgs_dir)
 
     def _load_pkgs_index_yaml(self, pkgs_dir: str) -> None:
-        index_yaml = os.path.join(pkgs_dir, str(Config.INDEX.value))
-        if not os.path.isfile(index_yaml):
-            log.error(f"Pkgs index file of layer '{self._layer}' is missing")
-            raise LoadException(f"Pkgs index file of layer '{self._layer}' is missing")
-
-        index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
+        index_config = self.index_config
+        # index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
         pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
             raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
@@ -106,11 +115,8 @@ class _LayerConfigLoader:
         self._load_use_index_yaml(use_dir)
 
     def _load_use_index_yaml(self, use_dir: str) -> None:
-        index_yaml = os.path.join(use_dir, str(Config.INDEX.value))
-        if not os.path.isfile(index_yaml):
-            raise LoadException(f"Use index file of layer '{self._layer}' is missing")
-
-        index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
+        index_config = self.index_config
+        # index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
         pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
             raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
@@ -163,10 +169,10 @@ class _LayerConfigLoader:
 
 class _ElementConfigLoader:
     IMPLICIT_FIELDS = {
-        "basename": "%%_basename",
-        "filepath": "%%_filepath",
-        "dirname": "%%_dirname",
-        "filename": "%%_filename",
+        "basename": "${{pkg._basename}}",
+        "filepath": "${{pkg._filepath}}",
+        "dirname": "${{pkg._dirname}}",
+        "filename": "${{pkg._filename}}",
     }
 
     def __init__(self, element: str, element_config_path: str, index_config: Dict[str, Any]) -> None:
