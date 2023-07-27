@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
-
 import yaml
-
 from src.core.evaluator import transform
 from src.core.loader.lib.enums import Directory, IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml

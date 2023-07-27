@@ -31,3 +31,11 @@ class Directory(Enum):
     TYPES = "types"
     RPMRC = "rpmrc"
     LANG = "lang"
+
+
+# Enum of partner of import config
+class ImportConfig(Enum):
+    PKG_GET = "(\$\{\{pkg\.get\(([-\\'\\\"\w.]+)\)}})"
+    PKG_KEY = "(\$\{\{pkg\[([-\'\"\w.]+)]}})"
+    PKG_HAS = "(\$\{\{pkg\.has\(([-\\'\\\"\w.]+)\)}})"
+    TOP_KEY = "(\$\{\{pkg\[[\\'\\\"]([-\\'\\\"\w.]+)[\\'\\\"]]}})"

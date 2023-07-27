@@ -2,8 +2,10 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 
 import re
+import yaml
 from src.core.common import is_pycode
 from src.core.constant.tokens import NOT_EXIST
+from src.core.loader.lib.enums import ImportConfig
 
 def expand_macro(str_macro, fspath):
     from src.core.config_space import config_space
@@ -27,29 +29,40 @@ def expand_macro(str_macro, fspath):
             if k.startswith("${{rpmrc."):
                 v = v.replace("rpmrc.", "rpmGlobal.")
             elif k.startswith("${{pkg.") or k.startswith("${{pkg["):
-                if re.fullmatch("\$\{\{pkg\.has\([-\'\"\w.]+\)}}", k):
-                    find_keywords = re.findall("\$\{\{pkg\.has\([-\'\"\w.]+\)}}", k)[0]
+                if re.fullmatch(ImportConfig.PKG_HAS.value, k):
+                    find_keywords = re.findall(ImportConfig.PKG_HAS.value, k)[0]
                     keywords = find_keywords[1]
                     if re.fullmatch("[\"\'].+[\"\']", keywords):
                         keywords = keywords[1:-1]
-                        v = f"pkg.{keywords}" in config_space
-                elif re.fullmatch("\$\{\{pkg\.get\([-\'\"\w.]+\)}}", k):
-                    find_keywords = re.findall("\$\{\{pkg\.get\([-\'\"\w.]+\)}}", k)[0]
+                    v = f"pkg.{keywords}" in config_space
+                elif re.fullmatch(ImportConfig.PKG_GET.value, k):
+                    find_keywords = re.findall(ImportConfig.PKG_GET.value, k)[0]
                     keywords = find_keywords[1]
                     if re.fullmatch("[\"\'].+[\"\']", keywords):
                         keywords = keywords[1:-1]
-                        v = f"{cspath}.{keywords}"
-                elif re.fullmatch("\$\{\{pkg\[[-\'\"\w.]+]}}", k):
-                    find_keywords = re.findall("\$\{\{pkg\[[-\'\"\w.]+]}}", k)[0]
+                    v = f"{cspath}.{keywords}"
+                elif re.fullmatch(ImportConfig.PKG_KEY.value, k):
+                    find_keywords = re.findall(ImportConfig.PKG_KEY.value, k)[0]
                     keywords = find_keywords[1]
                     if re.fullmatch("[\"\'].+[\"\']", keywords):
                         keywords = keywords[1:-1]
-                        v = f"{cspath}.{keywords}"
+                    v = f"{cspath}.{keywords}"
                 else:
                     v = v.replace("pkg.", f"{cspath}.")
+            elif k.startswith("${{top["):
+                find_keywords = re.findall(ImportConfig.TOP_KEY.value, k)[0]
+                keywords = find_keywords[1]
+                if "." not in keywords:
+                    raise Exception("error format in %s" % k)
+                v = f"top.{keywords}"
+                if v not in config_space:
+                    load_top_yaml_info(fspath, cspath, keywords.split(".")[1])
             else:
                 v = f"{cspath}.{v}"
-        sub_values[k] = config_space.get_key(v)
+        if isinstance(v, bool):
+            sub_values[k] = str(v).lower()
+        else:
+            sub_values[k] = config_space.get_key(v)
 
         # defineFlags只需要看 是否真的能够获取到值，如果获取到说明是存在的
         if ("defineFlags.+" in k) or ("defineFlags.-" in k):
@@ -67,3 +80,20 @@ def substitute(str_macro, sub_values):
     for sub_value in sorted_sub_values:
         str_macro = str_macro.replace(sub_value[0], str(sub_value[1]))
     return str_macro
+
+
+def load_top_yaml_info(fspath, cspath, package):
+    from src.core.config_space import config_space
+    package_fspath = fspath.replace(cspath.split(".")[-1], package)
+    with open(package_fspath, encoding="utf-8") as f1:
+        configs = yaml.safe_load(f1)
+        package_content = f1.read()
+    import_words = re.findall(ImportConfig.TOP_KEY.value, package_content)
+    for import_word in import_words:
+        pkg_cspath = import_word[1]
+        if "." in pkg_cspath:
+            raise Exception("Can't load full package")
+        package_name = pkg_cspath.split(".")[0]
+        load_top_yaml_info(package_fspath, pkg_cspath, package_name)
+    for k, v in configs.items():
+        config_space.add_key(f"top.pkgs.{package}.{k}", v, package_fspath)
