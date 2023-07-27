@@ -8,7 +8,7 @@ from src.core.constant.tokens import NOT_EXIST
 def expand_macro(str_macro, fspath):
     from src.core.config_space import config_space
     str_macro += " "
-    patterns = [r'(%%%?{?(.+?)[}" "\s])', '(\${{([-\.\w]+)}})']
+    patterns = [r'(%%%?{?(.+?)[}" "\s])', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
     if is_pycode(str_macro):
         patterns.append(r'(dd?\.(.+?)[" "\s])')
     macro_keys = {}
@@ -26,8 +26,27 @@ def expand_macro(str_macro, fspath):
         if k.startswith("${{") and k.endswith("}}"):
             if k.startswith("${{rpmrc."):
                 v = v.replace("rpmrc.", "rpmGlobal.")
-            elif k.startswith("${{pkg."):
-                v = v.replace("pkg.", f"{cspath}.")
+            elif k.startswith("${{pkg.") or k.startswith("${{pkg["):
+                if re.fullmatch("\$\{\{pkg\.has\([-\'\"\w.]+\)}}", k):
+                    find_keywords = re.findall("\$\{\{pkg\.has\([-\'\"\w.]+\)}}", k)[0]
+                    keywords = find_keywords[1]
+                    if re.fullmatch("[\"\'].+[\"\']", keywords):
+                        keywords = keywords[1:-1]
+                        v = f"pkg.{keywords}" in config_space
+                elif re.fullmatch("\$\{\{pkg\.get\([-\'\"\w.]+\)}}", k):
+                    find_keywords = re.findall("\$\{\{pkg\.get\([-\'\"\w.]+\)}}", k)[0]
+                    keywords = find_keywords[1]
+                    if re.fullmatch("[\"\'].+[\"\']", keywords):
+                        keywords = keywords[1:-1]
+                        v = f"{cspath}.{keywords}"
+                elif re.fullmatch("\$\{\{pkg\[[-\'\"\w.]+]}}", k):
+                    find_keywords = re.findall("\$\{\{pkg\[[-\'\"\w.]+]}}", k)[0]
+                    keywords = find_keywords[1]
+                    if re.fullmatch("[\"\'].+[\"\']", keywords):
+                        keywords = keywords[1:-1]
+                        v = f"{cspath}.{keywords}"
+                else:
+                    v = v.replace("pkg.", f"{cspath}.")
             else:
                 v = f"{cspath}.{v}"
         sub_values[k] = config_space.get_key(v)
