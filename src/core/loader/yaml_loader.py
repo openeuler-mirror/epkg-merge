@@ -5,7 +5,7 @@ import os
 import yaml
 
 from src.core.evaluator import transform
-from src.core.loader.lib.enums import IndexConfigKey
+from src.core.loader.lib.enums import Directory, IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
 
@@ -53,14 +53,18 @@ class YamlLoader:
 
     def merge_inherit(self, inherits, final_package_info):
         from src.core.config_space import config_space
-        for inherit in inherits.split(","):
-            inherit_package = inherit.split(".")[1]
-            inherit_package_info = config_space.get_package(inherit_package)
-            inherit_key = inherit.replace(f"pkgs.{inherit_package}", "")
-            for inherit_k, inherit_v in inherit_package_info.items():
-                if inherit_key and not inherit_k.startswith(inherit_key):
-                    continue
-                final_package_info[f"{self._cspath}.{inherit_k}"] = inherit_v
+        if isinstance(inherits, str):
+            inherits = inherits.split(",")
+        lang_path = os.path.join(self._fspath.split("pkgs")[0], Directory.LANG.value)
+        for inherit_package in inherits:
+            if "." in inherit_package:
+                inherit_package = inherit_package.split(".")[-1]
+            inherit_package_info: dict = config_space.get_language(lang_path, inherit_package, self._cspath)
+            for inherit_key, inherit_value in inherit_package_info.items():
+                if isinstance(inherit_value, list):
+                    final_package_info[inherit_key] = list(set(final_package_info[inherit_key] + inherit_value))
+                elif isinstance(inherit_value, dict):
+                    final_package_info[inherit_key] = final_package_info[inherit_key.update(inherit_value)]
 
     @staticmethod
     def load_include(configs):

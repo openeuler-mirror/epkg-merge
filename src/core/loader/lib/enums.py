@@ -30,3 +30,4 @@ class Directory(Enum):
     USE = "use"
     TYPES = "types"
     RPMRC = "rpmrc"
+    LANG = "lang"

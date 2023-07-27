@@ -60,6 +60,7 @@ class _LayerConfigLoader:
 
     def load(self) -> None:
         log.info(f"Loading layer: '{self._layer}' with layer path: '{self._layer_path}'")
+        self._load_languages()
         self._load_pkgs()
         self._load_python_libs()
         self._load_use()
@@ -165,6 +166,20 @@ class _LayerConfigLoader:
                     for k, v in result.items():
                         rpmrc_key = "rpmGlobal.{}".format(k)
                         config_space.add_key(rpmrc_key, v, method_rpmrc)
+
+    def _load_languages(self):
+        language_path = os.path.join(self._layer_path, str(Directory.LANG.value))
+        if not os.path.isdir(language_path):
+            return
+        from src.core.config_space import config_space
+        language_list = os.listdir(language_path)
+        for language_yaml in language_list:
+            language_yaml_path = os.path.join(language_path, language_yaml)
+            language_name = language_yaml.split(".")[0]
+            result = expand_yaml(yaml.safe_load(open(language_yaml_path, encoding="utf-8")))
+            for k, v in result.items():
+                language_key = "lang.{0}.{1}".format(language_name, k)
+                config_space.add_key(language_key, v, language_yaml_path)
 
 
 class _ElementConfigLoader:

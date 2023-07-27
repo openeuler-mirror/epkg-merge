@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
+import os.path
 
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.evaluator.merge import merge_values
@@ -114,6 +115,18 @@ class ConfigSpace(dict):
             package_info[short_key] = value
 
         return package_info
+
+    def get_language(self, path, language, cspath=""):
+        language_yaml_path = os.path.join(path, f"{language}.yaml")
+        loaded_info: dict = yaml.safe_load(open(language_yaml_path, encoding="utf-8"))
+        for key, value in loaded_info.items():
+            if key == "inherit":
+                value = value.split(".")[-1]
+                target_path = path.replace(os.path.basename(path), value)
+                inherit_info = self.get_language(target_path, value, cspath)
+                inherit_info.update(loaded_info)
+        language_info = {f"{cspath}." + _key: _value for _key, _value in loaded_info.items()}
+        return language_info
 
     def get_package_format_json(self, package_name):
         pacakge_json = self.get_package(package_name)
