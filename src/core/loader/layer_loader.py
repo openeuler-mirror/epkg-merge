@@ -45,7 +45,7 @@ class _LayerConfigLoader:
         self.index_config = {
             "configFilesPattern": "(?P<_pkgname>[-0-9a-zA-Z_.]+)(/|\\)package\.yaml",
             "registerConfigSpaceForEachFile": {"pkgs.${{pkg._basename}}:fspath": "${{pkg._filepath}}",
-            "files.${{pkg._filepath}}": {
+            "files.\"${{pkg._filepath}}\"": {
                 "name": "${{pkg._basename}}", # can catch spell error if conflict with the name defined in yaml
                 "docType": "base",
                 "includePhase": "phase.sh",

@@ -6,6 +6,7 @@ import re
 from src.log import log
 from Cheetah.Template import Template
 from src.transition.template import *
+from src.transition.lib.config import *
 
 # only these keys can be parsed
 STR_KEYS = ('name',
@@ -222,7 +223,6 @@ class SpecWriter:
                 self.target_metadata['defineFlags'][condition] = target_dict
                 break
 
-
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
         for main_field in self.metadata.copy():
@@ -231,26 +231,14 @@ class SpecWriter:
             func_name = "phase." + main_field.split(".")[1]
             if func_name not in self.metadata:
                 continue
-            func_body = self.metadata.get(func_name).strip()
-            if func_body.endswith("\\"):
-                tmp_body = func_body
-                last_line = ""
-            else:
-                if os.linesep not in func_body:
-                    tmp_body = func_body
-                    if not tmp_body.endswith("\\"):
-                        tmp_body += " \\"
-                    last_line = ""
-                else:
-                    tmp_body, _, last_line = func_body.rpartition(os.linesep)
-            flags = copy.deepcopy(self.metadata.get(main_field))
-            tmp_body += os.linesep
             if re.fullmatch("build\.configure\w*\.Flags", main_field):
                 prefix = ""
             elif re.fullmatch("build\.cmake\w*\.Flags", main_field):
                 prefix = "-D"
             else:
                 continue
+            flags = copy.deepcopy(self.metadata.get(main_field))
+            flags_value = "%global %{0} \\{1}".format(main_field.replace(".", "_"), os.linesep)
             for flag, value in flags.items():
                 if isinstance(value, bool):
                     if prefix == "-D":
@@ -261,13 +249,15 @@ class SpecWriter:
                     base_key = flag.split(" rpmWhen ")[0]
                     conditions = flag.split(" rpmWhen ")[1:]
                     for condition in conditions:
-                        tmp_body += f'%if {condition}{os.linesep}'
-                    tmp_body += f"    {prefix}{base_key}={value} \\{os.linesep}" + f"%endif{os.linesep}" * len(conditions)
+                        flags_value += f'%if {condition}{os.linesep}'
+                    flags_value += f"    {prefix}{base_key}={value} \\{os.linesep}" + f"%endif{os.linesep}" * len(conditions)
                 else:
-                    tmp_body += f"    {prefix}{flag}={value} \\{os.linesep}"
-            if last_line == "":
-                tmp_body = tmp_body.rstrip() + os.linesep
-            self.metadata[func_name] = tmp_body + last_line
+                    flags_value += f"    {prefix}{flag}={value} \\{os.linesep}"
+            self.metadata[func_name] = f"{CONFIGURE} \\{os.linesep}" + self.metadata[func_name]
+            if "rpmMacros" not in self.target_metadata:
+                self.target_metadata.setdefault("rpmMacros", flags_value)
+            else:
+                self.target_metadata["rpmMacros"] += flags_value
 
     def parse_phase(self):
         # phase. prep build install check clean
