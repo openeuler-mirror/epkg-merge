@@ -58,10 +58,13 @@ class YamlLoader:
                 inherit_package = inherit_package.split(".")[-1]
             inherit_package_info: dict = config_space.get_language(lang_path, inherit_package, self._cspath)
             for inherit_key, inherit_value in inherit_package_info.items():
-                if isinstance(inherit_value, list):
-                    final_package_info[inherit_key] = list(set(final_package_info[inherit_key] + inherit_value))
-                elif isinstance(inherit_value, dict):
-                    final_package_info[inherit_key] = final_package_info[inherit_key].update(inherit_value)
+                if inherit_key in final_package_info:
+                    if isinstance(inherit_value, list):
+                        final_package_info[inherit_key] = list(set(final_package_info[inherit_key] + inherit_value))
+                    elif isinstance(inherit_value, dict):
+                        final_package_info[inherit_key] = final_package_info[inherit_key].update(inherit_value)
+                else:
+                    final_package_info.setdefault(inherit_key, inherit_value)
 
     @staticmethod
     def load_include(configs):
