@@ -61,7 +61,7 @@ class YamlLoader:
                 if isinstance(inherit_value, list):
                     final_package_info[inherit_key] = list(set(final_package_info[inherit_key] + inherit_value))
                 elif isinstance(inherit_value, dict):
-                    final_package_info[inherit_key] = final_package_info[inherit_key.update(inherit_value)]
+                    final_package_info[inherit_key] = final_package_info[inherit_key].update(inherit_value)
 
     @staticmethod
     def load_include(configs):
