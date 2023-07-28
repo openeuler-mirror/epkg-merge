@@ -44,7 +44,7 @@ def handle_output(package_name, content, output):
 
     for path in ConfigSpace.fspath_loaded:
         package_path, file_name = os.path.split(path)
-        if f"{package_name}.yaml" == file_name:
+        if file_name == "package.yaml":
             sub_files = os.listdir(package_path)
             for sub_file in sub_files:
                 if sub_file.endswith(".yaml") or sub_file.endswith(".spec"):
