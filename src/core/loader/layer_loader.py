@@ -77,7 +77,6 @@ class _LayerConfigLoader:
 
     def _load_pkgs_index_yaml(self, pkgs_dir: str) -> None:
         index_config = self.index_config
-        # index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
         pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
             raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
@@ -117,7 +116,6 @@ class _LayerConfigLoader:
 
     def _load_use_index_yaml(self, use_dir: str) -> None:
         index_config = self.index_config
-        # index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
         pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
             raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "

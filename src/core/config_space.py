@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os.path
-
+import yaml
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.evaluator.merge import merge_values
 from src.core.evaluator.transform import transform_key_default
@@ -106,8 +106,6 @@ class ConfigSpace(dict):
         self.get_key(pre_name)
         loaded_keys = config_space.get_key(f"pkgs.{package_name}:loadedKeys")
         for key in loaded_keys:
-            if "useConfigureFlags" in key:
-                continue
             value = config_space.get_key(key)
             if value == NOT_EXIST:
                 continue
@@ -121,7 +119,8 @@ class ConfigSpace(dict):
         loaded_info: dict = yaml.safe_load(open(language_yaml_path, encoding="utf-8"))
         for key, value in loaded_info.items():
             if key == "inherit":
-                value = value.split(".")[-1]
+                if "." in value:
+                    value = value.split(".")[-1]
                 target_path = path.replace(os.path.basename(path), value)
                 inherit_info = self.get_language(target_path, value, cspath)
                 inherit_info.update(loaded_info)

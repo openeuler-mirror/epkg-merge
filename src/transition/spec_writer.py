@@ -1,6 +1,5 @@
 import copy
 import os
-
 import yaml
 import re
 from src.log import log

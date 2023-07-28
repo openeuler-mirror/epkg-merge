@@ -38,7 +38,6 @@ class YamlLoader:
                     config_space[f"{self._cspath}:loadedKeys"] = keys_cur
                 if actual_key not in keys_cur:
                     keys_cur.append(actual_key)
-                # config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
 
     def load_inherit(self, package_info):
         final_package_info = {}
