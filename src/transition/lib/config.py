@@ -1,1 +1,1 @@
-CONFIGURE = "%add_configure_flags"
+CONFIGURE = "%{?add_configure_flags}"
