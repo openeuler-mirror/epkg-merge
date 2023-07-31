@@ -166,15 +166,16 @@ def get_val(val, fspath):
 
 def merge_with_func(merge_func, merge_params, values_all):
     current = ""
+
+    if not values_all:
+        return NOT_EXIST
+
     for cur_value in values_all:
         raw_value = cur_value.get("value", "")
         value = get_val(raw_value, cur_value.get('fspath'))
         current, is_continue = merge_func(current, value, merge_params)
         if not is_continue:
             break
-
-    if not values_all:
-        return NOT_EXIST
 
     return current
 

@@ -43,7 +43,6 @@ class ConfigSpace(dict):
     instance = None
     fspath_loaded = set()
     checked_failed_keys = []
-    excludes_key = [":remove", ":append", ":prepend", ":replace", ":rpm_macro_param"]
 
     @make_synchronized
     def __new__(cls, *args, **kwargs):
