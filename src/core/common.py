@@ -46,7 +46,7 @@ def eval_python(val: str):
     #     'result': exec_code(py_code)
     # }
     val = val.strip()
-    val = val.lstrip("{{")
+    val = val.lstrip("${{")
     val = val.rstrip("}}")
     result = src.core.interpreter.executor.call(val.strip())
 
