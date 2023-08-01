@@ -3,6 +3,7 @@
 import os.path
 import yaml
 from src.core.loader.yaml_loader import YamlLoader
+from src.core.loader.lib.load_helper import expand_yaml
 from src.core.evaluator.merge import merge_values
 from src.core.evaluator.transform import transform_key_default
 from src.core.common import format_package_json
@@ -124,7 +125,7 @@ class ConfigSpace(dict):
                 target_path = path.replace(os.path.basename(path), value)
                 inherit_info = self.get_language(target_path, value, cspath)
                 inherit_info.update(loaded_info)
-        language_info = {f"{cspath}." + _key: _value for _key, _value in loaded_info.items()}
+        language_info = expand_yaml({f"{cspath}." + _key: _value for _key, _value in loaded_info.items()})
         return language_info
 
     def get_package_format_json(self, package_name):
