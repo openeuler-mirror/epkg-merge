@@ -225,14 +225,14 @@ class SpecWriter:
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
         for main_field in self.metadata.copy():
-            if not re.fullmatch("build\.(configure|cmake)\w*\.Flags", main_field):
+            if not re.fullmatch("build\.(configure|cmake)\w*\.flags", main_field):
                 continue
             func_name = "phase." + main_field.split(".")[1]
             if func_name not in self.metadata:
                 continue
-            if re.fullmatch("build\.configure\w*\.Flags", main_field):
+            if re.fullmatch("build\.configure\w*\.flags", main_field):
                 prefix = ""
-            elif re.fullmatch("build\.cmake\w*\.Flags", main_field):
+            elif re.fullmatch("build\.cmake\w*\.flags", main_field):
                 prefix = "-D"
             else:
                 continue
