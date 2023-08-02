@@ -3,6 +3,7 @@
 import os
 import re
 from src.log import log
+from src.core.loader.lib.config import CONFIG_SET_FILES, ARCH_SYS
 
 
 def is_pycode(val: str):
@@ -163,12 +164,17 @@ def format_meta(k, v, format_json, raw_json):
 
 
 def format_compile_flags(k, v, format_json, raw_json):
-    if ".flags." not in k:
-        return
     if "build." not in k:
         return
-    build, key = k.split(".flags.", 1)
-    format_json.setdefault(f'{build}.flags', {}).setdefault(key, v)
+    if ".flags." in k:
+        build, key = k.split(".flags.", 1)
+        format_json.setdefault(f'{build}.flags', {}).setdefault(key, v)
+    elif re.match("build\." + ("|".join(CONFIG_SET_FILES)), k):
+        from src.core.config_space import config_space
+        key = k.split(".")[-1]
+        config_key_name = k.split(".")[1]
+        format_json.setdefault(config_key_name, {"ARCH": ARCH_SYS.get(config_space.arch, config_space.arch)}) \
+            .setdefault(key, v)
 
 
 format_funcs = {
