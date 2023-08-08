@@ -8,6 +8,7 @@ import yaml
 from src.core.loader.lib.enums import Config, MainConfigKey, Directory, IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
+from src.core.loader.lib.config import INDEX_CONF
 from src.log import log
 
 
@@ -42,21 +43,6 @@ class _LayerConfigLoader:
         self._layer = layer
         self._layer_path = layer_path
         self.arch = target_arch
-        self.index_config = {
-            "configFilesPattern": r"(?P<_pkgname>[-0-9a-zA-Z_.]+)(/|\\)(package\.yaml)",
-            "registerConfigSpaceForEachFile": {"pkgs.${{pkg._basename}}:fspath": "${{pkg._filepath}}",
-            "files.\"${{pkg._filepath}}\"": {
-                "name": "${{pkg._basename}}", # can catch spell error if conflict with the name defined in yaml
-                "docType": "base",
-                "includePhase": "phase.sh",
-                "includeRuntimePhase": "runtimePhase.sh runtimePhase.lua",
-                "include": "versions.yaml files.yaml defineFlags.yaml",
-                ":referAttrs": "types.package",
-                "meta:referAttrs": "types.package.meta",
-                "phase:referAttrs": "types.package.phase",
-                "runtimePhase:referAttrs": "types.package.runtimePhase"}
-            }
-        }
 
     def load(self) -> None:
         log.info(f"Loading layer: '{self._layer}' with layer path: '{self._layer_path}'")
@@ -76,8 +62,7 @@ class _LayerConfigLoader:
         self._load_pkgs_index_yaml(pkgs_dir)
 
     def _load_pkgs_index_yaml(self, pkgs_dir: str) -> None:
-        index_config = self.index_config
-        pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
+        pattern = INDEX_CONF.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
             raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
                                 f"of pkgs index file in layer '{self._layer}' is empty")
@@ -93,7 +78,7 @@ class _LayerConfigLoader:
                 log.error(f"layer '{self._layer}' lacks of {pkg}/package.yaml")
                 continue
 
-            _ElementConfigLoader(pkg, pkg_config, index_config).load()
+            _ElementConfigLoader(pkg, pkg_config, INDEX_CONF).load()
             from src.core.config_space import config_space
             config_space.setdefault("allPkgs", set()).add(pkg)
 
@@ -115,15 +100,14 @@ class _LayerConfigLoader:
         self._load_use_index_yaml(use_dir)
 
     def _load_use_index_yaml(self, use_dir: str) -> None:
-        index_config = self.index_config
-        pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
+        pattern = INDEX_CONF.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
             raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
                                 f"of use index file in layer '{self._layer}' is empty")
 
         for use in [f for f in os.listdir(use_dir) if
                     os.path.isfile(os.path.join(use_dir, f)) and re.match(pattern, f) and f != str(Config.INDEX.value)]:
-            _ElementConfigLoader(".".join(use.split(".")[:-1]), os.path.join(use_dir, use), index_config).load()
+            _ElementConfigLoader(".".join(use.split(".")[:-1]), os.path.join(use_dir, use), INDEX_CONF).load()
 
     def _load_types(self) -> None:
         types_path = os.path.join(self._layer_path, str(Directory.TYPES.value))

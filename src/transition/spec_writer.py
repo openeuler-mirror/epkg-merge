@@ -6,6 +6,7 @@ from src.log import log
 from Cheetah.Template import Template
 from src.transition.template import *
 from src.transition.lib.config import *
+from src.core.loader.lib.config import CONFIG_SET_FILES
 
 # only these keys can be parsed
 STR_KEYS = ('name',
@@ -225,14 +226,14 @@ class SpecWriter:
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
         for main_field in self.metadata.copy():
-            if not re.fullmatch("build\.(configure|cmake)\w*\.Flags", main_field):
+            if not re.fullmatch("build\.(configure|cmake)\w*\.flags", main_field):
                 continue
             func_name = "phase." + main_field.split(".")[1]
             if func_name not in self.metadata:
                 continue
-            if re.fullmatch("build\.configure\w*\.Flags", main_field):
+            if re.fullmatch("build\.configure\w*\.flags", main_field):
                 prefix = ""
-            elif re.fullmatch("build\.cmake\w*\.Flags", main_field):
+            elif re.fullmatch("build\.cmake\w*\.flags", main_field):
                 prefix = "-D"
             else:
                 continue
@@ -257,6 +258,22 @@ class SpecWriter:
                 self.target_metadata.setdefault("rpmMacros", flags_value)
             else:
                 self.target_metadata["rpmMacros"] += flags_value
+
+    def parse_config_settings(self):
+        for config_name in CONFIG_SET_FILES:
+            if config_name in self.metadata and isinstance(self.metadata.get(config_name), dict):
+                set_str = ""
+                arch = ""
+                for key, value in self.metadata.get(config_name).items():
+                    if key == "ARCH":
+                        arch = value
+                        continue
+                    if arch != "":
+                        sed_cmd = f"sed -i arch/{arch}/configs/openeuler_defconfig -e \'s/^{key}=.*/{key}={value}/\'" \
+                                  f"{os.linesep}"
+                        set_str += sed_cmd
+                if set_str != "" and "phase.prep" in self.metadata:
+                    self.metadata["phase.prep"] += set_str
 
     def parse_phase(self):
         # phase. prep build install check clean
@@ -495,6 +512,7 @@ class SpecWriter:
         self.parse_simple_keys()
         self.parse_subpackage()
         self.merge_compile_flags()
+        self.parse_config_settings()
         self.parse_phase()
         self.parse_shell()
 
