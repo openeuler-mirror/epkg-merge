@@ -25,12 +25,29 @@ reference: define vs. global
 
 	https://www.cnblogs.com/michael-xiang/p/10480809.html
 
-## compiler cflags 定制
+## compiler/cflags 定制
 
-	rpmGlobal:
-		__cc: ${{pkg.env.compiler}}
-		build_cflags: ${{pkg.env.cflags}}
-		build_cxxflags: ${{pkg.env.cxxflags}}
+	rpmGlobal when ${{ pkg.has('build.cc') }}:
+		__cc:           ${{pkg.build.cc}}
+		__cpp:          ${{pkg.build.cpp}}
+		__cxx:          ${{pkg.build.cxx}}
+		__ld:           ${{pkg.build.ld}}
+		__ar:           ${{pkg.build.ar}}
+		__as:           ${{pkg.build.as}}
+		__nm:           ${{pkg.build.nm}}
+		__objcopy:      ${{pkg.build.objcopy}}
+		__objdump:      ${{pkg.build.objdump}}
+		__ranlib:       ${{pkg.build.ranlib}}
+		__readelf:      ${{pkg.build.readelf}}
+		__strings:      ${{pkg.build.strings}}
+		__strip:        ${{pkg.build.strip}}
+
+	rpmGlobal when ${{ pkg.has('build.optflags') }}:
+		optflags: 	${{pkg.build.optflags}}
+		build_cflags: 	${{pkg.build.cflags}}
+		build_cxxflags: ${{pkg.build.cxxflags}}
+		build_fflags: 	${{pkg.build.fflags}}
+		build_ldflags: 	${{pkg.build.ldflags}}
 
 ## reference: 定制相关 rpm macros
 
@@ -39,7 +56,7 @@ https://src.fedoraproject.org/rpms/redhat-rpm-config/blob/rawhide/f/buildflags.m
 Observation:
 CFLAGS
 - spec CFLAGS normally inherits one of %optflags/%build_ldflags/RPM_OPT_FLAGS/CFLAGS
-- %build_ldflags inherits %optflags in global macros
+- %build_cflags inherits %optflags in global macros
 - RPM_OPT_FLAGS inherits %optflags in %___build_pre
 - CFLAGS inherits CFLAGS/%optflags in %cmake
 - CFLAGS inherits CFLAGS/%build_cflags in %configure
