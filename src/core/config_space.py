@@ -10,7 +10,9 @@ from src.core.common import format_package_json
 from src.core.evaluator.check import check_value
 from src.core.constant.tokens import NOT_EXIST
 from src.log import log
+from src.core.lib.exclude_key import is_strategy_key, is_yaml_key
 import platform
+
 
 def make_synchronized(func):
     import threading
@@ -72,7 +74,6 @@ class ConfigSpace(dict):
         self[key] = value
         return value
 
-
     def get_key(self, key):
         raw_key, fspath_list = get_key_fspath(key)
         fspath_set = set()
@@ -90,7 +91,7 @@ class ConfigSpace(dict):
     def add_key(self, key, value, fspath):
         key_info = transform_key_default(key, value, fspath)
         for k, v in key_info.items():
-            if ":" in k and ":rpm_macro_param" not in k:
+            if is_strategy_key(k):
                 self[k] = v["value"]
                 continue
             self.setdefault(f"{k}:values", []).append(v)
@@ -109,6 +110,8 @@ class ConfigSpace(dict):
         for key in loaded_keys:
             value = config_space.get_key(key)
             if value == NOT_EXIST:
+                continue
+            if not is_yaml_key(key):
                 continue
             short_key = key.replace(f"{pre_name}.", "")
             package_info[short_key] = value

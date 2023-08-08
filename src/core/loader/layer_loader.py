@@ -75,7 +75,7 @@ class _LayerConfigLoader:
                     break
 
             if not pkg_config:
-                log.error(f"layer '{self._layer}' lacks of {pkg}.yaml")
+                log.error(f"layer '{self._layer}' lacks of {pkg}/package.yaml")
                 continue
 
             _ElementConfigLoader(pkg, pkg_config, INDEX_CONF).load()

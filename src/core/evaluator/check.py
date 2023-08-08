@@ -21,6 +21,6 @@ def check_value(key, value):
         'value': value,
         'err_msg': 'No checkFunc specified for key: ' + key + '!'
         }
-    log.info(err_code)
+    log.debug(err_code)
 
     return True

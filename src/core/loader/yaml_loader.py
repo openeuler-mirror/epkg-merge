@@ -6,7 +6,7 @@ from src.core.evaluator import transform
 from src.core.loader.lib.enums import Directory, IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
-
+from src.core.lib.exclude_key import is_strategy_key
 
 class YamlLoader:
 
@@ -30,7 +30,7 @@ class YamlLoader:
         result = self.load_inherit(result)
         for k, v in result.items():
             actual_keys = config_space.add_key(k, v, self._fspath)
-            if ":" in k and ":rpm_macro_param" not in k:
+            if is_strategy_key(k):
                 continue
             for actual_key in actual_keys:
                 keys_cur = config_space.get(f"{self._cspath}:loadedKeys", [])
@@ -99,7 +99,7 @@ class YamlLoader:
                     result = expand_yaml(transform_result, self._cspath)
                     for k, v in result.items():
                         actual_keys = config_space.add_key(k, v, self._fspath)
-                        if ":" in k and ":rpm_macro_param" not in k:
+                        if is_strategy_key(k):
                             continue
                         for actual_key in actual_keys:
                             keys_cur = config_space.get(f"{self._cspath}:loadedKeys", [])
