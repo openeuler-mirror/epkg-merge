@@ -79,10 +79,22 @@ l3.key1 {prev => l2.key1}
 So that one can replace item of an exact layer.
 So that one can insert item after an exact layer.
 
-## 通常在base package YAML内描述多版本、多架构处理逻辑
+## origin/update 包文件的自动识别
+
+一个YAML文件，可以定义一个软件包，也可以对另一个软件包做局部修改。
+我们用如下两个概念加以区分：
+- origin package file是一个软件包的原始定义。
+- update package file是对（第三方）原始定义的补充与修改。
+它们可以类比yocto里的bb与bbappend文件。
+
+这里我们不采用bb/bbappend这样，以文件后缀名来区分origin/update，而是认为可以自动判断：
+如果一个YAML包文件里定义了meta.xxx (spec:Summary/License/URL)这些字段，那么就认为它是origin package。
+因为这些字段一旦定义，一般第三方没必要去修改。
+
+## 通常在baseos、origin package YAML内描述多版本、多架构处理逻辑
 
 描述特定版本、架构的处理(如打patch)逻辑
-这些是软件包本身属性，应该在base package定义，方便各overlay/project共享。
+这些是软件包本身属性，应该在origin package定义，方便各overlay/project共享。
 
 各overlay/project主要聚焦定制option (expected customization)，
 以及原package未考虑到情形的fixup  (unexpected customization)。
@@ -110,19 +122,6 @@ YAML内嵌python code表述了各field之间的内在逻辑关系。
 功能对比:
 - inherit 要求等待 source.path 所有相关文件load结束，非常适合带抽象的全局引用
 - include 在当前YAML文件加载时立即执行，只适合引用当前目录下的强相关/附属文件
-
-
-## origin/update 包文件的自动识别
-
-一个YAML文件，可以定义一个软件包，也可以对另一个软件包做局部修改。
-我们用如下两个概念加以区分：
-- origin package file是一个软件包的原始定义。
-- update package file是对（第三方）原始定义的补充与修改。
-它们可以类比yocto里的bb与bbappend文件。
-
-这里我们不采用bb/bbappend这样，以文件后缀名来区分origin/update，而是认为可以自动判断：
-如果一个YAML包文件里定义了meta.xxx (spec:Summary/License/URL)这些字段，那么就认为它是origin package。
-因为这些字段一旦定义，一般第三方没必要去修改。
 
 ## merge 优先级
 
@@ -163,18 +162,84 @@ docType 按优先级顺序从高到低定义如下：
 
 2) layerPrio number不好理解、把握、协调。因而我们在它之上新增一个docType维度的排序，将priority number置于次要地位。如果必要，进一步替代priority number的可能办法是，对well known layers，协调设置它们之间的依赖关系，作为merge排序依据。
 
-references
+references:
 这里我们把yocto 的 layer type 细分为了 doc type.
 
-https://www.openembedded.org/wiki/Layers_FAQ
+`https://www.openembedded.org/wiki/Layers_FAQ`
 How do I choose the appropriate "layer type" for my layer?
 
-    Base: this is really only for oe-core and meta-oe, i.e. the base metadata for the build system.
-    Machine (BSP): if your layer primarily exists to add support for additional machine(s), use this type.
-    Software: if your layer primarily provides recipes for building additional software, use this type.
-    Distribution: if your layer primarily provides policy configuration for a distribution (conf/distro/*), which may include customised/additional recipes for the distribution, then choose this type.
-    Miscellaneous: if your layer doesn't fall into any other category you can choose this type; however there shouldn't be too many miscellaneous layers and it may be an indication that the purpose isn't well defined or that you should consider splitting the layer.
+- Base: this is really only for oe-core and meta-oe, i.e. the base metadata for the build system.
+- Machine (BSP): if your layer primarily exists to add support for additional machine(s), use this type.
+- Software: if your layer primarily provides recipes for building additional software, use this type.
+- Distribution: if your layer primarily provides policy configuration for a distribution (`conf/distro/*`), which may include customised/additional recipes for the distribution, then choose this type.
+- Miscellaneous: if your layer doesn't fall into any other category you can choose this type; however there shouldn't be too many miscellaneous layers and it may be an indication that the purpose isn't well defined or that you should consider splitting the layer.
 
+
+## 取值空间极其删减
+
+对一个包的一个字段的定制，涉及以下几个维度
+1) default value(s): 取值范围是客观的，值的先后顺序可以是主观的
+   - :type
+   - :default
+   - :values/:ranges
+2) 客观约束: 在baseos描述现实世界的各类约束，依赖以及非法组合
+   - :excludes
+3) 主观意愿: 在各layer表达定制需求
+   - :append/:prepend
+   - :remove/:replace
+
+在(1)中，当一个字段的:type为bool时，以下两者等价
+
+	:default: true
+	:values: [true, false]
+
+## excludes/restricts 字段
+
+这是一种用户友好形式，以简单灵活的方式，定义一组非法组合。
+实现中会通过transform函数，转换为对应字段的:excludes属性。
+
+一个字段的多个:excludes属性，会在特定when场景下，把其:values可能取值空间不断减少。
+:excludes的减少方式是对可能取值空间打洞，:restricts的减少方式是取交集。后者行为更像requires，适合表达这样的约束:
+
+	restricts:
+	- %gcc  # this pkg only supports gcc compiler, please exclude all others
+
+同样的多个requires/buildRequires
+1. for the same pkg: 追加version range，合并时取交集
+2. for different pkg: 追加pkg
+
+其取值为数组，其中每个item由1-3部分构成，基本形式如下
+
+	excludes:
+	- simple-condition  when multi-condition  // message
+
+其中的
+- simple-condition 是必选项，表达一个字段的取值条件
+- when multi-condition 是可选项，表达一个when condition
+- // message 是可选项，表示提示消息
+
+样例
+
+```
+	conflicts("%clang@:7")
+	conflicts("%gcc@:5.0", when="@8:")
+	conflicts("%oneapi@:2022.1.0", when="+fortran")
+	conflicts("+openmp", when="%clang", msg="OpenMP not available for the clang compiler")
+	conflicts("+openmp", when="%pgi", msg="OpenMP not available for the pgi compiler")
+	conflicts("+shared", when="platform=darwin %gcc")
+	conflicts("cxxstd=14", when="@1.8:")
+	conflicts("platform=darwin", msg="ALSA only works for Linux")
+=>
+	excludes:
+	- %clang@:7
+	- %gcc@:5.0             when @8:
+	- %oneapi@:2022.1.0     when +fortran
+	- +openmp               when %clang     // OpenMP not available for the clang compiler
+	- +openmp               when %pgi       // OpenMP not available for the pgi compiler
+	- +shared               when platform=darwin %gcc
+	- cxxstd=14             when @1.8:
+	- platform=darwin                       // ALSA only works for Linux
+```
 
 ## merge overrides: append/prepend/remove/replace属性及参数
 
@@ -188,10 +253,12 @@ merge顺序:
 	merge(prepend-values, normal-values, append-values)
 
 移除整个key：
-	key:remove:
+
+	key:remove: true
 
 移除key里的一项内容：
-	key:remove: item
+
+	key:remove: item	# remove an item from array, or a substring from string
 
 remove item动作会在files load后，merge前进行。
 remove key动作可以视情况优化提前。
@@ -286,21 +353,30 @@ define-refine
 各layer都做加法，且是condition限定下的加法。
 只在最后用户侧做必要的减法。
 这样可以有效避免中间layers 做+/-的conflicts
+
+```
 eg.
 	layer A want +CONFIG_XXX
 	layer B want -CONFIG_XXX
+```
 
 对数组类型，mergePolicy=append|prepend类型的字段，多处地方的条件配置，最后效果是做加法，等同于||
+
+```
 	repo-a
 		cflags when cond1: -g
 	repo-b
 		cflags when cond2: -g
 =>
 		cflags when cond1 || cond2: -g
+```
 
 对于用户，若想修正，做减法即可：
+
+```
 	user-config
 		cflags:remove: -g
+```
 
 然后考虑更好的长期方案，给repo-a/b提交补丁，完善其cond1/cond2。
 长期推动各方认真思考和改进condition，避免无脑+/-，置社区于浑沌。

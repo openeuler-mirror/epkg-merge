@@ -477,15 +477,15 @@ YAML内置python code可以引用如下两类函数
 condition语法：
 1) k=v, 其中k是%%或者%%%宏
 2) option=value，其中option是常见的global/package构建参数
-	  global build parameters: target, board, platform, arch, os, 在build字段下搜索
-	  package build option: eg. buildType, cxxstd, ..., 在pkgs.<pkg>.use字段下搜索
-	  package builder ENV: compiler, configureFlags, ..., 在pkgs.<pkg>.env字段下搜索
-3) +flag or -flag，其中flag是bool型的package build option，例如+debug -qt
-4) @version-specs，例如
-	@1.2:1.4 表示 version >= 1.2 and version <= 1.4
-	@1.2:    表示 version >= 1.2
-	@1.2     表示 version == 1.2
-5) ^dependency-specs，例如 ^python@:3.3，表达依赖包的情况
+	  global build parameters: target, board, platform, arch, os, 在 top.build 字段下搜索
+	  package build option: eg. buildType, cxxstd, ..., 在 pkg.use 字段下搜索
+	  package build flags: compiler, configureFlags, ..., 在 pkg.build 字段下搜索
+3) +flag or -flag，其中flag是bool型的package build option，例如 +debug -qt 等同于 (2) 中的 pkg.use.debug=true pkg.use.qt=false
+4) @version-spec，例如
+	@1.2:1.4 表示 pkg.version >= 1.2 and pkg.version <= 1.4
+	@1.2:    表示 pkg.version >= 1.2
+	@1.2     表示 pkg.version == 1.2
+5) %compiler-spec，描述一个编译器，可以紧接一个可选的@compiler-version-spec，例如``%gcc``, ``%gcc@4.7.3``
 
 Q: is the inclusive range enough?
 A: Mostly. '>=' is dominant one, about 2 orders more than < and > and <=
@@ -501,7 +501,6 @@ A: Mostly. '>=' is dominant one, about 2 orders more than < and > and <=
 
 例子
 	BuildRequires when +X: libx11
-	BuildRequires when ^python@:3.3: py-enum34
 	Patches when @0.2.5b8: gcc-5-compat.patch
 
 yocto OVERRIDES example (used a lot)
@@ -643,8 +642,8 @@ YAML python code里禁止自行import libs。只能使用python语言服务沙�
 			use.f1:type: bool
 			use.f1:default: true/false if f1 starts_with +/-
 			use.f1:doc: this is some xxx feature
-			env.configureFlags when +f1: --with-f1
-			env.configureFlags when -f1: --without-f1
+			build.configureFlags when +f1: --with-f1
+			build.configureFlags when -f1: --without-f1
 			buildRequires when +f1: build-deps-for-f1
 			requires when +f1: runtime-deps-for-f1
 			recommends when +f1: runtime-recommends-for-f1

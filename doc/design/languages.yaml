@@ -1,0 +1,263 @@
+# in YAML format, describe programming languages
+#    Ada Apex Bash C C# C++ Cobol CoffeeScript
+#    D Dart Erlang F# Fortran Go Groovy Haskell
+#    Java JavaScript Julia Kotlin Lisp Lua MATLAB Objective-C
+#    OCaml Perl PHP Powershell Prolog Python R Racket Ruby
+#    Rust Scala Scheme Scratch Shell Swift Tcl TypeScript
+#
+# - Specify the programming language for each entry
+# - Specify the rpm package name that provides the programming language
+# - Provide the file suffix associated with the programming language, separated by commas (,)
+# - Indicate the compiler command name used for the programming language
+# - Specify the build system(s) used for building the project, separated by commas (,)
+# - Specify the test framework(s) command name used for testing the project, separated by commas (,)
+# - If you know the RPM package names for the projects in this language's typical build dependencies and runtime dependencies, provide them
+# - If you know the Debian package names for the projects in this language's typical build dependencies and runtime dependencies, provide them
+# - if not applicable, don't show the field
+#
+# Please follow format of the below example
+#   - language: Haskell
+#     rpm_package: ghc
+#     file_suffix: .hs
+#     compiler: ghc
+#     build_system: cabal, stack
+#     test_framework: HUnit, QuickCheck
+
+
+- language: JavaScript
+  rpm_package: nodejs
+  file_suffix: .js
+  build_system: npm, yarn
+  test_framework: jest, mocha
+
+- language: TypeScript
+  rpm_package: nodejs-typescript
+  file_suffix: .ts
+  compiler: tsc
+  build_system: npm, yarn
+  test_framework: jest, mocha
+
+- language: Python
+  rpm_package: python3
+  file_suffix: .py
+  build_system: setuptools, pip
+  test_framework: unittest, pytest
+  rpm_build_requires: python3-devel
+  deb_build_depends: python3-dev
+
+- language: Java
+  rpm_package: java-devel
+  file_suffix: .java
+  compiler: javac
+  build_system: Maven, Gradle
+  test_framework: JUnit
+  rpm_build_requires: java-devel
+  rpm_requires: java-1.8.0-openjdk
+  deb_build_depends: default-jdk
+  deb_depends: default-jre
+
+- language: C
+  rpm_package: gcc
+  file_suffix: .c
+  compiler: gcc, clang
+  build_system: make
+
+- language: C++
+  rpm_package: gcc-c++
+  file_suffix: .cpp, .h
+  compiler: g++, clang++
+  build_system: cmake, make
+  test_framework: googletest, catch2
+  rpm_requires: libstdc++
+  deb_depends: libstdc++
+
+- language: C#
+  rpm_package: mono-devel
+  file_suffix: .cs
+  compiler: csc
+  build_system: msbuild, nuget
+  test_framework: nunit, xunit
+
+- language: Ruby
+  rpm_package: ruby
+  file_suffix: .rb
+  build_system: bundler, rake
+  test_framework: rspec, minitest
+  rpm_build_requires: ruby-devel
+  rpm_requires: ruby
+  deb_build_depends: ruby-dev
+  deb_depends: ruby
+
+- language: Go
+  rpm_package: golang
+  file_suffix: .go
+  compiler: go
+  build_system: go build, go mod
+  test_framework: go test
+
+- language: Swift
+  rpm_package: swift
+  file_suffix: .swift
+  compiler: swiftc
+  build_system: swift package
+  test_framework: XCTest
+
+- language: Rust
+  rpm_package: rust
+  file_suffix: .rs
+  compiler: rustc
+  build_system: cargo
+  test_framework: cargo test
+
+- language: PHP
+  rpm_package: php
+  file_suffix: .php
+
+- language: Shell
+  rpm_package: bash
+  file_suffix: .sh
+
+- language: PowerShell
+  rpm_package: powershell
+  file_suffix: .ps1
+  test_framework: Pester
+
+- language: Objective-C
+  rpm_package: gcc
+  file_suffix: .m, .h
+  compiler: gcc, clang
+  build_system: Xcode, CocoaPods
+  test_framework: XCTest
+
+- language: Perl
+  rpm_package: perl
+  file_suffix: .pl, .pm
+  test_framework: Test::More
+
+- language: R
+  rpm_package: R
+  file_suffix: .R, .Rmd
+  test_framework: testthat
+
+- language: Lua
+  rpm_package: lua
+  file_suffix: .lua
+  test_framework: busted
+
+- language: Julia
+  rpm_package: julia
+  file_suffix: .jl
+  compiler: julia
+
+- language: Fortran
+  rpm_package: gcc-gfortran
+  file_suffix: .f, .f90
+  compiler: gfortran
+  build_system: make
+
+- language: Lisp
+  rpm_package: clisp
+  file_suffix: .lisp
+  compiler: clisp
+
+- language: Haskell
+  rpm_package: ghc
+  file_suffix: .hs
+  compiler: ghc
+  build_system: cabal, stack
+  test_framework: HUnit, QuickCheck
+
+- language: Ada
+  rpm_package: gcc-ada
+  file_suffix: .adb
+  compiler: gcc
+
+- language: Apex
+  file_suffix: .cls
+
+- language: Cobol
+  rpm_package: open-cobol
+  file_suffix: .cob
+  compiler: cobc
+
+- language: CoffeeScript
+  rpm_package: coffeescript
+  file_suffix: .coffee
+  compiler: coffee
+
+- language: Crystal
+  rpm_package: crystal
+  file_suffix: .cr
+  compiler: crystal
+
+- language: D
+  rpm_package: dmd
+  file_suffix: .d
+  compiler: dmd
+
+- language: Dart
+  rpm_package: dart
+  file_suffix: .dart
+  compiler: dart
+
+- language: Erlang
+  rpm_package: erlang
+  file_suffix: .erl
+  compiler: erlc
+
+- language: F#
+  rpm_package: fsharp
+  file_suffix: .fs
+  compiler: fsharpc
+
+- language: Groovy
+  rpm_package: groovy
+  file_suffix: .groovy
+  compiler: groovyc
+
+- language: Kotlin
+  rpm_package: kotlin
+  file_suffix: .kt
+  compiler: kotlinc
+
+- language: MATLAB
+  rpm_package: octave
+  file_suffix: .m
+
+- language: OCaml
+  rpm_package: ocaml
+  file_suffix: .ml
+  compiler: ocamlc
+
+- language: Powershell
+  rpm_package: powershell
+  file_suffix: .ps1
+
+- language: Prolog
+  rpm_package: swi-prolog
+  file_suffix: .pl
+  compiler: swipl
+
+- language: Racket
+  rpm_package: racket
+  file_suffix: .rkt
+  compiler: racket
+
+- language: Scala
+  rpm_package: scala
+  file_suffix: .scala
+  compiler: scalac
+
+- language: Scheme
+  rpm_package: guile
+  file_suffix: .scm
+  compiler: guile
+
+- language: Scratch
+  rpm_package: scratch
+  file_suffix: .sb
+
+- language: Tcl
+  rpm_package: tcl
+  file_suffix: .tcl
+  compiler: tclsh

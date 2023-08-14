@@ -158,7 +158,7 @@ YAML里可体现为
 		Requires: (preun):systemd
 		Requires: (postun):systemd
 
-## buildSystem 字段
+## buildSystem 字段 (not now)
 
 buildSystem可以大致分为如下类型
 
@@ -389,6 +389,19 @@ multi version中，某个具体version的url可以通过
 patches经常是有一个版本适用范围的，可以用when condition来限定：
 
 	patchset.<patchset-name> when @v1:v2: patches
+
+## languages 字段
+
+该字段可通过工具扫描source code tree，自动生成/校验/更新。
+样例：
+
+	languages: Ruby C Go Shell Makefile
+
+本字段应当支持常用编程语言常见写法的归一化，比如Go写成go/golang应该都可以，加载后都归一化为Go
+广义上，构建系统、单元测试框架的DSL也是语言，所以也一起列在这里。
+
+这些语言和构建测试DSL，是一个软件的基本属性，可以自动检测，且衍生出对很多其他字段的默认定义。
+例如build.toolchain:values属性、buildRequires、requires
 
 ## files 字段
 
