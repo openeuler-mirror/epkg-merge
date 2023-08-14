@@ -3,6 +3,7 @@
 
 import re
 import yaml
+from distutils.version import LooseVersion
 from src.core.common import is_pycode
 from src.core.constant.tokens import NOT_EXIST
 from src.core.loader.lib.enums import ImportConfig
@@ -10,7 +11,8 @@ from src.core.loader.lib.enums import ImportConfig
 def expand_macro(str_macro, fspath):
     from src.core.config_space import config_space
     str_macro += " "
-    patterns = [r'(%%%?{?(.+?)[}" "\s])', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
+    # patterns = [r'(%%%?{?(.+?)[}" "\s])', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
+    patterns = [r'(@([.\d]*:?[.\d]*))', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
     if is_pycode(str_macro):
         patterns.append(r'(dd?\.(.+?)[" "\s])')
     macro_keys = {}
@@ -21,8 +23,17 @@ def expand_macro(str_macro, fspath):
     str_macro = str_macro[0:-1]
     sub_values = {}
     for k, v in macro_keys.items():
-        if not k.startswith("%%%") and k.startswith("%%"):
-            v = f"{cspath}.{v}"
+        # if not k.startswith("%%%") and k.startswith("%%"):
+        #     v = f"{cspath}.{v}"
+        if k.startswith("@") and re.search("\d", v):
+            if ":" not in v:
+                v = f"version=={v}"
+            elif v.startswith(":"):
+                v = f"version<={v.lstrip(':')}"
+            elif v.endswith(":"):
+                v = f"version>={v.rstrip(':')}"
+            else:
+                v = v.replace(":", "<=version<=")
         if not k.startswith("dd") and k.startswith("d"):
             v = f"{cspath}.{v}"
         if k.startswith("${{") and k.endswith("}}"):
@@ -70,6 +81,8 @@ def expand_macro(str_macro, fspath):
                 sub_values[k] = False
             else:
                 sub_values[k] = True
+        elif k.startswith("@") and "version" in v:
+            sub_values[k] = parse_version_expression(v, cspath)
     return substitute(str_macro, sub_values)
 
 
@@ -97,3 +110,29 @@ def load_top_yaml_info(fspath, cspath, package):
         load_top_yaml_info(package_fspath, pkg_cspath, package_name)
     for k, v in configs.items():
         config_space.add_key(f"top.pkgs.{package}.{k}", v, package_fspath)
+
+
+def parse_version_expression(expression, cspath):
+    from src.core.config_space import config_space
+    version = config_space.get(f"{cspath}.version")
+    while True:
+        if re.fullmatch("%\{?\W?(\w+)}?", version):
+            base_param = re.findall("%\{?\W?(\w+)}?", version)[0]
+            version = config_space.get(f"{cspath}.rpmGlobal.{base_param}")
+        elif re.fullmatch("$\{\{rpmGlobal\.(\s+)}}", version):
+            base_param = re.findall("$\{\{rpmGlobal\.(\s+)}}", version)[0]
+            version = config_space.get(f"{cspath}.rpmGlobal.{base_param}")
+        else:
+            break
+    if "==" in expression:
+        target_version = expression.split("==")[1]
+        return version == target_version
+    elif ">=" in expression:
+        target_version = LooseVersion(expression.split(">=")[1])
+        return LooseVersion(version) >= target_version
+    elif expression.startswith("version<="):
+        target_version = LooseVersion(expression.split("<=")[1])
+        return LooseVersion(version) <= target_version
+    else:
+        least_version, _, largest_version = expression.split("<=")
+        return LooseVersion(least_version) <= LooseVersion(version) <= LooseVersion(largest_version)

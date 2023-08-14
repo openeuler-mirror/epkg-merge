@@ -260,7 +260,8 @@ class SpecWriter:
                 self.target_metadata["rpmMacros"] += flags_value
 
     def parse_config_settings(self):
-        for config_name in CONFIG_SET_FILES:
+        for config_name, config_path in CONFIG_SET_FILES.items():
+            config_name = f"build.{config_name}"
             if config_name in self.metadata and isinstance(self.metadata.get(config_name), dict):
                 set_str = ""
                 arch = ""
@@ -269,9 +270,9 @@ class SpecWriter:
                         arch = value
                         continue
                     if arch != "":
-                        sed_cmd = f"sed -i arch/{arch}/configs/openeuler_defconfig -e \'s/^{key}=.*/{key}={value}/\'" \
-                                  f"{os.linesep}"
-                        set_str += sed_cmd
+                        config_path = config_path.format(arch)
+                        sed_cmd = "sed -i {0} -e \'s/^{1}=.*/{1}={2}/\'".format(config_path, key, value)
+                        set_str += sed_cmd + os.linesep
                 if set_str != "" and "phase.prep" in self.metadata:
                     self.metadata["phase.prep"] += set_str
 
