@@ -47,3 +47,7 @@ BASE_FLAGS = {
     "strings": "__strings",
     "strip": "__strip",
 }
+
+MERGE_SCRIPTS = {
+    "merge_config": "/opt/merge_configs/merge_config.sh"
+}

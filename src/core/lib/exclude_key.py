@@ -2,6 +2,8 @@ def is_strategy_key(key):
     excludes_key = [":remove", ":append", ":prepend", ":replace", ":rpm_macro_param"]
     if ":" not in key:
         return False
+    if "@" in key:
+        return False
     for exclude_item in excludes_key:
         if exclude_item in key:
             return False
