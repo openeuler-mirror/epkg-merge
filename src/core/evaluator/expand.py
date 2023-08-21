@@ -12,7 +12,7 @@ def expand_macro(str_macro, fspath):
     from src.core.config_space import config_space
     str_macro += " "
     # patterns = [r'(%%%?{?(.+?)[}" "\s])', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
-    patterns = [r'(@([.\d]*:?[.\d]*))', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
+    patterns = [r'(%%%?{?(.+?)[}" "\s])', r'(@([.\d]*:?[.\d]*))', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
     if is_pycode(str_macro):
         patterns.append(r'(dd?\.(.+?)[" "\s])')
     macro_keys = {}
@@ -115,6 +115,8 @@ def load_top_yaml_info(fspath, cspath, package):
 def parse_version_expression(expression, cspath):
     from src.core.config_space import config_space
     version = config_space.get(f"{cspath}.version")
+    if version is None:
+        return False
     while True:
         if re.fullmatch("%\{?\W?(\w+)}?", version):
             base_param = re.findall("%\{?\W?(\w+)}?", version)[0]
