@@ -86,6 +86,9 @@ def format_subpackage(k, v, format_json, raw_json):
 
     if ".runtimePhase." in k:
         v = remove_tab(v)
+    if " rpmWhen " in key and "files" in key:
+        tmp_key = key.split(" rpmWhen ")[0].strip()
+        subpackage_name += key.replace(tmp_key, "")
     if key.startswith("meta."):
         meta, m_key = key.split(".", 1)
         format_json.setdefault(subpackage_name, {}).\
