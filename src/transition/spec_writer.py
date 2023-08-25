@@ -58,7 +58,7 @@ PHASE_KEYS = ('prep',
 RUNTIMEPHASE_KEYS = ('pre',
                      'preun',
                      'pretrans',
-                     'preuntrans'
+                     'preuntrans',
                      'post',
                      'postun',
                      'posttrans',
