@@ -43,6 +43,10 @@ def parse_shell_file(file_name, content):
                 function_content += line
                 symbol_count += 1
                 continue
+            if symbol_count > 1 and _line.lstrip() == "}":
+                function_content += line
+                symbol_count -= 1
+                continue
             if _line == "}":
                 symbol_count -= 1
                 if symbol_count:
