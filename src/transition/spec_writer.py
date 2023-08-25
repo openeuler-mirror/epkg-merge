@@ -238,7 +238,7 @@ class SpecWriter:
             else:
                 continue
             flags = copy.deepcopy(self.metadata.get(main_field))
-            flags_value = "%global %{0} \\{1}".format(main_field.replace(".", "_"), os.linesep)
+            flags_value = "%global {0} \\{1}".format(main_field.replace(".", "_"), os.linesep)
             for flag, value in flags.items():
                 if isinstance(value, bool):
                     if prefix == "-D":
