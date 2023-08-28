@@ -5,7 +5,6 @@ import re
 from src.log import log
 from Cheetah.Template import Template
 from src.transition.template import *
-from src.transition.lib.config import *
 from src.core.loader.lib.config import CONFIG_SET_FILES, MERGE_SCRIPTS
 
 # only these keys can be parsed
@@ -225,13 +224,15 @@ class SpecWriter:
 
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
+        compile_type = ""
         for main_field in self.metadata.copy():
-            if not re.fullmatch("build\.(configure|cmake)\w*\.flags", main_field):
+            if not re.fullmatch("build\.(configure|cmake|make)\w*\.flags", main_field):
                 continue
+            compile_type = re.findall("build\.(configure|cmake|make)\w*\.flags", main_field)[0]
             func_name = "phase." + main_field.split(".")[1]
-            if func_name not in self.metadata:
+            if func_name not in self.metadata and compile_type != "make":
                 continue
-            if re.fullmatch("build\.configure\w*\.flags", main_field):
+            if re.fullmatch("build\.(configure|make)\w*\.flags", main_field):
                 prefix = ""
             elif re.fullmatch("build\.cmake\w*\.flags", main_field):
                 prefix = "-D"
@@ -253,11 +254,18 @@ class SpecWriter:
                     flags_value += f"    {prefix}{base_key}={value} \\{os.linesep}" + f"%endif{os.linesep}" * len(conditions)
                 else:
                     flags_value += f"    {prefix}{flag}={value} \\{os.linesep}"
-            self.metadata[func_name] = f"{CONFIGURE} \\{os.linesep}" + self.metadata[func_name]
+            add_function = "%{add_" + compile_type + "_flags}"
+            if compile_type != "make":
+                self.metadata[func_name] = f"{add_function} \\{os.linesep}" + self.metadata[func_name]
+                with open(f"{template_path}/add_{compile_type}.tmpl", "r") as f:
+                    add_function_text = f.read()
+            flags_value = flags_value.rstrip().rstrip("\\").rstrip() + os.linesep
             if "rpmMacros" not in self.target_metadata:
                 self.target_metadata.setdefault("rpmMacros", flags_value)
             else:
                 self.target_metadata["rpmMacros"] += flags_value
+        if compile_type != "":
+            self.target_metadata["rpmMacros"] += os.linesep + add_function_text + os.linesep
 
     def parse_config_settings(self):
         for config_name, config_path in CONFIG_SET_FILES.items():
