@@ -225,6 +225,7 @@ class SpecWriter:
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
         compile_type = ""
+        add_function_text = ""
         for main_field in self.metadata.copy():
             if not re.fullmatch("build\.(configure|cmake|make)\w*\.flags", main_field):
                 continue
@@ -255,7 +256,7 @@ class SpecWriter:
                 else:
                     flags_value += f"    {prefix}{flag}={value} \\{os.linesep}"
             add_function = "%{add_" + compile_type + "_flags}"
-            if compile_type != "make":
+            if compile_type == "configure":
                 self.metadata[func_name] = f"{add_function} \\{os.linesep}" + self.metadata[func_name]
                 with open(f"{template_path}/add_{compile_type}.tmpl", "r") as f:
                     add_function_text = f.read()

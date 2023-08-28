@@ -25,6 +25,7 @@ setup(
     ],
     data_files=[
         ("", ["src/transition/template/meta.tmpl",
-              "src/transition/template/spec.tmpl"]),
+              "src/transition/template/spec.tmpl",
+              "src/transition/template/add_configure.tmpl"]),
     ],
 )

@@ -1,0 +1,39 @@
+%define add_configure_flags() \
+for line in `cat tmp_flags_files` ; do \
+  if [[ "$(echo $line | grep "=")" != "" ]];then \
+    cmd_key=`echo $line | cut -d "=" -f1` \
+    cmd_value=`echo $line | cut -d "=" -f1 -s --complement` \
+    if [[ "$(echo $line | grep "^()*")" == "" ]];then \
+      # --enable-shared=true \
+      key[${#key[*]}]=$cmd_key \
+      value[${#value[*]}]=$cmd_value \
+    else \
+      # (PACKAGE|FEATURE|capabilities|linux-caps|libcap|libcap-ng)=yes类佞~K﻾L佈~Y低»彎~I()佐~N﻾L以|佈~F佉²嬾X佅¥ \
+      cmd_key=`echo $cmd_key | sed -e 's/[()]//g'` \
+      key_split=(${cmd_key//|/ }) \
+      for var in ${key_split[*]} \
+      do \
+        key[${#key[*]}]=$var \
+        value[${#value[*]}]=$cmd_value \
+      done \
+    fi \
+  else \
+      # --disable-static类佞~K \
+    key[${#key[*]}]=$line \
+    value[${#value[*]}]="" \
+  fi \
+done \
+../configure --help > help.txt \
+compile_options='' \
+NUM=`expr ${#key[*]} - 1` \
+for i in $(seq 0 $NUM) ; do \
+  if [[ "$(grep '\\'${key[i]} help.txt)" != "" ]]; then \
+    if [[ "${value[i]}" != "" ]]; then \
+      compile_options=$compile_options${key[i]}"="${value[i]}" " \
+    else \
+      compile_options=$compile_options${key[i]}" " \
+    fi \
+  fi \
+done \
+echo $compile_options \
+%{nil}
