@@ -25,8 +25,8 @@ def expand_macro(str_macro, fspath):
     str_macro = str_macro[0:-1]
     sub_values = {}
     for k, v in macro_keys.items():
-        # if not k.startswith("%%%") and k.startswith("%%"):
-        #     v = f"{cspath}.{v}"
+        if not k.startswith("%%%") and k.startswith("%%"):
+            v = f"{cspath}.{v}"
         if k.startswith("@") and re.search("\d", v):
             if ":" not in v:
                 v = f"version=={v}"
