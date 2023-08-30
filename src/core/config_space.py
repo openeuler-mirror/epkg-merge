@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os.path
+import re
+
 import yaml
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.loader.lib.load_helper import expand_yaml
@@ -114,6 +116,15 @@ class ConfigSpace(dict):
             if not is_yaml_key(key):
                 continue
             short_key = key.replace(f"{pre_name}.", "")
+            base_key = key.split()
+            if ".defineFlags." in key and isinstance(value, dict):
+                option_name = ""
+                for sub_key, sub_value in value.items():
+                    if re.fullmatch("(cmake|configure|make)\w*\.(vars|options)", sub_key):
+                        option_name = sub_key.split(".")[0]
+                if option_name != "" and f"{pre_name}.use.{option_name}.{base_key}" in loaded_keys:
+                    if "default" in value:
+                        value["default"] = config_space.get_key(f"{pre_name}.use.{option_name}.{base_key}")
             package_info[short_key] = value
 
         return package_info

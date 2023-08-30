@@ -251,8 +251,8 @@ class SpecWriter:
                     base_key = flag.split(" rpmWhen ")[0]
                     conditions = flag.split(" rpmWhen ")[1:]
                     for condition in conditions:
-                        flags_value += f'%if {condition}{os.linesep}'
-                    flags_value += f"    {prefix}{base_key}={value} \\{os.linesep}" + f"%endif{os.linesep}" * len(conditions)
+                        flags_value += f'%if {condition} \\{os.linesep}'
+                    flags_value += f"    {prefix}{base_key}={value} \\{os.linesep}" + f"%endif \\{os.linesep}" * len(conditions)
                 else:
                     flags_value += f"    {prefix}{flag}={value} \\{os.linesep}"
             add_function = "%{add_" + compile_type + "_flags}"
