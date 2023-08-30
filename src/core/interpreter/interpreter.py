@@ -17,9 +17,10 @@ class StartUp:
         try:
             from src.core.config_space import config_space
             py_list = config_space.get('libs')
-            scanner.scan_module(py_list)
-            # If any code involves high-risk import, the startup fails
-            scanner.scan_risk_import(py_list)
+            if py_list:
+                scanner.scan_module(py_list)
+                # If any code involves high-risk import, the startup fails
+                scanner.scan_risk_import(py_list)
             # Import required for preloading code
             from src.core.interpreter import executor
         except illegal_import_exception.IllegalImportException as e:
