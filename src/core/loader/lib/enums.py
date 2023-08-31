@@ -6,7 +6,7 @@ from enum import Enum
 # Enum of config files
 class Config(Enum):
     MAIN_CONFIG = "config.yaml"
-    INDEX = "index.yaml"
+    INDEX = "default.yaml"
 
 
 # Enum of keys in main config file

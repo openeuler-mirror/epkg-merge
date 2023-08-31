@@ -8,7 +8,8 @@ import yaml
 from src.core.loader.lib.enums import Config, MainConfigKey, Directory, IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
-from src.core.loader.lib.config import INDEX_CONF
+from src.etc import etc_path
+from src.etc.rpmrc import rpmrc_path
 from src.log import log
 
 
@@ -62,7 +63,9 @@ class _LayerConfigLoader:
         self._load_pkgs_index_yaml(pkgs_dir)
 
     def _load_pkgs_index_yaml(self, pkgs_dir: str) -> None:
-        pattern = INDEX_CONF.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
+        index_yaml = os.path.join(etc_path, str(Config.INDEX.value))
+        index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
+        pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
             raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
                                 f"of pkgs index file in layer '{self._layer}' is empty")
@@ -78,7 +81,7 @@ class _LayerConfigLoader:
                 log.error(f"layer '{self._layer}' lacks of {pkg}/package.yaml")
                 continue
 
-            _ElementConfigLoader(pkg, pkg_config, INDEX_CONF).load()
+            _ElementConfigLoader(pkg, pkg_config, index_config).load()
             from src.core.config_space import config_space
             config_space.setdefault("allPkgs", set()).add(pkg)
 
@@ -100,14 +103,16 @@ class _LayerConfigLoader:
         self._load_use_index_yaml(use_dir)
 
     def _load_use_index_yaml(self, use_dir: str) -> None:
-        pattern = INDEX_CONF.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
+        index_yaml = os.path.join(etc_path, str(Config.INDEX.value))
+        index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
+        pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
             raise LoadException(f"'{IndexConfigKey.CONFIG_FILES_PATTERN.value}' "
                                 f"of use index file in layer '{self._layer}' is empty")
 
         for use in [f for f in os.listdir(use_dir) if
                     os.path.isfile(os.path.join(use_dir, f)) and re.match(pattern, f) and f != str(Config.INDEX.value)]:
-            _ElementConfigLoader(".".join(use.split(".")[:-1]), os.path.join(use_dir, use), INDEX_CONF).load()
+            _ElementConfigLoader(".".join(use.split(".")[:-1]), os.path.join(use_dir, use), index_config).load()
 
     def _load_types(self) -> None:
         types_path = os.path.join(self._layer_path, str(Directory.TYPES.value))
@@ -122,7 +127,6 @@ class _LayerConfigLoader:
                     config_space[k] = v
 
     def _load_rpmrc(self) -> None:
-        rpmrc_path = os.path.join(self._layer_path, str(Directory.RPMRC.value))
         if not os.path.isdir(rpmrc_path):
             return
         from src.core.config_space import config_space
