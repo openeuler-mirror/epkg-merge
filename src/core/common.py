@@ -180,7 +180,7 @@ def format_compile_flags(k, v, format_json, raw_json):
             .setdefault(key, v)
     elif re.match("build\.(" + ("|".join(list(BASE_FLAGS.keys()))) + ")", k):
         key = k.split(".")[-1]
-        format_json.setdefault("rpmGlobal", {}).setdefault(BASE_FLAGS.get(key, key), v)
+        format_json.setdefault("rpmGlobal", {}).setdefault(BASE_FLAGS.get(key, key), "\"%{?" + BASE_FLAGS.get(key, key) + "} " + v + "\"")
 
 
 format_funcs = {
