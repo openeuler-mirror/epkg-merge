@@ -1,0 +1,4 @@
+_systemtap_tapsetdir: /usr/share/systemtap/tapset
+_systemtap_datadir: /usr/share/systemtap
+
+

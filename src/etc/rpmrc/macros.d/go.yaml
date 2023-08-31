@@ -1,0 +1,101 @@
+golang_arches: "%%%{rpmGlobal.ix86} x86_64 %%%{rpmGlobal.arm} aarch64 ppc64le s390x riscv64"
+gccgo_arches: "%%%{rpmGlobal.mips}"
+go_arches: "%%%{rpmGlobal.golang_arches} %%%{rpmGlobal.gccgo_arches}"
+gopath: "%%%{rpmGlobal._datadir}/gocode"
+go_compiler: 1
+gorpmname(): |
+    %{lua:
+    local goname = rpm.expand("%1")
+    -- lowercase and end with '/'
+    goname       = string.lower(goname .. "/")
+    -- remove eventual protocol prefix
+    goname       = string.gsub(goname, "^http(s?)://",         "")
+    -- remove eventual .git suffix
+    goname       = string.gsub(goname, "%.git/*",              "")
+    -- remove eventual git. prefix
+    goname       = string.gsub(goname, "^git%.",              "")
+    -- add golang prefix
+    goname       = "golang-" .. goname
+    -- remove FQDN root (.com, .org, etc)
+    goname       = string.gsub(goname, "^([^/]+)%.([^%./]+)/", "%1/")
+    -- special-case x.y.z number-strings as that’s an exception in our naming
+    -- guidelines
+    repeat
+      goname, i = string.gsub(goname, "(%d)%.(%d)",            "%1:%2")
+    until i == 0
+    -- replace various separators rpm does not like with -
+    goname       = string.gsub(goname, "[%._/%-]+",            "-")
+    -- because of the Azure sdk
+    goname       = string.gsub(goname, "%-for%-go%-",          "-")
+    -- Tokenize along - separators and remove duplicates to avoid
+    -- golang-foo-foo-bar-foo names
+    local result = ""
+    local tokens = {}
+    tokens["go"]     = true
+    for token in string.gmatch(goname, "[^%-]+") do
+       if not tokens[token] then
+          result = result .. "-" .. token
+          tokens[token] = true
+       end
+    end
+    -- reassemble the string, restore x.y.z runs, convert the vx.y.z
+    -- Go convention to x.y.z as prefered in rpm naming
+    result = string.gsub(result, "^-", "")
+    result = string.gsub(result, ":", ".")
+    -- some projects have a name that end up in a number, and *also* add release
+    -- numbers on top of it, keep a - prefix before version strings
+    result = string.gsub(result, "%-v([%.%d])", "-%1")
+    print(result)
+    }
+
+gometa(u:spvi): |
+    %{expand:%{lua:
+    local forgeurl    = rpm.expand("%{?-u*}")
+    if (forgeurl == "") then
+      forgeurl        = rpm.expand("%{?forgeurl}")
+    end
+    -- Be explicit about the spec variables we’re setting
+    local function explicitset(rpmvariable,value)
+      rpm.define(rpmvariable .. " " .. value)
+      if (rpm.expand("%{?-v}") ~= "") then
+        rpm.expand("%{echo:Setting %%{" .. rpmvariable .. "} = " .. value .. "\\n}")
+      end
+    end
+    -- Never ever stomp on a spec variable the packager already set
+    local function safeset(rpmvariable,value)
+      if (rpm.expand("%{?" .. rpmvariable .. "}") == "") then
+        explicitset(rpmvariable,value)
+      end
+    end
+    -- All the Go packaging automation relies on goipath being set
+    local goipath = rpm.expand("%{?goipath}")
+    if (goipath == "") then
+      rpm.expand("%{error:Please set the Go import path in the “goipath” variable before calling “gometa”!}")
+    end
+    -- Compute and set spec variables
+    if (forgeurl ~= "") then
+      rpm.expand("%forgemeta %{?-v} %{?-i} %{?-s} %{?-p} -u " .. forgeurl .. "\\n")
+      safeset("gourl", forgeurl)
+    else
+      safeset("gourl", "https://" .. goipath)
+      rpm.expand("%forgemeta %{?-v} %{?-i} -s     %{?-p} -u %{gourl}\\n")
+    end
+    if (rpm.expand("%{?forgesource}") ~= "") then
+      safeset("gosource", "%{forgesource}")
+    else
+      safeset("gosource", "%{gourl}/%{archivename}.%{archiveext}")
+    end
+    safeset("goname", "%gorpmname %{goipath}")
+    rpm.define("gosetup %forgesetup")
+    -- Final spec variable summary if the macro was called with -i
+    if (rpm.expand("%{?-i}") ~= "") then
+      rpm.expand("%{echo:Go-specific packaging variables}")
+      rpm.expand("%{echo:  goipath:         %{?goipath}}")
+      rpm.expand("%{echo:  goname:          %{?goname}}")
+      rpm.expand("%{echo:  gourl:           %{?gourl}}")
+      rpm.expand("%{echo:  gosource:        %{?gosource}}")
+    end}
+    BuildRequires: compiler(go-compiler)
+    ExclusiveArch: %{go_arches}
+    }
+

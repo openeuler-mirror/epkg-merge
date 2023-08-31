@@ -1,0 +1,30 @@
+_cmake_lib_suffix64: -DLIB_SUFFIX=64
+_cmake_skip_rpath: -DCMAKE_SKIP_RPATH:BOOL=ON
+_cmake_version: 3.22.0
+__cmake: /usr/bin/cmake
+cmake: |
+  #CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
+  CFLAGS="-O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fstack-protector-strong -grecord-gcc-switches -specs=/usr/lib/rpm/generic-hardened-cc1  -mtune=generic -fasynchronous-unwind-tables -fstack-clash-protection" ; export CFLAGS ; \
+  CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
+  FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
+  FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
+  %{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
+  %__cmake \\\
+        -DCMAKE_C_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
+        -DCMAKE_CXX_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
+        -DCMAKE_Fortran_FLAGS_RELEASE:STRING="-DNDEBUG" \\\
+        -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \\\
+        -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \\\
+        -DCMAKE_TOOLCHAIN_FILE=/root/toolchain.cmake \\\
+        -DINCLUDE_INSTALL_DIR:PATH=%{_includedir} \\\
+        -DLIB_INSTALL_DIR:PATH=%{_libdir} \\\
+        -DSYSCONF_INSTALL_DIR:PATH=%{_sysconfdir} \\\
+        -DSHARE_INSTALL_PREFIX:PATH=%{_datadir} \\\
+  %if "%{?_lib}" == "lib64" \
+        %{?_cmake_lib_suffix64} \\\
+  %endif \
+        -DBUILD_SHARED_LIBS:BOOL=ON
+
+cmake3: "%cmake"
+
+

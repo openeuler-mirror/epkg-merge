@@ -1,0 +1,52 @@
+_fontbasedir: "%%%{rpmGlobal._datadir}/fonts"
+_fontconfig_masterdir: "%%%{rpmGlobal._sysconfdir}/fonts"
+_fontconfig_confdir: "%%%{rpmGlobal._sysconfdir}/fonts/conf.d"
+_fontconfig_templatedir: "%%%{rpmGlobal._datadir}/fontconfig/conf.avail"
+fontcontact: fonts@lists.fedoraproject.org
+fontorg: org.fedoraproject
+fontrpmname(): |
+    %{lua:
+    local fonts = require "fedora.srpm.fonts"
+    print(fonts.rpmname(rpm.expand("%1")))
+    }
+
+fontenv(z:vf:F:c:C:s:S:d:D:l:L:): |
+    %{lua:
+    local      fonts = require "fedora.srpm.fonts"
+    local     suffix =  rpm.expand("%{?-z*}")
+    local    verbose = (rpm.expand("%{-v}") ~= "")
+    local globvalues = {}
+    for g,_ in pairs(fonts.globargs) do
+      globvalues[g] = rpm.expand("%{?-" .. fonts.globargs[g] .. "*}")
+    end
+    fonts.env(suffix, verbose, globvalues)
+    }
+
+fontpkg(z:avms): |
+    %{lua:
+    local      fonts =  require "fedora.srpm.fonts"
+    local     suffix =  rpm.expand("%{?-z*}")
+    local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+    local    verbose = (rpm.expand("%{-v}") ~= "")
+    local  forcemain = (rpm.expand("%{-m}") ~= "")
+    local   forcesub = (rpm.expand("%{-s}") ~= "")
+    fonts.pkg(forcemain, forcesub, suffix, processall, verbose)
+    }
+
+fontmetapkg(n:s:d:z:): |
+    %{lua:
+    local        fonts = require "fedora.srpm.fonts"
+    local         name = rpm.expand("%{?-n*}")
+    local      summary = rpm.expand("%{?-s*}")
+    if (summary ~= "") then
+               summary = "%{" .. summary .. "}"
+    end
+    local  description = rpm.expand("%{?-d*}")
+    if (description ~= "") then
+           description = "%{" .. description .. "}"
+    end
+    local     suffixes = rpm.expand("%{?-z*}")
+    fonts.metapkg(name, summary, description, suffixes)
+    }
+
+

@@ -1,0 +1,49 @@
+_font_pkg(n:f:): |
+  %{expand:
+  %{warn:This package uses obsolete macros that will go away soon. Please convert to the spec templates provided by fonts-rpm-templates!}
+  %define spn %_font_pkg_name %{-n:%{-n*}}
+  %files -n %{spn}
+  %dir %{_fontdir}
+  %{lua:
+  for arg=1,rpm.expand("%#") do
+    print(rpm.expand("%{_fontdir}/%" .. arg) .. "\\n")
+  end}
+  %{-f:%{_fontconfig_templatedir}/%{-f*}}
+  %{-f:%config(noreplace) %{_fontconfig_confdir}/%{-f*}
+  }
+  %{nil}
+  }
+
+_font_pkg_name(): |
+  %{lua:
+  print("%{warn:This package uses obsolete macros that will go away soon. Please convert to the spec templates provided by fonts-rpm-templates!}")
+  local function rpmeval(name)
+    local sname = rpm.expand(name)
+    if sname == name
+    then return ""
+    else
+      sname = string.lower("-" .. sname .. "-")
+      sname = string.gsub(sname, "[_%-]+", "-")
+      sname = string.gsub(sname, "%-font(s?)%-", "-")
+      sname = string.gsub(sname, "^%-", "")
+      sname = string.gsub(sname, "%-$", "")
+      return sname
+    end
+  end
+  local function meld(name1,name2)
+    local name3 = "-" .. name2 .. "-"
+    for token in string.gmatch(name1 .. "-" , "..-%-") do
+      token = string.gsub(token, "%-", "%%-")
+      name3 = string.gsub(name3, "%-" .. token, "-")
+    end
+    return string.gsub( name1 .. name3 , "%-+$", "")
+  end
+  local pkgname  = rpmeval("%{name}")
+  local fontname = rpmeval("%{fontname}")
+  local subname  = rpmeval("%1")
+  print(meld(meld(pkgname,fontname),subname) .. "-fonts")
+  } %{nil}
+
+_fontdir: "%{_fontbasedir}/%{?fontname:%{fontname}}%{?!fontname:%{name}}"
+
+

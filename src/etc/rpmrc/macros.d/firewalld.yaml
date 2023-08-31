@@ -1,0 +1,4 @@
+firewalld_reload(): |
+  test -x %{_bindir}/firewall-cmd && firewall-cmd --reload --quiet || : \
+  %{nil}
+

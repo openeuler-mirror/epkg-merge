@@ -1,0 +1,16 @@
+_jvmdir: "%%%{rpmGlobal._prefix}/lib/jvm"
+_jvmprivdir: "%%%{rpmGlobal._prefix}/lib/jvm-private"
+_jvmlibdir: "%%%{rpmGlobal._prefix}/lib/jvm"
+_jvmdatadir: "%%%{rpmGlobal._datadir}/jvm"
+_jvmsysconfdir: "%%%{rpmGlobal._sysconfdir}/jvm"
+_jvmcommonlibdir: "%%%{rpmGlobal._prefix}/lib/jvm-commmon"
+_jvmcommondatadir: "%%%{rpmGlobal._datadir}/jvm-commmon"
+_jvmcommonsysconfdir: "%%%{rpmGlobal._sysconfdir}/jvm-commmon"
+_javaconfdir: "%%%{rpmGlobal._sysconfdir}/java"
+_javadir: "%%%{rpmGlobal._datadir}/java"
+_jnidir: "%%%{rpmGlobal._prefix}/lib/java"
+_javadocdir: "%%%{rpmGlobal._datadir}/javadoc"
+_mavenpomdir: "%%%{rpmGlobal._datadir}/maven-poms"
+_ivyxmldir: "%%%{rpmGlobal._datadir}/ivy-xmls"
+
+

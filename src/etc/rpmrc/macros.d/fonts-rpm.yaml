@@ -1,0 +1,113 @@
+fonttxt2xml(v:): |
+    %{lua:
+    local    fonts = require "fedora.rpm.fonts"
+    local variable = "%{" .. rpm.expand("%{-v*}%{!-v:_description}") .. "}"
+    print(fonts.txt2xml(variable))
+    }
+
+fontbuild(z:av): |
+    %{lua:
+    local     fedora = require "fedora.common"
+    local      fonts = require "fedora.srpm.fonts"
+    local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+    local    verbose = (rpm.expand("%{-v}") ~= "")
+    local function process(suffix)
+      fonts.env(suffix, verbose, {})
+      if not verbose then print('set +x\\n') end
+      print(rpm.expand('%__fontbuild\\n'))
+      if not verbose then print('set -x\\n') end
+    end
+    if processall then
+      for _,s in pairs(fedora.getsuffixes("fontfamily")) do
+        process(s)
+      end
+    else
+      process(rpm.expand("%{-z*}"))
+    end
+    }
+
+fontinstall(z:avf:F:c:C:s:S:d:D:l:L:): |
+    %{lua:
+    local     fedora = require "fedora.common"
+    local      fonts = require "fedora.srpm.fonts"
+    local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+    local    verbose = (rpm.expand("%{-v}") ~= "")
+    local globvalues = {}
+    for g,_ in pairs(fonts.globargs) do
+      globvalues[g] = rpm.expand("%{?-" .. fonts.globargs[g] .. "*}")
+    end
+    local function process(suffix)
+      fonts.env(suffix, verbose, globvalues)
+      if not verbose then print('set +x\\n') end
+      print(rpm.expand('%__fontinstall\\n'))
+      if not verbose then print('set -x\\n') end
+    end
+    if processall then
+      for _,s in pairs(fedora.getsuffixes("fontfamily")) do
+        process(s)
+      end
+    else
+      process(rpm.expand("%{-z*}"))
+    end
+    }
+
+fontcheck(z:av): |
+    %{lua:
+    local     fedora = require "fedora.common"
+    local      fonts = require "fedora.srpm.fonts"
+    local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+    local    verbose = (rpm.expand("%{-v}") ~= "")
+    local function process(suffix)
+      fonts.env(suffix, verbose, {})
+      print(rpm.expand([[
+        grep -E '^"%{_fontconfig_templatedir}/.+\\.conf"' '%{currentfontfilelist}' \\
+          | xargs -I{} -- sh -c "xmllint --loaddtd --valid     --nonet '%{buildroot}{}' >/dev/null && echo %{buildroot}{}: OK"
+        grep -E '^"%{_datadir}/metainfo/.+\\.xml"'        '%{currentfontfilelist}' \\
+          | xargs -I{} --        appstream-util validate-relax --nonet '%{buildroot}{}'
+        ]]))
+    end
+    if processall then
+      for _,s in pairs(fedora.getsuffixes("fontfamily")) do
+        process(s)
+      end
+    else
+      process(rpm.expand("%{-z*}"))
+    end
+    }
+
+fontfiles(z:av): |
+    %{lua:
+    local     fedora = require "fedora.common"
+    local      fonts = require "fedora.srpm.fonts"
+    local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+    local    verbose = (rpm.expand("%{-v}") ~= "")
+    local function process(suffix)
+      fonts.env(suffix, verbose, {})
+      print(rpm.expand('%files -n %{currentfontpkgname} -f %{currentfontfilelist}\\n'))
+    end
+    if processall then
+      for _,s in pairs(fedora.getsuffixes("fontfamily")) do
+        process(s)
+      end
+    else
+      process(rpm.expand("%{-z*}"))
+    end
+    }
+
+linuxtext(e:n): |
+    %{expand:
+    for textfile in %* ; do
+      %{!-n:
+        iconv -f %{-e*}%{!-e:$(uchardet "${textfile}")} -t UTF-8 -o "${textfile}.tmp" "${textfile}"
+        touch -r "${textfile}" "${textfile}.tmp"
+        mv "${textfile}.tmp" "${textfile}"
+      }
+      fold -s "${textfile}" > "${textfile}.tmp"
+      LANG=C LC_ALL=C sed -e 's/\\r$// ; 1 s/^\\xef\\xbb\\xbf//' -i "${textfile}.tmp"
+      touch -r "${textfile}" "${textfile}.tmp"
+      mv "${textfile}.tmp" "${textfile}"
+      chmod 0644 "${textfile}"
+    done
+    }
+
+

@@ -1,0 +1,120 @@
+mvn_package: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }/usr/bin/python3 /usr/share/java-utils/mvn_package.py"
+mvn_alias: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }/usr/bin/python3 /usr/share/java-utils/mvn_alias.py"
+mvn_file: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }/usr/bin/python3 /usr/share/java-utils/mvn_file.py"
+mvn_compat_version: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }/usr/bin/python3 /usr/share/java-utils/mvn_compat_version.py"
+mvn_config: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }/usr/bin/python3 /usr/share/java-utils/mvn_config.py"
+mvn_artifact: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }/usr/bin/python3 /usr/share/java-utils/mvn_artifact.py"
+mvn_build: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }/usr/bin/python3 /usr/share/java-utils/mvn_build.py %{?base_xmvn_opts} %{?xmvn_opts} %{?xmvn_bootstrap: -b} %{?_without_javadoc: -j $(> .mfiles-javadoc)}%{?_without_tests: -f}"
+gradle_build: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }/usr/bin/python3 /usr/share/java-utils/mvn_build.py --gradle %{?base_xmvn_opts} %{?xmvn_opts} %{?xmvn_bootstrap: -b} %{?_without_javadoc: -j $(> .mfiles-javadoc)}%{?_without_tests: -f}"
+mvn_install(J:X): |
+  %{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }xmvn-install %{?base_xmvn_opts} %{?xmvn_install_opts} %{?-X} -R .xmvn-reactor -n %{?scl:%{pkg_name}}%{!?scl:%{name}} %{?xmvn_install_repo:-i %{xmvn_install_repo}} -d "%{buildroot}" \
+  %{-J*:jdir="%{-J*}"}%{!-J*:jdir=target/site/apidocs; [ -d .xmvn/apidocs ] && jdir=.xmvn/apidocs} \
+  %{__mkdir_p} %{buildroot}%{_licensedir} \
+  if [ -d "${jdir}" ]; then \
+     install -dm755 %{buildroot}%{_javadocdir}/%{?scl:%{pkg_name}}%{!?scl:%{name}} \
+     cp -pr "${jdir}"/* %{buildroot}%{_javadocdir}/%{?scl:%{pkg_name}}%{!?scl:%{name}} \
+     echo '%{_javadocdir}/%{?scl:%{pkg_name}}%{!?scl:%{name}}' >>.mfiles-javadoc \
+  fi \
+  %{nil}
+
+mvn_subst: "%{?scl:/usr/share/java-utils/scl-enable %{?scl_maven} %{scl} -- }xmvn-subst %{?base_xmvn_opts} %{?xmvn_subst_opts} -R %{buildroot}"
+add_maven_depmap(f:a:v:): |
+  set -e \
+  %{lua:io.stderr:write("[WARNING] Deprecated \%add_maven_depmap macro is used. ", \
+  "Please use \%mvn_artifact and %mvn_install instead.\\n")} \
+  # default values \
+  %if %# == 0 \
+     _pompart="JPP-%{?scl:%{pkg_name}}%{!?scl:%{name}}.pom" \
+     _jarpart="%{?scl:%{pkg_name}}%{!?scl:%{name}}.jar" \
+  %else \
+     _pompart="%1" \
+     _jarpart="%2" \
+  %endif \
+  _filelist=".mfiles%{-f*:-%{-f*}}" \
+  install -dm 755 %{buildroot}%{_datadir}/maven-metadata \
+  _jbase= \
+  _jpath= \
+  for _dir in %{_jnidir} %{_javadir}; do \
+      if [ -f %{buildroot}$_dir/$_jarpart ]; then \
+      _jbase="%{buildroot}$_dir" \
+      _jpath="$_jbase/$_jarpart" \
+      fi \
+  done \
+  %if %# != 1 \
+      [ -z "$_jpath" ] && (echo "%0 error: $_jarpart - file not found" 1>&2; exit 1) \
+  %endif \
+  /usr/bin/python3 /usr/share/java-utils/maven_depmap.py %{-a} %{-v*:-r %{-v*}} \\\
+                   -n "%{?scl}" \\\
+                   --pom-base %{buildroot}%{_mavenpomdir} \\\
+                   --jar-base "$_jbase" \\\
+                   %{buildroot}%{_datadir}/maven-metadata/%{?scl:%{pkg_name}}%{!?scl:%{name}}%{-f*:-%{-f*}}.xml \\\
+                   %{buildroot}%{_mavenpomdir}/$_pompart \\\
+  %if %# == 2 \
+            "${_jpath}" \\\
+  %endif \
+  %if %# == 0 \
+            "${_jpath}" \\\
+  %endif \
+          >> ${_filelist} \
+  sed -i 's:%{buildroot}::' ${_filelist} \
+  sort -u -o ${_filelist} ${_filelist} \
+  \
+  %{nil}
+pom_remove_dep(rf): |
+  %{expand: %{__pom_call}remove_dep %**
+  }
+pom_remove_plugin(rf): |
+  %{expand: %{__pom_call}remove_plugin %**
+  }
+pom_disable_module(): |
+  %{expand: %{__pom_call}disable_module %*
+  }
+pom_xpath_remove(rf): |
+  %{expand: %{__pom_call}xpath_remove %**
+  }
+pom_xpath_disable(): |
+  %{expand: %{__pom_call}xpath_disable %**
+  }
+pom_xpath_inject(): |
+  %{expand: %{__pom_call}xpath_inject %*
+  }
+pom_xpath_replace(rf): |
+  %{expand: %{__pom_call}xpath_replace %**
+  }
+pom_xpath_set(rf): |
+  %{expand: %{__pom_call}xpath_set %**
+  }
+pom_add_parent(): |
+  %{expand: %{__pom_call}add_parent %*
+  }
+pom_remove_parent(): |
+  %{expand: %{__pom_call}remove_parent %*
+  }
+pom_set_parent(): |
+  %{expand: %{__pom_call}set_parent %*
+  }
+pom_add_dep(): |
+  %{expand: %{__pom_call}add_dep %*
+  }
+pom_add_dep_mgmt(): |
+  %{expand: %{__pom_call}add_dep_mgmt %*
+  }
+pom_add_plugin(): |
+  %{expand: %{__pom_call}add_plugin %*
+  }
+pom_change_dep(rf): |
+  %{expand: %{__pom_call}change_dep %**
+  }
+javadoc_package(L): |
+  %if 0%{!?_without_javadoc:1} \
+  %package javadoc \
+  Summary:        API documentation for %{?scl:%{pkg_name}}%{!?scl:%{name}} \
+  %description javadoc \
+  API documentation for %{?scl:%{pkg_name}}%{!?scl:%{name}}. \
+  %files javadoc -f .mfiles-javadoc \
+  %if 0%{!?-L:1} \
+  %%license %{_licensedir} \
+  %exclude %dir %{_licensedir} \
+  %endif \
+  %endif
+

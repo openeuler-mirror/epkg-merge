@@ -1,0 +1,166 @@
+__fontbuild(): |
+  %{expand:
+    (
+    %define listfiles_include %{?currentfonts}
+    %define listfiles_exclude %{?currentfontsex}
+    IFS= lines=$(%listfiles
+    )
+    while IFS= read -r line; do
+      [[ -n $line ]] && fonts+=("$line")
+    done <<< ${lines}
+    fontnames=$(
+      if [ ${#fonts[@]} -gt 0 ]; then
+        for font in "${fonts[@]}"; do
+          fc-scan "${font}" -f "    <font>%{fullname[0]}</font>\\n"
+        done
+      fi | sort -u
+    )
+    if [[ -n "${fontnames}" ]] ; then
+      fontnames=$'\\n'"  <provides>"$'\\n'"${fontnames}"$'\\n'"  </provides>"
+    fi
+    fontlangs=$(
+      if [ ${#fonts[@]} -gt 0 ]; then
+        for font in "${fonts[@]}"; do
+          fc-scan "${font}" -f "%{[]lang{    <lang>%{lang}</lang>\\n}}"
+        done
+      fi | sort -u
+    )
+    if [[ -n "${fontlangs}" ]] ; then
+      fontlangs=$'\\n'"  <languages>"$'\\n'"${fontlangs}"$'\\n'"  </languages>"
+    fi
+    %define listfiles_include %{?currentfontappstreams}
+    %define listfiles_exclude %{?currentfontappstreamsex}
+    IFS= lines=$(%listfiles
+    )
+    while IFS= read -r line; do
+      [[ -n $line ]] && fontappstreams+=("$lines")
+    done <<< ${lines}
+    if  [ ${#fontappstreams[@]} -eq 0 ]; then
+      echo "Generating the %{currentfontpkgname} appstream file"
+      cat > "%{fontorg}.%{currentfontpkgname}.metainfo.xml" << EOF_APPSTREAM
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!-- SPDX-License-Identifier: MIT -->
+  <component type="font">
+    <id>%{fontorg}.%{currentfontpkgname}</id>
+    <metadata_license>MIT</metadata_license>
+    <project_license>%{currentfontlicense}</project_license>
+    <name>%{currentfonthumanname}</name>
+    <summary><![CDATA[%{currentfontsummary}]]></summary>
+    <description>
+      %fonttxt2xml -v currentfontdescription
+    </description>
+    <updatecontact>%{fontcontact}</updatecontact>
+    %{?url:<url type="homepage">%{url}</url>}
+    <releases>
+      <release version="%{version}-%{release}" date="$(date -d @$SOURCE_DATE_EPOCH -u --rfc-3339=d)"/>
+    </releases>${fontnames}${fontlangs}
+  </component>
+  EOF_APPSTREAM
+    fi
+  )
+  }
+
+
+__fontinstall(): |
+    %{expand:
+    echo "Installing %{currentfontpkgname}"
+    echo "" > "%{currentfontfilelist}"
+    (
+      %define listfiles_include %{?currentfonts}
+      %define listfiles_exclude %{?currentfontsex}
+      IFS= lines=$(%listfiles
+      )
+      while IFS= read -r line; do
+        [[ -n $line ]] && fonts+=("$line")
+      done <<< ${lines}
+      if [ ${#fonts[@]} -gt 0 ]; then
+        install -m 0755 -vd "%{buildroot}%{currentfontdir}"
+        echo "%dir \\"%{currentfontdir}\\""                  >> "%{currentfontfilelist}"
+        for font in "${fonts[@]}"; do
+          install -m 0644 -vp "${font}" "%{buildroot}%{currentfontdir}"
+          echo \\"%{currentfontdir}/$(basename "${font}")\\" >> "%{currentfontfilelist}"
+        done
+      fi
+      %define listfiles_include %{?currentfontconfngs}
+      %define listfiles_exclude %{?currentfontngsex}
+      IFS= lines=$(%listfiles
+      )
+      while IFS= read -r line; do
+        [[ -n $line ]] && fontconfngs+=("$line")
+      done <<< ${lines}
+      IFS= lines=$(
+        if [ ${#fontconfngs[@]} -gt 0 ]; then
+          for fontconfng in "${fontconfngs[@]}"; do
+            gen-fontconf -x "${fontconfng}" -w -f "${fonts[@]}"
+          done
+        fi
+      )
+      while IFS= read -r line; do
+        [[ -n $line ]] && newfontconfs+=("$line")
+      done <<< ${lines}
+      %define listfiles_include %{?currentfontconfs}
+      %define listfiles_exclude %{?currentfontconfsex}
+      IFS= lines=$(%listfiles
+      )
+      while IFS= read -r line; do
+        [[ -n $line ]] && fontconfs+=("$line")
+      done <<< ${lines}
+      if [ ${#fontconfs[@]} -gt 0 ] || [ ${#newfontconfs[@]} -gt 0 ]; then
+        install -m 0755 -vd "%{buildroot}%{_fontconfig_templatedir}" \\
+                            "%{buildroot}%{_fontconfig_confdir}"
+      fi
+      for fontconf in "${fontconfs[@]}" "${newfontconfs[@]}"; do
+        if [[ -n $fontconf ]] ; then
+          install -m 0644 -vp "${fontconf}" "%{buildroot}%{_fontconfig_templatedir}"
+          echo \\"%{_fontconfig_templatedir}/$(basename "${fontconf}")\\"                  >> "%{currentfontfilelist}"
+          ln -vsr "%{buildroot}%{_fontconfig_templatedir}/$(basename "${fontconf}")" "%{buildroot}%{_fontconfig_confdir}"
+          echo "%config(noreplace)" \\"%{_fontconfig_confdir}/$(basename "${fontconf}")\\" >> "%{currentfontfilelist}"
+        fi
+      done
+    )
+    (
+      %define listfiles_include %{?currentfontappstreams}
+      %define listfiles_exclude %{?currentfontappstreamsex}
+      IFS= lines=$(%listfiles
+      )
+      while IFS= read -r line; do
+        [[ -n $line ]] && fontappstreams+=("$line")
+      done <<< ${lines}
+      if [[ (${#fontappstreams[@]} -eq 0) && (-r "%{fontorg}.%{currentfontpkgname}.metainfo.xml") ]] ; then
+        fontappstreams+=("%{fontorg}.%{currentfontpkgname}.metainfo.xml")
+      fi
+      if [ ${#fontappstreams[@]} -gt 0 ] ; then
+        install -m 0755 -vd "%{buildroot}%{_metainfodir}"
+        for fontappstream in "${fontappstreams[@]}"; do
+          install -m 0644 -vp "${fontappstream}" "%{buildroot}%{_metainfodir}"
+          echo \\"%{_metainfodir}/$(basename "${fontappstream}")\\" >> "%{currentfontfilelist}"
+        done
+      fi
+    )
+    (
+      %define listfiles_include %{?currentfontdocs}
+      %define listfiles_exclude %{?currentfontdocsex}
+      IFS= lines=$(%listfiles
+      )
+      while IFS= read -r line; do
+        [[ -n $line ]] && fontdocs+=("$line")
+      done <<< ${lines}
+      for fontdoc in "${fontdocs[@]}"; do
+        echo %doc \\"${fontdoc}\\" >> "%{currentfontfilelist}"
+      done
+    )
+    (
+      %define listfiles_include %{?currentfontlicenses}
+      %define listfiles_exclude %{?currentfontlicensesex}
+      IFS= lines=$(%listfiles
+      )
+      while IFS= read -r line; do
+        [[ -n $line ]] && fontlicenses+=("$line")
+      done <<< ${lines}
+      for fontlicense in "${fontlicenses[@]}"; do
+        echo "%"license \\"${fontlicense}\\" >> "%{currentfontfilelist}"
+      done
+    )
+    }
+
+

@@ -1,0 +1,87 @@
+perl_ext_env_unset: |
+  %{expand:
+  unset PERL_MM_OPT MODULEBUILDRC PERL5INC
+  export PERL_AUTOINSTALL="--defaultdeps"
+  export PERL_MM_USE_DEFAULT=1
+  }
+
+perl_default_filter_revision: 3
+perl_default_filter: |
+  %{expand: \
+  %global __provides_exclude_from %{?__provides_exclude_from:%__provides_exclude_from|}^%{_docdir}
+  %global __requires_exclude_from %{?__requires_exclude_from:%__requires_exclude_from|}^%{_docdir}
+  %global __provides_exclude %{?__provides_exclude:%__provides_exclude|}^perl\\\\(VMS|^perl\\\\(Win32|^perl\\\\(DB\\\\)|^perl\\\\(UNIVERSAL\\\\)
+  %global __requires_exclude %{?__requires_exclude:%__requires_exclude|}^perl\\\\(VMS|^perl\\\\(Win32
+  }
+
+perl_version: "%(eval \"`%%%{rpmGlobal.__perl} -V:version`\"; echo $version)"
+perl_testdir: "%%%{rpmGlobal._libexecdir}/perl5-tests"
+cpan_dist_name: "%(eval echo %{name} | %{__sed} -e 's/^perl-//')"
+tests_req(): |
+  %{expand:\
+  BuildRequires: %*\
+  %%tests_subpackage_requires %*\
+  }
+
+fix_shbang_line(): |
+  TMPHEAD=`mktemp`\
+  TMPBODY=`mktemp`\
+  for file in %* ; do \
+      head -1 $file > $TMPHEAD\
+      tail -n +2 $file > $TMPBODY\
+      %{__perl} -pi -e '$f = /^#!/ ? "" : "#!%{__perl}$/"; $_="$f$_"' $TMPHEAD\
+      cat $TMPHEAD $TMPBODY > $file\
+  done\
+  %{__perl} -MExtUtils::MakeMaker -e "ExtUtils::MM_Unix->fixin(qw{%*})"\
+  %{__rm} $TMPHEAD $TMPBODY\
+  %{nil}
+
+tests_subpackage_requires(): |
+  %{expand: \
+  %global __tests_spkg_req %{?__tests_spkg_req} %* \
+  }
+
+tests_subpackage_provides(): |
+  %{expand: \
+  %global __tests_spkg_prov %{?__tests_spkg_prov} %* \
+  }
+
+__perl_check_pre: |
+  %{expand: \
+  %{?__spec_check_pre} \
+  pushd %{buildsubdir} \
+  %define perl_br_testdir %{buildroot}%{perl_testdir}/%{cpan_dist_name} \
+  %{__mkdir_p} %{perl_br_testdir} \
+  %{__tar} -cf - %{__perl_test_dirs} | ( cd %{perl_br_testdir} && %{__tar} -xf - ) \
+  find . -maxdepth 1 -type f -name '*META*' -exec %{__cp} -vp {} %{perl_br_testdir} ';' \
+  find %{perl_br_testdir} -type f -exec %{__chmod} -c -x {} ';' \
+  T_FILES=`find %{perl_br_testdir} -type f -name '*.t'` \
+  %fix_shbang_line $T_FILES \
+  %{__chmod} +x $T_FILES \
+  %{_fixperms} %{perl_br_testdir} \
+  popd \
+  }
+
+perl_subpackage_tests(): |
+  %{expand: \
+  %global __perl_package 1\
+  %global __perl_test_dirs %* \
+  %global __spec_check_pre %{expand:%{__perl_check_pre}} \
+  %package tests\
+  Summary: Test suite for package %{name}\
+  Group: Development/Debug\
+  Requires: %{name} = %{?epoch:%{epoch}:}%{version}-%{release}\
+  Requires: /usr/bin/prove \
+  %{?__tests_spkg_req:Requires: %__tests_spkg_req}\
+  %{?__tests_spkg_prov:Provides: %__tests_spkg_prov}\
+  AutoReqProv: 0 \
+  %description tests\
+  This package provides the test suite for package %{name}.\
+  %files tests\
+  %defattr(-,root,root,-)\
+  %{perl_testdir}\
+  }
+
+perl_default_subpackage_tests: "%perl_subpackage_tests t/"
+
+

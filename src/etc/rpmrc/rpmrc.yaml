@@ -1,0 +1,506 @@
+nil: "%{!?nil}"
+_usr: /usr
+_usrsrc: "${{rpmGlobal._usr}}/src"
+_var: /var
+__7zip: /usr/bin/7za
+__awk: gawk
+__bzip2: /usr/bin/bzip2
+__cat: /usr/bin/cat
+__chmod: /usr/bin/chmod
+__chown: /usr/bin/chown
+__cp: /usr/bin/cp
+__file: /usr/bin/file
+__gpg: /usr/bin/gpg2
+__grep: /usr/bin/grep
+__gzip: /usr/bin/gzip
+__id: /usr/bin/id
+__id_u: "${{rpmGlobal.__id}} -u"
+__install: /usr/bin/install
+__ln_s: ln -s
+__lrzip: /usr/bin/lrzip
+__lzip: /usr/bin/lzip
+__xz: /usr/bin/xz
+__make: /usr/bin/make
+__mkdir: /usr/bin/mkdir
+__mkdir_p: /usr/bin/mkdir -p
+__mv: /usr/bin/mv
+__patch: /usr/bin/patch
+__rm: /usr/bin/rm
+__sed: /usr/bin/sed
+__tar: /usr/bin/tar
+__unzip: /usr/bin/unzip
+__zstd: /usr/bin/zstd
+__gem: /usr/bin/gem
+__git: /usr/bin/git
+__hg: /usr/bin/hg
+__bzr: /usr/bin/bzr
+__quilt: /usr/bin/quilt
+__ar: ar
+__as: as
+__cc: gcc
+__cpp: gcc -E
+__cxx: g++
+__ld: /usr/bin/ld
+__objdump: /usr/bin/objdump
+__strip: /usr/bin/strip
+__find_debuginfo: /usr/bin/find-debuginfo
+defined(): "%{expand:%%{?%{1}:1}%%{!?%{1}:0}}"
+undefined(): "%{expand:%%{?%{1}:0}%%{!?%{1}:1}}"
+with(): "%{expand:%%{?with_%{1}:1}%%{!?with_%{1}:0}}"
+without(): "%{expand:%%{?with_%{1}:0}%%{!?with_%{1}:1}}"
+bcond_with(): "%{expand:%%{?_with_%{1}:%%global with_%{1} 1}}"
+bcond_without(): "%{expand:%%{!?_without_%{1}:%%global with_%{1} 1}}"
+_rpmconfigdir: "%{getconfdir}"
+_rpmmacrodir: "${{rpmGlobal._rpmconfigdir}}/macros.d"
+_rpmluadir: "${{rpmGlobal._rpmconfigdir}}/lua"
+_builddir: "${{rpmGlobal._topdir}}/BUILD"
+_buildshell: /bin/sh
+_dbpath: "${{rpmGlobal._var}}/lib/rpm"
+_dbpath_rebuild: "${{rpmGlobal._dbpath}}"
+_keyring: rpmdb
+_keyringpath: "${{rpmGlobal._dbpath}}/pubkeys/"
+__debug_install_post: |
+  %{__find_debuginfo} \\\ 
+  %{?_smp_build_ncpus:-j%{_smp_build_ncpus}} \\\
+  %{?_missing_build_ids_terminate_build:--strict-build-id} \\\
+  %{?_no_recompute_build_ids:-n} \\\
+  %{?_include_minidebuginfo:-m} \\\
+  %{?_include_gdb_index:-i} \\\
+  %{?_unique_build_ids:--build-id-seed "%{VERSION}-%{RELEASE}"} \\\
+  %{?_unique_debug_names:--unique-debug-suffix "-%{VERSION}-%{RELEASE}.%{_arch}"} \\\
+  %{?_unique_debug_srcs:--unique-debug-src-base "%{name}-%{VERSION}-%{RELEASE}.%{_arch}"} \\\
+  %{?_find_debuginfo_dwz_opts} \\\
+  %{?_find_debuginfo_opts} \\\
+  %{?_debugsource_packages:-S debugsourcefiles.list} \\\
+  "%{_builddir}/%{?buildsubdir}"\
+  %{nil}
+
+_debuginfo_template: |
+  %package debuginfo\
+  Summary: Debug information for package %{name}\
+  Group: Development/Debug\
+  AutoReq: 0\
+  AutoProv: 1\
+  %description debuginfo\
+  This package provides debug information for package %{name}.\
+  Debug information is useful when developing applications that use this\
+  package or when debugging this package.\
+  %files debuginfo -f debugfiles.list\
+  %{nil}
+
+_debugsource_template: |
+  %package debugsource\
+  Summary: Debug sources for package %{name}\
+  Group: Development/Debug\
+  AutoReqProv: 0\  %description debugsource\
+  This package provides debug sources for package %{name}.\
+  Debug sources are useful when developing applications that use this\
+  package or when debugging this package.\
+  %files debugsource -f debugsourcefiles.list\
+  %{nil}
+
+debug_package: |
+  %ifnarch noarch\
+  %global __debug_package 1\
+  %_debuginfo_template\
+  %{?_debugsource_packages:%_debugsource_template}\
+  %endif\
+  %{nil}
+
+_defaultdocdir: "${{rpmGlobal._datadir}}/doc"
+_defaultlicensedir: "${{rpmGlobal._datadir}}/licenses"
+__global_requires_exclude_from: "%{?_docdir:%{_docdir}}"
+__global_provides_exclude_from: "%{?_docdir:%{_docdir}}"
+_changelog_trimage: 0
+_changelog_trimtime: 0
+source_date_epoch_from_changelog: 0
+use_source_date_epoch_as_buildtime: 0
+clamp_mtime_to_source_date_epoch: 0
+_rpmdir: "${{rpmGlobal._topdir}}/RPMS"
+_rpmfilename: "${{rpmGlobal._build_name_fmt}}"
+_sourcedir: "${{rpmGlobal._topdir}}/SOURCES"
+_specdir: "${{rpmGlobal._topdir}}/SPECS"
+_srcrpmdir: "${{rpmGlobal._topdir}}/SRPMS"
+_buildrootdir: "${{rpmGlobal._topdir}}/BUILDROOT"
+buildroot: "%{_buildrootdir}/%{NAME}-%{VERSION}-%{RELEASE}.%{_arch}"
+_tmppath: "${{rpmGlobal._var}}/tmp"
+_topdir: "%{getenv:HOME}/rpmbuild"
+_install_script_path: /sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin
+_install_langs: all
+_query_selector_match: default
+_source_filedigest_algorithm: 8
+_binary_filedigest_algorithm: 8
+_default_patch_fuzz: 0
+_default_patch_flags: --no-backup-if-mismatch -f
+__check_files: "${{rpmGlobal._rpmconfigdir}}/check-files ${{rpmGlobal.buildroot}}"
+_unpackaged_files_terminate_build: 1
+_duplicate_files_terminate_build: 0
+_missing_doc_files_terminate_build: 1
+_empty_manifest_terminate_build: 1
+_binaries_in_noarch_packages_terminate_build: 1
+_invalid_encoding_terminates_build: 1
+_wrong_version_format_terminate_build: 1
+_disable_source_fetch: 1
+_build_id_links: compat
+_unique_build_ids: 1
+_unique_debug_names: 1
+_unique_debug_srcs: 1
+_use_internal_dependency_generator: 1
+__docdir_path: "${{rpmGlobal._datadir}}/doc:${{rpmGlobal._datadir}}/man:${{rpmGlobal._datadir}}/info:${{rpmGlobal._datadir}}/gtk-doc/html:${{rpmGlobal._datadir}}/gnome/help:%{?_docdir}:%{?_mandir}:%{?_infodir}:%{?_javadocdir}:/usr/doc:/usr/man:/usr/info:/usr/X11R6/man"
+__find_provides: "${{rpmGlobal._rpmconfigdir}}/find-provides"
+__find_requires: "${{rpmGlobal._rpmconfigdir}}/find-requires"
+_fileattrsdir: "${{rpmGlobal._rpmconfigdir}}/fileattrs"
+__gpg_reserved_space: 4096
+_db_backend: ndb
+__gpg_sign_cmd: |
+  %{__gpg} \
+  gpg --no-verbose --no-armor \
+  %{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
+  --no-secmem-warning \
+  %{?_gpg_sign_cmd_extra_args:%{_gpg_sign_cmd_extra_args}} \
+  -u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}_hkp_keyserver: http://pgp.mit.edu
+_hkp_keyserver_query: "%{_hkp_keyserver}:11371/pks/lookup?op=get&search=0x"
+_build_name_fmt: "%%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm"
+__vsflags: 0xf0000
+_vsflags_build: "${{rpmGlobal.__vsflags}}"
+_vsflags_erase: "${{rpmGlobal.__vsflags}}"
+_vsflags_install: "${{rpmGlobal.__vsflags}}"
+_vsflags_query: "${{rpmGlobal.__vsflags}}"
+_vsflags_rebuilddb: 0xc0c00
+_vsflags_verify: "${{rpmGlobal.__vsflags}}"
+_pkgverify_level: digest
+_pkgverify_flags: 0x0
+_query_all_fmt: "%%{nvra}"
+_color_output: never
+_rpmlock_path: "${{rpmGlobal._dbpath}}/.rpm.lock"
+_isa: "%{?__isa:(${{rpmGlobal.__isa}})}%{!?__isa:${{rpmGlobal.nil}}}"
+__arch_install_post: "${{rpmGlobal.nil}}"
+__os_install_post: "${{rpmGlobal.___build_post}}"
+_fixperms: "${{rpmGlobal.__chmod}} -Rf a+rX,u+w,g-w,o-w"
+___build_shell: "%{?_buildshell:${{rpmGlobal._buildshell}}}%{!?_buildshell:/bin/sh}"
+___build_args: -e
+___build_cmd: "%{?_sudo:%{_sudo} }%{?_remsh:%{_remsh} %{_remhost} }%{?_remsudo:%{_remsudo} }%{?_remchroot:%{_remchroot} %{_remroot} }%{___build_shell} %{___build_args}"
+___build_pre: |
+  RPM_SOURCE_DIR=\"%{u2p:%{_sourcedir}}\"\
+  RPM_BUILD_DIR=\"%{u2p:%{_builddir}}\"\
+  RPM_OPT_FLAGS=\"%{optflags}\"\
+  RPM_LD_FLAGS=\"%{?build_ldflags}\"\
+  RPM_ARCH=\"%{_arch}\"\
+  RPM_OS=\"%{_os}\"\
+  RPM_BUILD_NCPUS=\"%{_smp_build_ncpus}\"\
+  export RPM_SOURCE_DIR RPM_BUILD_DIR RPM_OPT_FLAGS RPM_ARCH RPM_OS RPM_BUILD_NCPUS RPM_OPT_FLAGS\
+  RPM_DOC_DIR=\"%{_docdir}\"\
+  export RPM_DOC_DIR\ 
+  RPM_PACKAGE_NAME=\"%{NAME}\"\
+  RPM_PACKAGE_VERSION=\"%{VERSION}\"\
+  RPM_PACKAGE_RELEASE=\"%{RELEASE}\"\
+  export RPM_PACKAGE_NAME RPM_PACKAGE_VERSION RPM_PACKAGE_RELEASE\
+  LANG=C\
+  export LANG\
+  unset CDPATH DISPLAY ||:\
+  %{?buildroot:RPM_BUILD_ROOT=\"%{u2p:%{buildroot}}\"\
+  export RPM_BUILD_ROOT}\
+  %{?_javaclasspath:CLASSPATH=\"%{_javaclasspath}\"\
+  export CLASSPATH}\
+  PKG_CONFIG_PATH=\"${PKG_CONFIG_PATH}:%{_libdir}/pkgconfig:%{_datadir}/pkgconfig\"\
+  export PKG_CONFIG_PATH\
+  CONFIG_SITE=${CONFIG_SITE:-NONE}\
+  export CONFIG_SITE\
+  \
+  %[%{verbose}?"set -x":""]\
+  umask 022\
+  cd \"%{u2p:%{_builddir}}\"\
+
+___build_post: |
+  RPM_EC=$?\
+  for pid in $(jobs -p); do kill -9 ${pid} || continue; done\
+  exit ${RPM_EC}\
+  %{nil}
+
+___build_template: |
+  #!%{___build_shell}\
+  %{___build_pre}\
+  %{nil}
+
+__spec_prep_shell: "${{rpmGlobal.___build_shell}}"
+__spec_prep_args: "${{rpmGlobal.___build_args}}"
+__spec_prep_cmd: "${{rpmGlobal.___build_cmd}}"
+__spec_prep_pre: "${{rpmGlobal.___build_pre}}"
+__spec_prep_body: "%{___build_body}"
+__spec_prep_post: "${{rpmGlobal.___build_post}}"
+__spec_prep_template: |
+  #!%{__spec_prep_shell}\
+  %{__spec_prep_pre}\
+  %{nil}
+
+__spec_buildrequires_shell: "${{rpmGlobal.___build_shell}}"
+__spec_buildrequires_args: "${{rpmGlobal.___build_args}}"
+__spec_buildrequires_cmd: "${{rpmGlobal.___build_cmd}}"
+__spec_buildrequires_pre: "${{rpmGlobal.___build_pre}}"
+__spec_buildrequires_body: "%{___build_body}"
+__spec_buildrequires_post: "${{rpmGlobal.___build_post}}"
+__spec_buildrequires_template: |
+  #!%{__spec_buildrequires_shell}\
+  %{__spec_buildrequires_pre}\
+  %{nil}
+
+__spec_build_shell: "${{rpmGlobal.___build_shell}}"
+__spec_build_args: "${{rpmGlobal.___build_args}}"
+__spec_build_cmd: "${{rpmGlobal.___build_cmd}}"
+__spec_build_pre: "${{rpmGlobal.___build_pre}}"
+__spec_build_body: "%{___build_body}"
+__spec_build_post: "${{rpmGlobal.___build_post}}"
+__spec_build_template: |
+  #!%{__spec_build_shell}\
+  %{__spec_build_pre}\
+  %{nil}
+
+__spec_install_shell: "${{rpmGlobal.___build_shell}}"
+__spec_install_args: "${{rpmGlobal.___build_args}}"
+__spec_install_cmd: "${{rpmGlobal.___build_cmd}}"
+__spec_install_pre: "${{rpmGlobal.___build_pre}}"
+__spec_install_body: "%{___build_body}"
+__spec_install_template: |
+  #!%{__spec_install_shell}\
+  %{__spec_install_pre}\
+  %{nil}
+
+__spec_check_shell: "${{rpmGlobal.___build_shell}}"
+__spec_check_args: "${{rpmGlobal.___build_args}}"
+__spec_check_cmd: "${{rpmGlobal.___build_cmd}}"
+__spec_check_pre: "${{rpmGlobal.___build_pre}}"
+__spec_check_body: "%{___build_body}"
+__spec_check_post: "${{rpmGlobal.___build_post}}"
+__spec_check_template: |
+  #!%{__spec_check_shell}\
+  %{__spec_check_pre}\
+  %{nil}
+
+__spec_clean_shell: "${{rpmGlobal.___build_shell}}"
+__spec_clean_args: "${{rpmGlobal.___build_args}}"
+__spec_clean_cmd: "${{rpmGlobal.___build_cmd}}"
+__spec_clean_pre: "${{rpmGlobal.___build_pre}}"
+__spec_clean_body: "%{___build_body}"
+__spec_clean_post: "${{rpmGlobal.___build_post}}"
+__spec_clean_template: |
+  #!%{__spec_clean_shell}\
+  %{__spec_clean_pre}\
+  %{nil}
+
+__spec_rmbuild_shell: "${{rpmGlobal.___build_shell}}"
+__spec_rmbuild_args: "${{rpmGlobal.___build_args}}"
+__spec_rmbuild_cmd: "${{rpmGlobal.___build_cmd}}"
+__spec_rmbuild_pre: "${{rpmGlobal.___build_pre}}"
+__spec_rmbuild_body: "%{___build_body}"
+__spec_rmbuild_post: "${{rpmGlobal.___build_post}}"
+__spec_rmbuild_template: |
+  #!%{__spec_rmbuild_shell}\
+  %{__spec_rmbuild_pre}\
+  %{nil}
+
+_prefix: /usr
+_exec_prefix: "${{rpmGlobal._prefix}}"
+_bindir: "${{rpmGlobal._exec_prefix}}/bin"
+_sbindir: "${{rpmGlobal._exec_prefix}}/sbin"
+_libexecdir: "${{rpmGlobal._exec_prefix}}/libexec"
+_datadir: "${{rpmGlobal._prefix}}/share"
+_sysconfdir: /etc
+_sharedstatedir: "${{rpmGlobal._prefix}}/com"
+_localstatedir: "${{rpmGlobal._prefix}}/var"
+_lib: lib
+_libdir: "${{rpmGlobal._exec_prefix}}/${{rpmGlobal._lib}}"
+_includedir: "${{rpmGlobal._prefix}}/include"
+_infodir: "${{rpmGlobal._datadir}}/info"
+_mandir: "${{rpmGlobal._datadir}}/man"
+_build: "${{rpmGlobal._host}}"
+_build_alias: "${{rpmGlobal._host_alias}}"
+_build_cpu: "${{rpmGlobal._host_cpu}}"
+_build_vendor: "${{rpmGlobal._host_vendor}}"
+_build_os: "${{rpmGlobal._host_os}}"
+_host: ${{top.arch}}-openEuler-linux-gnu
+_host_alias: ${{top.arch}}-openEuler-linux-gnu${{rpmGlobal.nil}}
+_host_cpu: ${{top.arch}}
+_host_vendor: openEuler
+_host_os: linux
+_target: "${{rpmGlobal._host}}"
+_target_alias: "${{rpmGlobal._host_alias}}"
+_target_cpu: "${{rpmGlobal._host_cpu}}"
+_target_vendor: "${{rpmGlobal._host_vendor}}"
+_target_os: "${{rpmGlobal._host_os}}"
+build_cflags: "${{rpmGlobal.optflags}}"
+build_cxxflags: "${{rpmGlobal.optflags}}"
+build_fflags: "${{rpmGlobal.optflags}} %{?_fmoddir:-I${{rpmGlobal._fmoddir}}}"
+set_build_flags: |
+  CFLAGS="${CFLAGS:-%{?build_cflags}}" ; export CFLAGS ; \
+  CXXFLAGS="${CXXFLAGS:-%{?build_cxxflags}}" ; export CXXFLAGS ; \
+  FFLAGS="${FFLAGS:-%{?build_fflags}}" ; export FFLAGS ; \
+  FCFLAGS="${FCFLAGS:-%{?build_fflags}}" ; export FCFLAGS ; \
+  LDFLAGS="${LDFLAGS:-%{?build_ldflags}}" ; export LDFLAGS
+
+_configure: ./configure
+configure: |
+  %{set_build_flags}; \
+  %{_configure} --host=%{_host} --build=%{_build} \\\
+        --program-prefix=%{?_program_prefix} \\\
+        --disable-dependency-tracking \\\
+        --prefix=%{_prefix} \\\
+        --exec-prefix=%{_exec_prefix} \\\
+        --bindir=%{_bindir} \\\
+        --sbindir=%{_sbindir} \\\
+        --sysconfdir=%{_sysconfdir} \\\
+        --datadir=%{_datadir} \\\
+        --includedir=%{_includedir} \\\
+        --libdir=%{_libdir} \\\
+        --libexecdir=%{_libexecdir} \\\
+        --localstatedir=%{_localstatedir} \\\
+        --sharedstatedir=%{_sharedstatedir} \\\
+        --mandir=%{_mandir} \\\
+        --infodir=%{_infodir}
+
+_make_output_sync: "%(! ${{rpmGlobal.__make}} --version -O >/dev/null 2>&1 || echo -O)"
+_make_verbose: V=1 VERBOSE=1
+make_build: "${{rpmGlobal.__make}} ${{rpmGlobal._make_output_sync}} %{?_smp_mflags} ${{rpmGlobal._make_verbose}}"
+make_install: "${{rpmGlobal.__make}} install DESTDIR=%{?buildroot} INSTALL=\"${{rpmGlobal.__install}} -p\""
+makeinstall: |
+  echo "warning: %%makeinstall is deprecated, try %%make_install instead" 1>&2\
+  %{__make} \\\
+        prefix=%{?buildroot:%{buildroot}}%{_prefix} \\\
+        exec_prefix=%{?buildroot:%{buildroot}}%{_exec_prefix} \\\
+        bindir=%{?buildroot:%{buildroot}}%{_bindir} \\\
+        sbindir=%{?buildroot:%{buildroot}}%{_sbindir} \\\
+        sysconfdir=%{?buildroot:%{buildroot}}%{_sysconfdir} \\\
+        datadir=%{?buildroot:%{buildroot}}%{_datadir} \\\
+        includedir=%{?buildroot:%{buildroot}}%{_includedir} \\\
+        libdir=%{?buildroot:%{buildroot}}%{_libdir} \\\
+        libexecdir=%{?buildroot:%{buildroot}}%{_libexecdir} \\\
+        localstatedir=%{?buildroot:%{buildroot}}%{_localstatedir} \\\
+        sharedstatedir=%{?buildroot:%{buildroot}}%{_sharedstatedir} \\\
+        mandir=%{?buildroot:%{buildroot}}%{_mandir} \\\
+        infodir=%{?buildroot:%{buildroot}}%{_infodir} \\\
+  install
+
+patches: "%{lua: for i, p in ipairs(patches) do print(p..\" \") end}"
+sources: "%{lua: for i, s in ipairs(sources) do print(s..\" \") end}"
+ix86: i386 i486 i586 i686 pentium3 pentium4 athlon geode
+arm32: armv3l armv4b armv4l armv4tl armv5tl armv5tel armv5tejl armv6l armv6hl armv7l armv7hl armv7hnl armv8l armv8hl armv8hnl armv8hcnl
+arm: "${{rpmGlobal.arm32}}"
+arm64: aarch64
+mips32: mips mipsel mipsr6 mipsr6el
+mips64: mips64 mips64el mips64r6 mips64r6el
+mipseb: mips mipsr6 mips64 mips64r6
+mipsel: mipsel mipsr6el mips64el mips64r6el
+mips: "${{rpmGlobal.mips32}} ${{rpmGlobal.mips64}}"
+sparc: sparc sparcv8 sparcv9 sparcv9v sparc64 sparc64v
+alpha: alpha alphaev56 alphaev6 alphaev67
+power64: ppc64 ppc64p7 ppc64le
+riscv32: riscv32
+riscv64: riscv64
+riscv128: riscv128
+riscv: "${{rpmGlobal.riscv32}} ${{rpmGlobal.riscv64}} ${{rpmGlobal.riscv128}}"
+find_lang: "${{rpmGlobal._rpmconfigdir}}/find-lang.sh ${{rpmGlobal.buildroot}}"
+__urlhelpercmd: /usr/bin/curl
+__urlhelperopts: --silent --show-error --fail --globoff --location -o
+__urlhelper_proxyopts: "%{?_httpproxy:--proxy %{_httpproxy}%{?_httpport::%{_httpport}}}%{!?_httpproxy:%{nil}}"
+_urlhelper: "${{rpmGlobal.__urlhelpercmd}} %{?__urlhelper_localopts} %{?__urlhelper_proxyopts} ${{rpmGlobal.__urlhelperopts}}"
+__plugindir: "${{rpmGlobal._libdir}}/rpm-plugins"
+__transaction_systemd_inhibit: "${{rpmGlobal.__plugindir}}/systemd_inhibit.so"
+__transaction_selinux: "${{rpmGlobal.__plugindir}}/selinux.so"
+__transaction_syslog: "${{rpmGlobal.__plugindir}}/syslog.so"
+__transaction_ima: "${{rpmGlobal.__plugindir}}/ima.so"
+__transaction_fapolicyd: "${{rpmGlobal.__plugindir}}/fapolicyd.so"
+__transaction_fsverity: "${{rpmGlobal.__plugindir}}/fsverity.so"
+__transaction_prioreset: "${{rpmGlobal.__plugindir}}/prioreset.so"
+__transaction_audit: "${{rpmGlobal.__plugindir}}/audit.so"
+__transaction_dbus_announce: "${{rpmGlobal.__plugindir}}/dbus_announce.so"
+__transaction_digest_list: "${{rpmGlobal.__plugindir}}/digest_list.so"
+__scm: patch
+__scm_username: rpm-build
+__scm_usermail: <rpm-build>
+__scm_author: "${{rpmGlobal.__scm_username}} ${{rpmGlobal.__scm_usermail}}"
+__scm_setup_patch(q): "${{rpmGlobal.nil}}"
+__scm_apply_patch(qp:m:): "${{rpmGlobal.__patch}} %{-p:-p%{-p*}} %{-q:-s} --fuzz=${{rpmGlobal._default_patch_fuzz}} ${{rpmGlobal._default_patch_flags}}"
+
+__scm_setup_gendiff(q): "${{rpmGlobal.nil}}"
+__scm_apply_gendiff(qp:m:): "%{__patch} %{-p:-p%{-p*}} %{-q:-s} --fuzz=%{_default_patch_fuzz} %{_default_patch_flags} -b --suffix \".%{2}\""
+
+__scm_setup_hg(q): |
+    %{__hg} init %{-q} .\
+    %{__hg} add %{-q} .\
+    %{__hg} commit %{-q} --user "%{__scm_author}" -m "%{NAME}-%{VERSION} base"
+
+__scm_apply_hg(qp:m:): "${{rpmGlobal.__hg}} import - %{-p:-p%{-p*}} %{-q} -m %{-m*} --user \"${{rpmGlobal.__scm_author}}\""
+
+__scm_setup_git(q): |
+    %{__git} init %{-q}\
+    %{__git} config user.name "%{__scm_username}"\
+    %{__git} config user.email "%{__scm_usermail}"\
+    %{__git} config gc.auto 0\
+    %{__git} add --force .\
+    %{__git} commit %{-q} --allow-empty -a\\\
+            --author "%{__scm_author}" -m "%{NAME}-%{VERSION} base"
+
+__scm_apply_git(qp:m:): |
+    %{__git} apply --index --reject %{-p:-p%{-p*}} -\
+    %{__git} commit %{-q} -m %{-m*} --author "%{__scm_author}"
+__scm_setup_git_am(q): "%{expand:%__scm_setup_git %{-q}}"
+
+__scm_apply_git_am(qp:m:): "${{rpmGlobal.__git}} am --reject %{-q} %{-p:-p%{-p*}}"
+
+__scm_setup_quilt(q): "${{rpmGlobal.nil}}"
+__scm_apply_quilt(qp:m:): "%{__quilt} import %{-p:-p%{-p*}} %{1} && %{__quilt} push %{-q}"
+
+__scm_setup_bzr(q): |
+    %{__bzr} init %{-q}\
+    %{__bzr} whoami --branch "%{__scm_author}"\
+    %{__bzr} add .\
+    %{__bzr} commit %{-q} -m "%{NAME}-%{VERSION} base"
+
+__scm_apply_bzr(qp:m:): |
+    %{__patch} %{-p:-p%{-p*}} %{-q:-s}\
+    %{__bzr} commit %{-q} -m %{-m*}
+
+__apply_patch(qp:m:): |
+    %{lua:\
+    local file = rpm.expand("%{1}")\
+    local num = rpm.expand("%{2}")\
+    if posix.access(file, "r") then\
+        local options = rpm.expand("%{-q} %{-p:-p%{-p*}} %{-m:-m%{-m*}}")\
+        local scm_apply = rpm.expand("%__scm_apply_%{__scm}")\
+        print(rpm.expand("%{uncompress:"..file.."} | "..scm_apply.." "..options.."  "..file.." "..num.."\\n"))\
+    else\
+        print("echo 'Cannot read "..file.."'; exit 1;".."\\n")\
+    end}
+
+autopatch(vp:m:M:): |
+    %{lua:
+    if #arg == 0 then
+        local lo = tonumber(rpm.expand("%{-m:%{-m*}}"))
+        local hi = tonumber(rpm.expand("%{-M:%{-M*}}"))
+        for i, n in ipairs(patch_nums) do
+            if ((not lo or n >= lo) and (not hi or n <= hi)) then
+                table.insert(arg, n)
+            end
+        end
+    end
+    local options = rpm.expand("%{!-v:-q} %{-p:-p%{-p*}} ")
+    local bynum = {}
+    for i, p in ipairs(patches) do
+        bynum[patch_nums[i]] = p
+    end
+    for i, a in ipairs(arg) do
+        local p = bynum[a]
+        if p then
+            print(rpm.expand("%__apply_patch -m %{basename:"..p.."}  "..options..p.." "..i.."\\n"))
+        else
+            macros.error({"no such patch "..a})
+        end
+    end
+    }
+
+autosetup(a:b:cDn:TvNS:p:): |
+    %setup %{-a} %{-b} %{-c} %{-D} %{-n} %{-T} %{!-v:-q}\
+    %{-S:%global __scm %{-S*}}\
+    %{expand:%__scm_setup_%{__scm} %{!-v:-q}}\
+    %{!-N:%autopatch %{-v} %{-p:-p%{-p*}}}
+
+
