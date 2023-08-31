@@ -87,7 +87,7 @@ class _LayerConfigLoader:
 
     def _load_python_libs(self) -> None:
         lib_path = os.path.join(self._layer_path, str(Directory.LIBS.value))
-        if not os.path.isdir(lib_path):
+        if not os.path.exists(lib_path) or not os.path.isdir(lib_path):
             return
 
         from src.core.config_space import config_space
@@ -97,7 +97,7 @@ class _LayerConfigLoader:
 
     def _load_use(self) -> None:
         use_dir = os.path.join(self._layer_path, str(Directory.USE.value))
-        if not os.path.isdir(use_dir):
+        if not os.path.exists(use_dir) or not os.path.isdir(use_dir):
             return
 
         self._load_use_index_yaml(use_dir)
@@ -116,7 +116,7 @@ class _LayerConfigLoader:
 
     def _load_types(self) -> None:
         types_path = os.path.join(self._layer_path, str(Directory.TYPES.value))
-        if not os.path.isdir(types_path):
+        if not os.path.exists(types_path) or not os.path.isdir(types_path):
             return
 
         from src.core.config_space import config_space
@@ -127,7 +127,7 @@ class _LayerConfigLoader:
                     config_space[k] = v
 
     def _load_rpmrc(self) -> None:
-        if not os.path.isdir(rpmrc_path):
+        if not os.path.exists(rpmrc_path) or not os.path.isdir(rpmrc_path):
             return
         from src.core.config_space import config_space
         rpmrc_path_list = [
@@ -155,7 +155,7 @@ class _LayerConfigLoader:
 
     def _load_languages(self):
         language_path = os.path.join(self._layer_path, str(Directory.LANG.value))
-        if not os.path.isdir(language_path):
+        if not os.path.exists(language_path) or not os.path.isdir(language_path):
             return
         from src.core.config_space import config_space
         language_list = os.listdir(language_path)
