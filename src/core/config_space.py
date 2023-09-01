@@ -118,13 +118,9 @@ class ConfigSpace(dict):
             short_key = key.replace(f"{pre_name}.", "")
             base_key = key.split(".")[-1]
             if ".defineFlags." in key and isinstance(value, dict):
-                option_name = ""
-                for sub_key, sub_value in value.items():
-                    if re.fullmatch("(cmake|configure|make)\w*\.(vars|options)", sub_key):
-                        option_name = sub_key.split(".")[0]
-                if option_name != "" and f"{pre_name}.use.{option_name}.{base_key}" in loaded_keys:
+                if f"{pre_name}.use.{base_key}" in loaded_keys:
                     if "default" in value:
-                        value["default"] = config_space.get_key(f"{pre_name}.use.{option_name}.{base_key}")
+                        value["default"] = config_space.get_key(f"{pre_name}.use.{base_key}")
             package_info[short_key] = value
 
         return package_info
