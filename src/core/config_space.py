@@ -116,7 +116,7 @@ class ConfigSpace(dict):
             if not is_yaml_key(key):
                 continue
             short_key = key.replace(f"{pre_name}.", "")
-            base_key = key.split()
+            base_key = key.split(".")[-1]
             if ".defineFlags." in key and isinstance(value, dict):
                 option_name = ""
                 for sub_key, sub_value in value.items():
