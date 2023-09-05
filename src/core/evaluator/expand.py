@@ -62,14 +62,21 @@ def expand_macro(str_macro, fspath):
                     v = f"{cspath}.{keywords}"
                 else:
                     v = v.replace("pkg.", f"{cspath}.")
-            elif k.startswith("${{top["):
-                find_keywords = re.findall(ImportConfig.TOP_KEY.value, k)[0]
-                keywords = find_keywords[1]
-                if "." not in keywords:
-                    raise Exception("error format in %s" % k)
-                v = f"top.{keywords}"
-                if v not in config_space:
-                    load_top_yaml_info(fspath, cspath, keywords.split(".")[1])
+            elif k.startswith("${{top[") or k.startswith("${{top."):
+                if re.fullmatch(ImportConfig.TOP_KEY.value, k):
+                    find_keywords = re.findall(ImportConfig.TOP_KEY.value, k)[0]
+                    keywords = find_keywords[1]
+                    if "." not in keywords:
+                        raise Exception("error format in %s" % k)
+                    v = f"top.{keywords}"
+                    if v not in config_space:
+                        load_top_yaml_info(fspath, cspath, keywords.split(".")[1])
+                elif re.fullmatch(ImportConfig.TOP_HAS.value, k):
+                    find_keywords = re.findall(ImportConfig.TOP_KEY.value, k)[0]
+                    keywords = find_keywords[1]
+                    if re.fullmatch("[\"\'].+[\"\']", keywords):
+                        keywords = keywords[1:-1]
+                    v = f"top.{keywords}" in config_space
             else:
                 v = f"{cspath}.{v}"
         if isinstance(v, bool):
