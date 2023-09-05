@@ -225,7 +225,6 @@ class SpecWriter:
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
         compile_type = ""
-        add_function_text = ""
         for main_field in self.metadata.copy():
             if not re.fullmatch("build\.(configure|cmake|make)\w*\.flags", main_field):
                 continue
@@ -233,39 +232,36 @@ class SpecWriter:
             func_name = "phase." + main_field.split(".")[1]
             if func_name not in self.metadata and compile_type != "make":
                 continue
-            if re.fullmatch("build\.(configure|make)\w*\.flags", main_field):
-                prefix = ""
-            elif re.fullmatch("build\.cmake\w*\.flags", main_field):
+            prefix = ""
+            if compile_type == "cmake":
                 prefix = "-D"
-            else:
-                continue
             flags = copy.deepcopy(self.metadata.get(main_field))
             flags_value = "%global {0} \\{1}".format(main_field.replace(".", "_"), os.linesep)
             for flag, value in flags.items():
                 if isinstance(value, bool):
-                    if prefix == "-D":
+                    if compile_type == "cmake":
                         value = "ON" if value else "OFF"
-                    else:
-                        value = "yes" if value else "no"
+                    elif compile_type == "configure" and value == "no":
+                        flag = flag.replace("enable", "disable").replace("--with-", "--without-")
+                value = "=" + str(value)
+                if compile_type == "configure":
+                    value = ""
                 if " rpmWhen " in flag:
                     base_key = flag.split(" rpmWhen ")[0]
                     conditions = flag.split(" rpmWhen ")[1:]
                     for condition in conditions:
                         flags_value += f'%if {condition} \\{os.linesep}'
-                    flags_value += f"    {prefix}{base_key}={value} \\{os.linesep}" + f"%endif \\{os.linesep}" * len(conditions)
+                    flags_value += f"    {prefix}{base_key}{value} \\{os.linesep}" + f"%endif \\{os.linesep}" * len(conditions)
                 else:
-                    flags_value += f"    {prefix}{flag}={value} \\{os.linesep}"
-            add_function = "%{add_" + compile_type + "_flags}"
-            if compile_type == "configure":
-                self.metadata[func_name] = f"{add_function} \\{os.linesep}" + self.metadata[func_name]
-                with open(f"{template_path}/add_{compile_type}.tmpl", "r") as f:
-                    add_function_text = f.read()
+                    flags_value += f"    {prefix}{flag}{value} \\{os.linesep}"
             flags_value = flags_value.rstrip().rstrip("\\").rstrip() + os.linesep
             if "rpmMacros" not in self.target_metadata:
                 self.target_metadata.setdefault("rpmMacros", flags_value)
             else:
                 self.target_metadata["rpmMacros"] += flags_value
-        if compile_type != "":
+        if compile_type == "configure" and "%{?add_configure_flags}" in self.metadata["phase.build"]:
+            with open(f"{template_path}/add_{compile_type}.tmpl", "r") as f:
+                add_function_text = f.read()
             self.target_metadata["rpmMacros"] += os.linesep + add_function_text + os.linesep
 
     def parse_config_settings(self):
