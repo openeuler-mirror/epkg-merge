@@ -150,12 +150,14 @@ class ConfigSpace(dict):
         return language_info
 
     def load_inherit(self):
+        if "base_layer" not in inherit_config:
+            log.error("Can't identify the baseOS, the types may be missing")
+            return
         for k, v in inherit_config.items():
             if k == "base_layer":
                 self["base_layer"] = v
                 continue
             inherit = InheritConfig()
-            print(inherit_config)
             inherit.value = v.get("value")
             inherit.cspath = v.get("cspath")
             layer_name = v.get("fspath").split("pkgs")[0].split(os.sep)[-2]
