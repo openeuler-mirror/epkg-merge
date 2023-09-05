@@ -6,6 +6,7 @@ import re
 import yaml
 from src.core.loader.yaml_loader import YamlLoader
 from src.core.loader.lib.load_helper import expand_yaml
+from src.core.loader.lib.enums import Directory
 from src.core.evaluator.merge import merge_values
 from src.core.evaluator.transform import transform_key_default
 from src.core.common import format_package_json
@@ -40,6 +41,13 @@ def get_key_fspath(key):
             break
         temp_key = raw_key
     return raw_key, fspath_list
+
+
+class InheritConfig:
+    def __init__(self):
+        self.value = None
+        self.fspath = ""
+        self.cspath = ""
 
 
 class ConfigSpace(dict):
@@ -108,9 +116,12 @@ class ConfigSpace(dict):
 
         package_info = {}
         self.get_key(pre_name)
+        self.load_inherit()
         loaded_keys = config_space.get_key(f"pkgs.{package_name}:loadedKeys")
         for key in loaded_keys:
             value = config_space.get_key(key)
+            if re.search("\$\{\{pkg\.\w+}}", key):
+                key = expand_implicit_fields(key, {"${{pkg.name}}": package_name})
             if value == NOT_EXIST:
                 continue
             if not is_yaml_key(key):
@@ -138,6 +149,34 @@ class ConfigSpace(dict):
         language_info = expand_yaml({f"{cspath}." + _key: _value for _key, _value in loaded_info.items()})
         return language_info
 
+    def load_inherit(self):
+        for k, v in inherit_config.items():
+            if k == "base_layer":
+                self["base_layer"] = v
+                continue
+            inherit = InheritConfig()
+            print(inherit_config)
+            inherit.value = v.get("value")
+            inherit.cspath = v.get("cspath")
+            layer_name = v.get("fspath").split("pkgs")[0].split(os.sep)[-2]
+            inherit.fspath = v.get("fspath").replace(layer_name, self["base_layer"])
+            self.merge_inherit(inherit)
+
+    def merge_inherit(self, inherit: InheritConfig):
+        lang_path = os.path.join(inherit.fspath.split("pkgs")[0], Directory.LANG.value)
+        if isinstance(inherit.value, str):
+            inherit.value = inherit.value.split(",")
+        for lang in inherit.value:
+            inherit_package_info: dict = self.get_language(lang_path, lang.split(".")[-1], inherit.cspath)
+            for inherit_key, inherit_value in inherit_package_info.items():
+                if inherit_key in self:
+                    if isinstance(inherit_value, list):
+                        self[inherit_key] = list(set(self[inherit_key] + inherit_value))
+                    elif isinstance(inherit_value, dict):
+                        self[inherit_key] = self[inherit_key].update(inherit_value)
+                    else:
+                        self.setdefault(inherit_key, inherit_value)
+
     def get_package_format_json(self, package_name):
         pacakge_json = self.get_package(package_name)
         return format_package_json(pacakge_json)
@@ -148,4 +187,5 @@ class ConfigSpace(dict):
 
 
 config_space = ConfigSpace()
+inherit_config = {}
 config_space.arch = platform.machine()

@@ -119,7 +119,9 @@ class _LayerConfigLoader:
         if not os.path.exists(types_path) or not os.path.isdir(types_path):
             return
 
-        from src.core.config_space import config_space
+        from src.core.config_space import config_space, inherit_config
+        if "base_layer" not in inherit_config:
+            inherit_config["base_layer"] = self._layer
         for f in os.listdir(types_path):
             if re.match(r".*\.yaml", f):
                 result = expand_yaml(yaml.safe_load(open(os.path.join(types_path, f), encoding="utf-8")))
@@ -157,7 +159,9 @@ class _LayerConfigLoader:
         language_path = os.path.join(self._layer_path, str(Directory.LANG.value))
         if not os.path.exists(language_path) or not os.path.isdir(language_path):
             return
-        from src.core.config_space import config_space
+        from src.core.config_space import config_space, inherit_config
+        if "base_layer" not in inherit_config:
+            inherit_config["base_layer"] = self._layer
         language_list = os.listdir(language_path)
         for language_yaml in language_list:
             language_yaml_path = os.path.join(language_path, language_yaml)

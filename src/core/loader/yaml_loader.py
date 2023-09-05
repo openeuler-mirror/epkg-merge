@@ -3,7 +3,7 @@
 import os
 import yaml
 from src.core.evaluator import transform
-from src.core.loader.lib.enums import Directory, IndexConfigKey
+from src.core.loader.lib.enums import IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
 from src.core.lib.exclude_key import is_strategy_key
@@ -27,7 +27,7 @@ class YamlLoader:
         configs = yaml.safe_load(open(self._fspath, encoding="utf-8"))
         configs = self.load_include(configs)
         result = expand_yaml(configs, self._cspath)
-        result = self.load_inherit(result)
+        self.save_inherit_item(result)
         for k, v in result.items():
             actual_keys = config_space.add_key(k, v, self._fspath)
             if is_strategy_key(k):
@@ -39,32 +39,15 @@ class YamlLoader:
                 if actual_key not in keys_cur:
                     keys_cur.append(actual_key)
 
-    def load_inherit(self, package_info):
-        final_package_info = {}
-        for k, v in package_info.items():
-            if k != f"{self._cspath}.inherit":
-                YamlLoader.sequential_update(k, v, final_package_info)
-                continue
-            self.merge_inherit(v, final_package_info)
-        return final_package_info
-
-    def merge_inherit(self, inherits, final_package_info):
-        from src.core.config_space import config_space
-        if isinstance(inherits, str):
-            inherits = inherits.split(",")
-        lang_path = os.path.join(self._fspath.split("pkgs")[0], Directory.LANG.value)
-        for inherit_package in inherits:
-            if "." in inherit_package:
-                inherit_package = inherit_package.split(".")[-1]
-            inherit_package_info: dict = config_space.get_language(lang_path, inherit_package, self._cspath)
-            for inherit_key, inherit_value in inherit_package_info.items():
-                if inherit_key in final_package_info:
-                    if isinstance(inherit_value, list):
-                        final_package_info[inherit_key] = list(set(final_package_info[inherit_key] + inherit_value))
-                    elif isinstance(inherit_value, dict):
-                        final_package_info[inherit_key] = final_package_info[inherit_key].update(inherit_value)
-                else:
-                    final_package_info.setdefault(inherit_key, inherit_value)
+    def save_inherit_item(self, items: dict):
+        from src.core.config_space import inherit_config
+        for k, v in items.items():
+            if ".inherit" in k:
+                inherit_config[k] = {
+                    "value": v,
+                    "fspath": self._fspath,
+                    "cspath": self._cspath
+                }
 
     @staticmethod
     def load_include(configs):
