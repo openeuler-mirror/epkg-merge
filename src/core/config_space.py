@@ -5,7 +5,7 @@ import re
 
 import yaml
 from src.core.loader.yaml_loader import YamlLoader
-from src.core.loader.lib.load_helper import expand_yaml
+from src.core.loader.lib.load_helper import expand_yaml, expand_implicit_fields
 from src.core.loader.lib.enums import Directory
 from src.core.evaluator.merge import merge_values
 from src.core.evaluator.transform import transform_key_default
