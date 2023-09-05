@@ -166,10 +166,8 @@ class _LayerConfigLoader:
         for language_yaml in language_list:
             language_yaml_path = os.path.join(language_path, language_yaml)
             language_name = language_yaml.split(".")[0]
-            result = expand_yaml(yaml.safe_load(open(language_yaml_path, encoding="utf-8")))
-            for k, v in result.items():
-                language_key = "lang.{0}.{1}".format(language_name, k)
-                config_space.add_key(language_key, v, language_yaml_path)
+            result = expand_yaml(yaml.safe_load(open(language_yaml_path, encoding="utf-8")), "top")
+            config_space.add_key(f"lang.{language_name}", result, language_yaml_path)
 
 
 class _ElementConfigLoader:

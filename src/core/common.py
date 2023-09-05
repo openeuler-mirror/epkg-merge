@@ -183,6 +183,31 @@ def format_compile_flags(k, v, format_json, raw_json):
         format_json.setdefault("rpmGlobal", {}).setdefault(BASE_FLAGS.get(key, key), "\"%{?" + BASE_FLAGS.get(key, key) + "} " + v + "\"")
 
 
+def format_top(k, v, format_json, raw_json):
+    if k.startswith("top."):
+        k = k.replace("top.", "")
+        if "defineFlags." in k:
+            compile_name = ""
+            option = ""
+            for param, val in v.items():
+                if re.fullmatch("configure\w*\.(options|vars)", param):
+                    compile_name = param.split(".")[0]
+                    option = val
+                    break
+            if not compile_name:
+                log.error("error customization: {0}".format(k))
+                return
+            condition = v.get("when", "")
+            default = v.get("default", "")
+            if "options" in param and "=" in val:
+                option, default = val.split("=", 1)
+            if condition:
+                option += " when " + condition
+            format_json.setdefault(f'build.{compile_name}.flags', {}).setdefault(option, default)
+        else:
+            format_json.setdefault(k, v)
+
+
 format_funcs = {
     "subpackage": format_subpackage,
     "patchset": format_patchset,
@@ -194,6 +219,7 @@ format_funcs = {
     "runtimePhase": format_phase,
     "meta": format_meta,
     "build": format_compile_flags,
+    "top": format_compile_flags,
 }
 
 

@@ -136,19 +136,6 @@ class ConfigSpace(dict):
 
         return package_info
 
-    def get_language(self, path, language, cspath=""):
-        language_yaml_path = os.path.join(path, f"{language}.yaml")
-        loaded_info: dict = yaml.safe_load(open(language_yaml_path, encoding="utf-8"))
-        for key, value in loaded_info.items():
-            if key == "inherit":
-                if "." in value:
-                    value = value.split(".")[-1]
-                target_path = path.replace(os.path.basename(path), value)
-                inherit_info = self.get_language(target_path, value, cspath)
-                inherit_info.update(loaded_info)
-        language_info = expand_yaml({f"{cspath}." + _key: _value for _key, _value in loaded_info.items()})
-        return language_info
-
     def load_inherit(self):
         if "base_layer" not in inherit_config:
             log.error("Can't identify the baseOS, the types may be missing")
@@ -165,19 +152,20 @@ class ConfigSpace(dict):
             self.merge_inherit(inherit)
 
     def merge_inherit(self, inherit: InheritConfig):
-        lang_path = os.path.join(inherit.fspath.split("pkgs")[0], Directory.LANG.value)
-        if isinstance(inherit.value, str):
-            inherit.value = inherit.value.split(",")
-        for lang in inherit.value:
-            inherit_package_info: dict = self.get_language(lang_path, lang.split(".")[-1], inherit.cspath)
-            for inherit_key, inherit_value in inherit_package_info.items():
-                if inherit_key in self:
-                    if isinstance(inherit_value, list):
-                        self[inherit_key] = list(set(self[inherit_key] + inherit_value))
-                    elif isinstance(inherit_value, dict):
-                        self[inherit_key] = self[inherit_key].update(inherit_value)
-                    else:
-                        self.setdefault(inherit_key, inherit_value)
+        inherit_lang_info = self.get_key(inherit.value.split(".", 1)[-1])
+        for inherit_key, inherit_value in inherit_lang_info.items():
+            if inherit_key in self:
+                if isinstance(inherit_value, list):
+                    self[inherit_key] = list(set(self[inherit_key] + inherit_value))
+                elif isinstance(inherit_value, dict):
+                    self[inherit_key] = self[inherit_key].update(inherit_value)
+            else:
+                self.setdefault(inherit_key, inherit_value)
+            keys_cur = self.get(f"{inherit.cspath}:loadedKeys", [])
+            if not keys_cur:
+                self[f"{inherit.cspath}:loadedKeys"] = keys_cur
+            if inherit_key not in keys_cur:
+                keys_cur.append(inherit_key)
 
     def get_package_format_json(self, package_name):
         pacakge_json = self.get_package(package_name)
