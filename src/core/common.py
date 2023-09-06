@@ -187,10 +187,13 @@ def format_top(k, v, format_json, raw_json):
     if k.startswith("top."):
         k = k.replace("top.", "")
         if "defineFlags." in k:
+            if not isinstance(v, dict):
+                format_json.setdefault(k, v)
+                return
             compile_name = ""
             option = ""
             for param, val in v.items():
-                if re.fullmatch("configure\w*\.(options|vars)", param):
+                if re.fullmatch("(configure|cmake|make)\w*\.(options|vars)", param):
                     compile_name = param.split(".")[0]
                     option = val
                     break
