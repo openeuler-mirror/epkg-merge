@@ -52,7 +52,7 @@ def expand_yaml(val, prefix: str = None, implicit_fields: Dict[str, str] = None)
 
 def expand_yaml(val, prefix: str = None, implicit_fields: Dict[str, str] = None) -> dict:
     if isinstance(val, dict):
-        if prefix is not None and re.fullmatch("pkgs\.\w+\.defineFlags\.[\w-]+", prefix):
+        if prefix is not None and re.fullmatch("(pkgs\.\w+|top)\.defineFlags\.[\w-]+", prefix):
             if "when" in val:
                 prefix += " when {0}".format(val.get("when"))
                 del val["when"]
