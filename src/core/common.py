@@ -219,7 +219,7 @@ format_funcs = {
     "runtimePhase": format_phase,
     "meta": format_meta,
     "build": format_compile_flags,
-    "top": format_compile_flags,
+    "top": format_top,
 }
 
 

@@ -241,11 +241,12 @@ class SpecWriter:
                 if isinstance(value, bool):
                     if compile_type == "cmake":
                         value = "ON" if value else "OFF"
-                    elif compile_type == "configure" and value in ["no", "false"]:
+                    elif compile_type == "configure" and value is False:
                         flag = flag.replace("enable", "disable").replace("--with-", "--without-")
-                value = "=" + str(value)
-                if compile_type == "configure" and value in ["yes", "no", "true", "false"]:
-                    value = ""
+                tmp_value = "=" + str(value)
+                if compile_type == "configure" and isinstance(value, bool):
+                    tmp_value = ""
+                value = tmp_value
                 if " rpmWhen " in flag:
                     base_key = flag.split(" rpmWhen ")[0]
                     conditions = flag.split(" rpmWhen ")[1:]
