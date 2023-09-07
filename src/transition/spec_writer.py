@@ -225,16 +225,32 @@ class SpecWriter:
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
         compile_type = ""
+        need_add_configure = False
         for main_field in self.metadata.copy():
             if not re.fullmatch("build\.(configure|cmake|make)\w*\.flags", main_field):
                 continue
             compile_type = re.findall("build\.(configure|cmake|make)\w*\.flags", main_field)[0]
             func_name = "phase." + main_field.split(".")[1]
-            if func_name not in self.metadata and compile_type != "make":
+            if func_name not in self.metadata and compile_type == "configure":
                 continue
             prefix = ""
             if compile_type == "cmake":
                 prefix = "-D"
+            elif compile_type == "configure":
+                configure_name = main_field.split(".")[1]
+                if f"phase.{configure_name}" in self.metadata:
+                    need_add_configure = True
+                    pre_add_configure_flags = """
+build_configure_flags=$(cat <<EOF{1}\
+%build_{0}_flags{1}\
+EOF{1}\
+}{1}""".format(configure_name, os.linesep)
+                    command = re.findall("\.*/configure", self.metadata[f"phase.{configure_name}"])[0]
+                    self.metadata[f"phase.{configure_name}"] = self.metadata[f"phase.{configure_name}"].replace(
+                        command, command + " $configure_options")
+                    self.metadata[f"phase.{configure_name}"] = self.metadata[f"phase.{configure_name}"].replace(
+                        "%{?add_configure_flags}",
+                        pre_add_configure_flags + os.linesep + "%{?add_configure_flags} " + command)
             flags = copy.deepcopy(self.metadata.get(main_field))
             flags_value = "%global {0} \\{1}".format(main_field.replace(".", "_"), os.linesep)
             for flag, value in flags.items():
@@ -260,7 +276,7 @@ class SpecWriter:
                 self.target_metadata.setdefault("rpmMacros", flags_value)
             else:
                 self.target_metadata["rpmMacros"] += flags_value
-        if compile_type == "configure" and "%{?add_configure_flags}" in self.metadata["phase.build"]:
+        if compile_type == "configure" and need_add_configure:
             with open(f"{template_path}/add_{compile_type}.tmpl", "r") as f:
                 add_function_text = f.read()
             self.target_metadata["rpmMacros"] += os.linesep + add_function_text + os.linesep

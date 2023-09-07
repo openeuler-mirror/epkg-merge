@@ -1,39 +1,57 @@
-%define add_configure_flags() \
-for line in `cat tmp_flags_files` ; do \
-  if [[ "$(echo $line | grep "=")" != "" ]];then \
-    cmd_key=`echo $line | cut -d "=" -f1` \
-    cmd_value=`echo $line | cut -d "=" -f1 -s --complement` \
-    if [[ "$(echo $line | grep "^()*")" == "" ]];then \
-      # --enable-shared=true \
-      key[${#key[*]}]=$cmd_key \
-      value[${#value[*]}]=$cmd_value \
-    else \
-      # (PACKAGE|FEATURE|capabilities|linux-caps|libcap|libcap-ng)=yes类佞~K﻾L佈~Y低»彎~I()佐~N﻾L以|佈~F佉²嬾X佅¥ \
-      cmd_key=`echo $cmd_key | sed -e 's/[()]//g'` \
-      key_split=(${cmd_key//|/ }) \
+%define add_configure_flags \
+function configure_flags_func() \
+{ \
+for line in $build_configure_flags ; do \
+  if [[ "$line" =~ "=" ]];then \
+    cmd_key="${line%%=*}"\
+    cmd_value="${line#*=}"\
+    if [[ "$line" =~ ^"(" ]] && [[ "$line" =~ ")"* ]];then \
+      # (PACKAGE|FEATURE|capabilities|linux-caps|libcap|libcap-ng)=yes类型，则去掉()后，以|分割存入 \
+      cmd_key="${cmd_key:1:-1}" \
+      key_split="${cmd_key//|/ }" \
       for var in ${key_split[*]} \
       do \
-        key[${#key[*]}]=$var \
-        value[${#value[*]}]=$cmd_value \
+        key[${#key[*]}]="$var" \
+        value[${#value[*]}]="$cmd_value" \
       done \
+    else \
+      # --enable-shared=true类型 \
+      key[${#key[*]}]="$cmd_key" \
+      value[${#value[*]}]="$cmd_value" \
     fi \
   else \
-      # --disable-static类佞~K \
-    key[${#key[*]}]=$line \
+    # --disable-static类型 \
+    key[${#key[*]}]="$line" \
     value[${#value[*]}]="" \
   fi \
 done \
-../configure --help > help.txt \
-compile_options='' \
-NUM=`expr ${#key[*]} - 1` \
-for i in $(seq 0 $NUM) ; do \
-  if [[ "$(grep '\\'${key[i]} help.txt)" != "" ]]; then \
+configure_help=$($1 --help) \
+configure_options='' \
+for(( i=0;i<${#key[*]};i++)) ; do \
+  if [[ "$configure_help" =~ ${key[i]} ]]; then \
     if [[ "${value[i]}" != "" ]]; then \
-      compile_options=$compile_options${key[i]}"="${value[i]}" " \
+      configure_options="$configure_options${key[i]}=${value[i]} " \
     else \
-      compile_options=$compile_options${key[i]}" " \
+      configure_options="$configure_options${key[i]} " \
+    fi \
+  else \
+    declare -A replacement_map \
+    replacement_map=( ["--enable-"]="--disable-" ["--disable-"]="--enable-" ["--with-"]="--without-" ["--without-"]="--with-" ) \
+    for item in "${replacement_map[@]}"; do \
+      if [[ "${key[i]}" == *$item* ]]; then \
+        tmp="${key[i]//$item/${replacement_map[$item]}}" \
+        break \
+      fi \
+    done \
+    if [[ "$configure_help" =~ $tmp ]]; then \
+      if [[ "${value[i]}" != "" ]]; then \
+        configure_options="$configure_options${key[i]}=${value[i]} " \
+      else \
+        configure_options="$configure_options${key[i]} " \
+      fi \
     fi \
   fi \
 done \
-echo $compile_options \
-%{nil}
+%{nil} \
+} \
+configure_flags_func $1
