@@ -238,7 +238,7 @@ class SpecWriter:
                 prefix = "-D"
             elif compile_type == "configure":
                 configure_name = main_field.split(".")[1]
-                if f"phase.{configure_name}" in self.metadata:
+                if f"phase.{configure_name}" in self.metadata and "./configure" in self.metadata[f"phase.{configure_name}"]:
                     need_add_configure = True
                     pre_add_configure_flags = """
 build_configure_flags=$(cat <<EOF{1}\
