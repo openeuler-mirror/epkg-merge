@@ -244,7 +244,7 @@ class SpecWriter:
 build_configure_flags=$(cat <<EOF{1}\
 %build_{0}_flags{1}\
 EOF{1}\
-}{1}""".format(configure_name, os.linesep)
+){1}""".format(configure_name, os.linesep)
                     command = re.findall("\.*/configure", self.metadata[f"phase.{configure_name}"])[0]
                     self.metadata[f"phase.{configure_name}"] = self.metadata[f"phase.{configure_name}"].replace(
                         command, command + " $configure_options")
