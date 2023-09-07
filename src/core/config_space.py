@@ -52,7 +52,7 @@ class InheritConfig:
 
 class ConfigSpace(dict):
     instance = None
-    fspath_loaded = set()
+    fspath_loaded = []
     checked_failed_keys = []
 
     @make_synchronized
@@ -86,15 +86,12 @@ class ConfigSpace(dict):
 
     def get_key(self, key):
         raw_key, fspath_list = get_key_fspath(key)
-        fspath_set = set()
-        if type(fspath_list) is list:
-            fspath_set = set(fspath_list)
-        fspath_set_not_loaded = fspath_set - ConfigSpace.fspath_loaded
-        if fspath_set_not_loaded:
-            for fspath in fspath_set_not_loaded:
-                # 文件已加载，但没有这个key
-                YamlLoader(raw_key, fspath).load()
-                ConfigSpace.fspath_loaded.add(fspath)
+        if isinstance(fspath_list, list):
+            for fspath in fspath_list:
+                # 如果文件不在加载列表中，则添加到加载列表
+                if fspath not in ConfigSpace.fspath_loaded:
+                    YamlLoader(raw_key, fspath).load()
+                    ConfigSpace.fspath_loaded.append(fspath)
         value = self.get_key_value(key)
         return value
 
