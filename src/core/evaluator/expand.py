@@ -12,14 +12,12 @@ def expand_macro(str_macro, fspath):
     from src.core.config_space import config_space
     str_macro += " "
     # patterns = [r'(%%%?{?(.+?)[}" "\s])', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
-    patterns = [r'(%%%?{?(.+?)[}" "\s])', r'(@([.\d]*:?[.\d]*))', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
+    patterns = [r'(%%%?{?(.+?)[}" "\s])', r'(@([-+.\d]*:?[-+.\d]*))', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
     if is_pycode(str_macro):
         patterns.append(r'(dd?\.(.+?)[" "\s])')
     macro_keys = {}
     cspath = config_space.get_key(f"files.\"{fspath}\".cspath")
-    for p_index, pattern in enumerate(patterns):
-        if p_index == 1 and " when " not in str_macro:
-            continue
+    for pattern in patterns:
         for match in re.findall(pattern, str_macro):
             macro_keys[match[0].strip()] = match[1]
     str_macro = str_macro[0:-1]
@@ -123,7 +121,7 @@ def load_top_yaml_info(fspath, cspath, package):
 
 def parse_version_expression(expression, cspath):
     from src.core.config_space import config_space
-    version = config_space.get(f"{cspath}.version")
+    version = config_space.get_key(f"{cspath}.version")
     if version is None:
         return False
     while True:
