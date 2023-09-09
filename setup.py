@@ -30,7 +30,7 @@ for rel_path, target_dir in target_dirs.items():
 # python3 setup.py bdist_wheel
 setup(
     name="merge-configs",
-    version="0.1.0",
+    version="0.1.1",
     packages=find_packages(),
     description="...",
     license="MulanPSL-2.0+",

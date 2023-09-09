@@ -1,3 +1,7 @@
+2023.09.09 v0.1.1:
+1、更新build.cflags为叠加
+2、更新build.cc为替换
+
 2023.08.15 v0.1.0:
 1、自动生成index.yaml
 2、package.yaml替换$pkg.yaml

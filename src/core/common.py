@@ -178,9 +178,12 @@ def format_compile_flags(k, v, format_json, raw_json):
         config_key_name = k.split(".")[1]
         format_json.setdefault(config_key_name, {"ARCH": ARCH_SYS.get(config_space.arch, config_space.arch)}) \
             .setdefault(key, v)
-    elif re.match("build\.(" + ("|".join(list(BASE_FLAGS.keys()))) + ")", k):
+    elif re.match("build\.(" + ("|".join(list(BASE_FLAGS_CANTACT.keys()))) + ")", k):
         key = k.split(".")[-1]
-        format_json.setdefault("rpmGlobal", {}).setdefault(BASE_FLAGS.get(key, key), "\"%{?" + BASE_FLAGS.get(key, key) + "} " + v + "\"")
+        format_json.setdefault("rpmGlobal", {}).setdefault(BASE_FLAGS_CANTACT.get(key, key), "%{?" + BASE_FLAGS_CANTACT.get(key, key) + "} " + v)
+    elif re.match("build\.(" + ("|".join(list(BASE_FLAGS_REPLACE.keys()))) + ")", k):
+        key = k.split(".")[-1]
+        format_json.setdefault("rpmGlobal", {}).setdefault(BASE_FLAGS_REPLACE.get(key, key),  v )
 
 
 def format_top(k, v, format_json, raw_json):
