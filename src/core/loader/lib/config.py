@@ -9,12 +9,15 @@ ARCH_SYS: dict = {
     "alpha": "alpha",
 }
 
-BASE_FLAGS = {
+BASE_FLAGS_CANTACT = {
     "optflags": "optflags",
     "cflags": "build_cflags",
     "cxxflags": "build_cxxflags",
     "fflags": "build_fflags",
     "ldflags": "build_ldflags",
+}
+
+BASE_FLAGS_REPLACE = {
     "cc": "__cc",
     "cpp": "__cpp",
     "cxx": "__cxx",
