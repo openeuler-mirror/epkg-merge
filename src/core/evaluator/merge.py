@@ -25,6 +25,8 @@ def cmp(v_left, v_right):
     v_right_layername = config_space.get_key(f"files.\"{v_right_fspath}\".cspath")
     if v_left_layername < v_right_layername:
         return 1
+    elif v_left_layername == v_right_layername:
+        return 0
     else:
         return -1
 
