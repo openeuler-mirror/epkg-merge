@@ -96,6 +96,9 @@ $when_str_keys('Group', 'group')
 #if 'license' in $metadata
 $when_str_keys('License', 'license')
 #end if
+#if "buildRoot" in $metadata
+$when_str_keys('BuildRoot', 'buildRoot')
+#end if
 #if "exclusiveArch" in $metadata
 $when_list_keys('ExclusiveArch', 'exclusiveArch')
 #end if
@@ -139,10 +142,6 @@ $parse_when($condition)
 $print_endif($condition)
 #end if
 #end for
-#end if
-
-#if "buildRoot" in $metadata
-$when_list_keys('BuildRoot','buildRoot')
 #end if
 
 #if "recommends" in $metadata

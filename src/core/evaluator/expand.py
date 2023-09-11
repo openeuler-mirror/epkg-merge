@@ -17,8 +17,10 @@ def expand_macro(str_macro, fspath):
         patterns.append(r'(dd?\.(.+?)[" "\s])')
     macro_keys = {}
     cspath = config_space.get_key(f"files.\"{fspath}\".cspath")
-    for pattern in patterns:
+    for p_index, pattern in enumerate(patterns):
         for match in re.findall(pattern, str_macro):
+            if p_index == 1 and not re.search("\d", match[1]):
+                continue
             macro_keys[match[0].strip()] = match[1]
     str_macro = str_macro[0:-1]
     sub_values = {}
