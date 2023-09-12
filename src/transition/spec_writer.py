@@ -238,6 +238,8 @@ class SpecWriter:
             if compile_type == "cmake":
                 prefix = "-D"
                 break_line = "\\\\\\"
+            elif compile_type == "make":
+                break_line = "\\\\\\"
             elif compile_type == "configure":
                 configure_name = main_field.split(".")[1]
                 if f"phase.{configure_name}" in self.metadata and "./configure" in self.metadata[f"phase.{configure_name}"]:
@@ -254,7 +256,7 @@ EOF{1}\
                         "%{?add_configure_flags}",
                         pre_add_configure_flags + os.linesep + "%{?add_configure_flags} " + command)
             flags = copy.deepcopy(self.metadata.get(main_field))
-            flags_value = "%global {0} \\{1}".format(main_field.replace(".", "_"), os.linesep)
+            flags_value = "%global {0} {break_line}{1}".format(main_field.replace(".", "_"), os.linesep)
             for flag, value in flags.items():
                 if isinstance(value, bool):
                     if compile_type == "cmake":
