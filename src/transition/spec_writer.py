@@ -256,7 +256,7 @@ EOF{1}\
                         "%{?add_configure_flags}",
                         pre_add_configure_flags + os.linesep + "%{?add_configure_flags} " + command)
             flags = copy.deepcopy(self.metadata.get(main_field))
-            flags_value = "%global {0} {break_line}{1}".format(main_field.replace(".", "_"), os.linesep)
+            flags_value = "%global {0} {1}{2}".format(main_field.replace(".", "_"), break_line, os.linesep)
             for flag, value in flags.items():
                 if isinstance(value, bool):
                     if compile_type == "cmake":
