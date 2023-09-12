@@ -63,6 +63,9 @@ class _LayerConfigLoader:
         self._load_pkgs_index_yaml(pkgs_dir)
 
     def _load_pkgs_index_yaml(self, pkgs_dir: str) -> None:
+        index_yaml = os.path.join(pkgs_dir, str(Config.INDEX.value))
+        if not os.path.exists(index_yaml):
+            index_yaml = os.path.join(etc_path, str(Config.INDEX.value))
         index_yaml = os.path.join(etc_path, str(Config.INDEX.value))
         index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
         pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
