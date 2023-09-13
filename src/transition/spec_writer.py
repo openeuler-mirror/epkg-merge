@@ -280,10 +280,6 @@ EOF{1}\
                 self.target_metadata.setdefault("rpmMacros", flags_value)
             else:
                 self.target_metadata["rpmMacros"] += flags_value
-        if compile_type == "configure" and need_add_configure:
-            with open(f"{template_path}/add_{compile_type}.tmpl", "r") as f:
-                add_function_text = f.read()
-            self.target_metadata["rpmMacros"] += os.linesep + add_function_text + os.linesep
 
     def parse_config_settings(self):
         for config_name, config_path in CONFIG_SET_FILES.items():
