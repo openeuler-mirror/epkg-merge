@@ -234,8 +234,12 @@ class SpecWriter:
             if func_name not in self.metadata and compile_type == "configure":
                 continue
             prefix = ""
+            break_line = "\\"
             if compile_type == "cmake":
                 prefix = "-D"
+                break_line = "\\\\\\"
+            elif compile_type == "make":
+                break_line = "\\\\\\"
             elif compile_type == "configure":
                 configure_name = main_field.split(".")[1]
                 if f"phase.{configure_name}" in self.metadata and "./configure" in self.metadata[f"phase.{configure_name}"]:
@@ -252,7 +256,7 @@ EOF{1}\
                         "%{?add_configure_flags}",
                         pre_add_configure_flags + os.linesep + "%{?add_configure_flags} " + command)
             flags = copy.deepcopy(self.metadata.get(main_field))
-            flags_value = "%global {0} \\{1}".format(main_field.replace(".", "_"), os.linesep)
+            flags_value = "%global {0} {1}{2}".format(main_field.replace(".", "_"), break_line, os.linesep)
             for flag, value in flags.items():
                 if isinstance(value, bool):
                     if compile_type == "cmake":
@@ -268,9 +272,9 @@ EOF{1}\
                     conditions = flag.split(" rpmWhen ")[1:]
                     for condition in conditions:
                         flags_value += f'%if {condition} \\{os.linesep}'
-                    flags_value += f"    {prefix}{base_key}{value} \\{os.linesep}" + f"%endif \\{os.linesep}" * len(conditions)
+                    flags_value += f"    {prefix}{base_key}{value} {break_line}{os.linesep}" + f"%endif \\{os.linesep}" * len(conditions)
                 else:
-                    flags_value += f"    {prefix}{flag}{value} \\{os.linesep}"
+                    flags_value += f"    {prefix}{flag}{value} {break_line}{os.linesep}"
             flags_value = flags_value.rstrip().rstrip("\\").rstrip() + os.linesep
             if "rpmMacros" not in self.target_metadata:
                 self.target_metadata.setdefault("rpmMacros", flags_value)
