@@ -248,7 +248,7 @@ class SpecWriter:
                     if f"build.{configure_name}.flags" in self.metadata and \
                             "%{?add_configure_flags}" not in self.metadata[f"phase.{configure_name}"]:
                         self.metadata[f"phase.{configure_name}"] = self.metadata[f"phase.{configure_name}"].replace(
-                            command, "%{?add_configure_flags}" + command)
+                            command, "%{?add_configure_flags} " + command)
             flags = copy.deepcopy(self.metadata.get(main_field))
             flags_value = "%global {0} {1}{2}".format(main_field.replace(".", "_"), break_line, os.linesep)
             for flag, value in flags.items():
