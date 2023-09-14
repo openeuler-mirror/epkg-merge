@@ -135,6 +135,12 @@ def format_define_flags(k, v, format_json, raw_json):
             return
         condition = v.get("when", "")
         default = v.get("default", "")
+        build_requires = v.get("buildRequires", "")
+        if build_requires != "":
+            for build_require in build_requires.split():
+                if "buildRequires" in format_json and build_require not in format_json["buildRequires"] or \
+                        "buildRequires" not in format_json:
+                    format_json.setdefault('buildRequires', []).append(build_require)
         if "options" in param and "=" in val:
             option, default = val.split("=", 1)
         if condition:

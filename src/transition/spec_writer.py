@@ -242,19 +242,13 @@ class SpecWriter:
                 break_line = "\\\\\\"
             elif compile_type == "configure":
                 configure_name = main_field.split(".")[1]
-                if f"phase.{configure_name}" in self.metadata and "./configure" in self.metadata[f"phase.{configure_name}"]:
-                    need_add_configure = True
-                    pre_add_configure_flags = """
-build_configure_flags=$(cat <<EOF{1}\
-%build_{0}_flags{1}\
-EOF{1}\
-){1}""".format(configure_name, os.linesep)
-                    command = re.findall("\.*/configure", self.metadata[f"phase.{configure_name}"])[0]
-                    self.metadata[f"phase.{configure_name}"] = self.metadata[f"phase.{configure_name}"].replace(
-                        command, command + " $configure_options")
-                    self.metadata[f"phase.{configure_name}"] = self.metadata[f"phase.{configure_name}"].replace(
-                        "%{?add_configure_flags}",
-                        pre_add_configure_flags + os.linesep + "%{?add_configure_flags} " + command)
+                if f"phase.{configure_name}" in self.metadata and \
+                        re.search("^\.+/configure", self.metadata[f"phase.{configure_name}"]):
+                    command = re.findall("^\.+/configure", self.metadata[f"phase.{configure_name}"])[0]
+                    if f"build.{configure_name}.flags" in self.metadata and \
+                            "%{?add_configure_flags}" not in self.metadata[f"phase.{configure_name}"]:
+                        self.metadata[f"phase.{configure_name}"] = self.metadata[f"phase.{configure_name}"].replace(
+                            command, "%{?add_configure_flags} " + command)
             flags = copy.deepcopy(self.metadata.get(main_field))
             flags_value = "%global {0} {1}{2}".format(main_field.replace(".", "_"), break_line, os.linesep)
             for flag, value in flags.items():
@@ -280,10 +274,6 @@ EOF{1}\
                 self.target_metadata.setdefault("rpmMacros", flags_value)
             else:
                 self.target_metadata["rpmMacros"] += flags_value
-        if compile_type == "configure" and need_add_configure:
-            with open(f"{template_path}/add_{compile_type}.tmpl", "r") as f:
-                add_function_text = f.read()
-            self.target_metadata["rpmMacros"] += os.linesep + add_function_text + os.linesep
 
     def parse_config_settings(self):
         for config_name, config_path in CONFIG_SET_FILES.items():
