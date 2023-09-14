@@ -4,95 +4,45 @@
 import re
 import yaml
 from distutils.version import LooseVersion
-from src.core.common import is_pycode
+
 from src.core.constant.tokens import NOT_EXIST
 from src.core.loader.lib.enums import ImportConfig
+from src.core.lib.utils import eval_python, parse_version_expression
 
-def expand_macro(str_macro, fspath):
+
+def get_version_value(v, cspath):
+    if ":" not in v:
+        v = f"version=={v}"
+    elif v.startswith(":"):
+        v = f"version<={v.lstrip(':')}"
+    elif v.endswith(":"):
+        v = f"version>={v.rstrip(':')}"
+    else:
+        v = v.replace(":", "<=version<=")
+
+    return parse_version_expression(v, cspath)
+
+
+def get_macro_values(v, cspath):
     from src.core.config_space import config_space
-    str_macro += " "
-    # patterns = [r'(%%%?{?(.+?)[}" "\s])', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
-    patterns = [r'(%%%?{?(.+?)[}" "\s])', r'(@([-+.\d]*:?[-+.\d]*))', '(\${{([-.\(\)\[\]\\\'\\"\w]+)}})']
-    if is_pycode(str_macro):
-        patterns.append(r'(dd?\.(.+?)[" "\s])')
-    macro_keys = {}
-    cspath = config_space.get_key(f"files.\"{fspath}\".cspath")
-    for p_index, pattern in enumerate(patterns):
-        for match in re.findall(pattern, str_macro):
-            if p_index == 1 and not re.search("\d", match[1]):
-                continue
-            macro_keys[match[0].strip()] = match[1]
-    str_macro = str_macro[0:-1]
-    sub_values = {}
-    for k, v in macro_keys.items():
-        if not k.startswith("%%%") and k.startswith("%%"):
-            v = f"{cspath}.{v}"
-        if k.startswith("@") and re.search("\d", v):
-            if ":" not in v:
-                v = f"version=={v}"
-            elif v.startswith(":"):
-                v = f"version<={v.lstrip(':')}"
-            elif v.endswith(":"):
-                v = f"version>={v.rstrip(':')}"
-            else:
-                v = v.replace(":", "<=version<=")
-        if not k.startswith("dd") and k.startswith("d"):
-            v = f"{cspath}.{v}"
-        if k.startswith("${{") and k.endswith("}}"):
-            if k.startswith("${{rpmrc."):
-                v = v.replace("rpmrc.", "rpmGlobal.")
-            elif k.startswith("${{pkg.") or k.startswith("${{pkg["):
-                if re.fullmatch(ImportConfig.PKG_HAS.value, k):
-                    find_keywords = re.findall(ImportConfig.PKG_HAS.value, k)[0]
-                    keywords = find_keywords[1]
-                    if re.fullmatch("[\"\'].+[\"\']", keywords):
-                        keywords = keywords[1:-1]
-                    v = f"pkg.{keywords}" in config_space
-                elif re.fullmatch(ImportConfig.PKG_GET.value, k):
-                    find_keywords = re.findall(ImportConfig.PKG_GET.value, k)[0]
-                    keywords = find_keywords[1]
-                    if re.fullmatch("[\"\'].+[\"\']", keywords):
-                        keywords = keywords[1:-1]
-                    v = f"{cspath}.{keywords}"
-                elif re.fullmatch(ImportConfig.PKG_KEY.value, k):
-                    find_keywords = re.findall(ImportConfig.PKG_KEY.value, k)[0]
-                    keywords = find_keywords[1]
-                    if re.fullmatch("[\"\'].+[\"\']", keywords):
-                        keywords = keywords[1:-1]
-                    v = f"{cspath}.{keywords}"
-                else:
-                    v = v.replace("pkg.", f"{cspath}.")
-            elif k.startswith("${{top[") or k.startswith("${{top."):
-                if re.fullmatch(ImportConfig.TOP_KEY.value, k):
-                    find_keywords = re.findall(ImportConfig.TOP_KEY.value, k)[0]
-                    keywords = find_keywords[1]
-                    if "." not in keywords:
-                        raise Exception("error format in %s" % k)
-                    v = f"top.{keywords}"
-                    if v not in config_space:
-                        load_top_yaml_info(fspath, cspath, keywords.split(".")[1])
-                elif re.fullmatch(ImportConfig.TOP_HAS.value, k):
-                    find_keywords = re.findall(ImportConfig.TOP_KEY.value, k)[0]
-                    keywords = find_keywords[1]
-                    if re.fullmatch("[\"\'].+[\"\']", keywords):
-                        keywords = keywords[1:-1]
-                    v = f"top.{keywords}" in config_space
-            else:
-                v = f"{cspath}.{v}"
-        if isinstance(v, bool):
-            sub_values[k] = str(v).lower()
-        else:
-            sub_values[k] = config_space.get_key(v)
-
-        # defineFlags只需要看 是否真的能够获取到值，如果获取到说明是存在的
-        if ("defineFlags.+" in k) or ("defineFlags.-" in k):
-            if sub_values[k] == NOT_EXIST:
-                sub_values[k] = False
-            else:
-                sub_values[k] = True
-        elif k.startswith("@") and "version" in v:
-            sub_values[k] = parse_version_expression(v, cspath)
-    return substitute(str_macro, sub_values)
+    # ${{ xxx  }} 其中xxx 可能是多个语句，需要隔离并提取其中top和pkg部分
+    # 先替换top, 在替换pkg
+    rc_match = re.findall(ImportConfig.RC_VAL.value, v)
+    for temp_match in rc_match:
+        cspath_pkg_key = temp_match.replace("rpmrc.", "rpmGlobal.", 1)
+        v = v.replace(temp_match, config_space.get_key(cspath_pkg_key))
+    top_match = re.findall(ImportConfig.TOP_VAL.value, v)
+    for temp_match in top_match:
+        cspath_pkg_key = temp_match.replace("top.", "", 1)
+        v = v.replace(temp_match, config_space.get_key(cspath_pkg_key))
+    pkg_match = re.findall(ImportConfig.PKG_VAL.value, v)
+    for temp_match in pkg_match:
+        cspath_pkg_key = temp_match.replace("pkg.", cspath + ".", 1)
+        key_value = config_space.get_key(cspath_pkg_key)
+        if key_value == NOT_EXIST and ".defineFlags." in cspath_pkg_key:
+            key_value = "False"
+        v = v.replace(temp_match, key_value)
+    return v
 
 
 def substitute(str_macro, sub_values):
@@ -102,6 +52,35 @@ def substitute(str_macro, sub_values):
     for sub_value in sorted_sub_values:
         str_macro = str_macro.replace(sub_value[0], str(sub_value[1]))
     return str_macro
+
+
+def expand_macro(str_macro, fspath):
+    from src.core.config_space import config_space
+    str_macro += " "
+    macro_keys = {}
+    sub_values = {}
+    cspath = config_space.get_key(f"files.\"{fspath}\".cspath")
+
+    patterns = [r'(\${{(.+?)}})', r'(@([-+.\d]*:?[-+.\d]*))']
+    for p_index, pattern in enumerate(patterns):
+        for match in re.findall(pattern, str_macro):
+            if p_index == 1 and not re.search("\d", match[1]):
+                continue
+            macro_keys[match[0].strip()] = match[1]
+    str_macro = str_macro[0:-1]
+
+    for k, v in macro_keys.items():
+        if k.startswith("@") and re.search("\d", v):
+            v = get_version_value(v, cspath)
+            # sub_values[k] = v
+        if k.startswith("${{") and k.endswith("}}"):
+            v = get_macro_values(v, cspath)
+            v = eval_python(v)
+            # sub_values[k] = v
+
+        sub_values[k] = str(v)
+
+    return substitute(str_macro, sub_values)
 
 
 def load_top_yaml_info(fspath, cspath, package):
@@ -121,29 +100,47 @@ def load_top_yaml_info(fspath, cspath, package):
         config_space.add_key(f"top.pkgs.{package}.{k}", v, package_fspath)
 
 
-def parse_version_expression(expression, cspath):
+def _old_parse():
     from src.core.config_space import config_space
-    version = config_space.get_key(f"{cspath}.version")
-    if version is None:
-        return False
-    while True:
-        if re.fullmatch("%\{?\W?(\w+)}?", version):
-            base_param = re.findall("%\{?\W?(\w+)}?", version)[0]
-            version = config_space.get(f"{cspath}.rpmGlobal.{base_param}")
-        elif re.fullmatch("$\{\{rpmGlobal\.(\s+)}}", version):
-            base_param = re.findall("$\{\{rpmGlobal\.(\s+)}}", version)[0]
-            version = config_space.get(f"{cspath}.rpmGlobal.{base_param}")
+    k = ""
+    v = ""
+    cspath = ""
+    fspath = ""
+    if k.startswith("${{rpmrc."):
+        v = v.replace("rpmrc.", "rpmGlobal.")
+    elif k.startswith("${{pkg.") or k.startswith("${{pkg["):
+        if re.fullmatch(ImportConfig.PKG_HAS.value, k):
+            find_keywords = re.findall(ImportConfig.PKG_HAS.value, k)[0]
+            keywords = find_keywords[1]
+            if re.fullmatch("[\"\'].+[\"\']", keywords):
+                keywords = keywords[1:-1]
+            v = f"pkg.{keywords}" in config_space
+        elif re.fullmatch(ImportConfig.PKG_GET.value, k):
+            find_keywords = re.findall(ImportConfig.PKG_GET.value, k)[0]
+            keywords = find_keywords[1]
+            if re.fullmatch("[\"\'].+[\"\']", keywords):
+                keywords = keywords[1:-1]
+            v = f"{cspath}.{keywords}"
+        elif re.fullmatch(ImportConfig.PKG_KEY.value, k):
+            find_keywords = re.findall(ImportConfig.PKG_KEY.value, k)[0]
+            keywords = find_keywords[1]
+            if re.fullmatch("[\"\'].+[\"\']", keywords):
+                keywords = keywords[1:-1]
+            v = f"{cspath}.{keywords}"
         else:
-            break
-    if "==" in expression:
-        target_version = expression.split("==")[1]
-        return version == target_version
-    elif ">=" in expression:
-        target_version = LooseVersion(expression.split(">=")[1])
-        return LooseVersion(version) >= target_version
-    elif expression.startswith("version<="):
-        target_version = LooseVersion(expression.split("<=")[1])
-        return LooseVersion(version) <= target_version
-    else:
-        least_version, _, largest_version = expression.split("<=")
-        return LooseVersion(least_version) <= LooseVersion(version) <= LooseVersion(largest_version)
+            v = v.replace("pkg.", f"{cspath}.")
+    elif k.startswith("${{top[") or k.startswith("${{top."):
+        if re.fullmatch(ImportConfig.TOP_KEY.value, k):
+            find_keywords = re.findall(ImportConfig.TOP_KEY.value, k)[0]
+            keywords = find_keywords[1]
+            if "." not in keywords:
+                raise Exception("error format in %s" % k)
+            v = f"top.{keywords}"
+            if v not in config_space:
+                load_top_yaml_info(fspath, cspath, keywords.split(".")[1])
+        elif re.fullmatch(ImportConfig.TOP_HAS.value, k):
+            find_keywords = re.findall(ImportConfig.TOP_KEY.value, k)[0]
+            keywords = find_keywords[1]
+            if re.fullmatch("[\"\'].+[\"\']", keywords):
+                keywords = keywords[1:-1]
+            v = f"top.{keywords}" in config_space
