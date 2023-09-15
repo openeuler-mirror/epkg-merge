@@ -1,0 +1,14 @@
+files: |
+    %license COPYING
+    %doc BUGS README.md 00-RELEASENOTES MANIFESTO CONTRIBUTING
+    %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
+    %attr(0640, redis, root) %config(noreplace) %{_sysconfdir}/%{name}.conf
+    %attr(0640, redis, root) %config(noreplace) %{_sysconfdir}/%{name}-sentinel.conf
+    %dir %attr(0750, redis, redis) %{_libdir}/%{name}
+    %dir %attr(0750, redis, redis) %{_libdir}/%{name}/modules
+    %dir %attr(0750, redis, redis) %{_sharedstatedir}/%{name}
+    %dir %attr(0750, redis, redis) %{_localstatedir}/log/%{name}
+    %{_bindir}/%{name}-*
+    %{_unitdir}/%{name}.service
+    %{_unitdir}/%{name}-sentinel.service
+

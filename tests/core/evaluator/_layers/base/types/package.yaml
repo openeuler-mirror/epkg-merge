@@ -1,0 +1,115 @@
+# type: key的变量类型
+# doc: 说明
+# example: 样例
+# checkFunc: 测试脚本
+# checkParams: 检测参数
+# mergeFunc: 合并函数
+# mergeParams: 合并函数参数
+# transformFunc: 转换函数
+# transformParams: 转换函数参数
+
+types.path:type: str
+types.path:doc: filesystem path name
+types.path:example: pkgs/bash/bash.yaml
+types.path:checkFunc: is_path
+types.path:mergeFunc: is_path
+
+types.PATH:type: str
+types.PATH:checkFunc: is_PATH
+
+types.package:validSubkeys: |
+  name version versions release meta source patchset requires buildRequires
+  subpackage phase runtimePhase includePhase 
+  includeRuntimePhase includeLib files use env
+
+types.package.name:type: str
+types.package.name:doc: package's spec_name
+types.package.name:example: busybox
+types.package.name:checkFunc: is_str
+types.package.name:mergeFunc: merge_policy_first
+
+
+types.package.use.sqlite:example: True/False
+
+types.package.epoch:type: int
+types.package.epoch:checkFunc: is_between
+types.package.epoch:checkParams: "0,100"
+types.package.epoch:mergeFunc: merge_policy_first
+
+types.package.version:type: str
+types.package.version:checkFunc: is_version
+types.package.version:mergeFunc: merge_policy_first
+
+types.package.rpmMacros:type: str
+types.package.rpmMacros:checkFunc: is_str
+types.package.rpmMacros:mergeFunc: merge_policy_first
+
+types.package.release:type: str
+types.package.release:checkFunc: is_release
+types.package.release:mergeFunc: merge_policy_first
+
+types.package.meta.license:type: str
+types.package.meta.license:checkFunc: is_str
+
+types.package.meta:type: str
+types.package.meta:checkFunc: is_str
+
+types.package.meta.summary:type: str
+types.package.meta.summary:checkFunc: is_str
+
+types.package.phase:type: str
+types.package.phase:checkFunc: is_str
+types.package.phase:mergeFunc: merge_policy_concat
+types.package.phase:mergeParams: "\n"
+
+types.package.includePhase:type: str
+types.package.includePhase:mergeFunc: merge_policy_concat
+types.package.includePhase:mergeParams: "\n"
+
+types.package.source:type: str
+types.package.source:mergeFunc: merge_policy_concat
+
+types.package.patchset:type: str
+types.package.patchset:mergeFunc: merge_policy_concat
+
+types.package.buildRoot:type: list
+types.package.buildRoot:checkFunc: is_list
+types.package.buildRoot:mergeFunc: merge_policy_extend
+
+types.package.subpackage.devel.conflicts:type: list
+types.package.subpackage.devel.conflicts:checkFunc: is_list
+
+types.package.subpackage.devel.buildRequires:type: list
+types.package.subpackage.devel.buildRequires:checkFunc: is_list
+
+types.package.subpackage.help.requires:type: list
+types.package.subpackage.help.requires:checkFunc: is_list
+
+types.package.recommends:type: list
+types.package.recommends:checkFunc: is_list
+
+types.package.patchset.0:checkFunc: is_pattern
+types.package.patchset.0:checkParams: .*\.patch
+
+types.package.buildRequires:type: list
+types.package.buildRequires:checkFunc: is_list
+types.package.buildRequires:mergeFunc: merge_policy_pre_extend
+
+types.package.requires:type: list
+types.package.requires:checkFunc: is_list
+types.package.requires:mergeFunc: merge_policy_pre_extend
+
+types.package.files:type: str
+types.package.files:mergeFunc: merge_policy_concat
+types.package.files:mergeParams: "\n"
+
+types.package.files:rpm_macro_param:type: str
+types.package.files:rpm_macro_param:mergeFunc: merge_policy_concat
+types.package.files:rpm_macro_param:mergeParams: "\n"
+
+types.package.configureFlags:type: str
+types.package.configureFlags:mergeFunc: merge_policy_config_concat
+types.package.configureFlags:mergeParams: " \\\n"
+
+types.package.use.sqlite:type: bool
+types.package.use.sqlite:checkFunc: is_bool

@@ -4,7 +4,7 @@ import re
 
 from distutils.version import LooseVersion
 from src.log import log
-import core
+
 
 
 def version_compare():

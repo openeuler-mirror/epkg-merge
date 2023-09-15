@@ -45,7 +45,7 @@ def is_when(item):
     when_statement = ""
     try:
         when_statement = item.get("when")
-        when_value = convert_val(when_statement, fspath)
+        when_value = convert_val(when_statement, fspath, True)
     except Exception as _:
         log.error(f"expand {item.get('when')} failed!")
         when_value = str(False)
@@ -150,10 +150,10 @@ def merge_overrides(key, values):
     return temp_values
 
 
-def convert_val(val, fspath):
+def convert_val(val, fspath, is_when_statement=False):
     if type(val) is not str:
         return val
-    val_expanded = expand_macro(val, fspath)
+    val_expanded = expand_macro(val, fspath, is_when_statement)
     value = eval_val(val_expanded)
     return value
 
