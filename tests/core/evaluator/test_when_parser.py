@@ -109,7 +109,10 @@ class TestWhenParser(unittest.TestCase):
         self.assertEqual(parser.parse("not False or not (True and True)"), True)
         self.assertEqual(parser.parse("not False or not (True and False)"), True)
 
-
+    def test_parse_version(self):
+        self.assertEqual(parser.parse("4.2.1 <= 4.5.2"), True)
+        self.assertEqual(parser.parse("1.12 <= 1.2"), False)
+        # self.assertEqual(parser.parse("True and (False or False)"), False)
 
 
 if __name__ == '__main__':

@@ -6,12 +6,18 @@
 from ply.lex import lex
 from ply.yacc import yacc
 
+from distutils.version import LooseVersion
+
+from src.log import log
+
+
+
 # 定义词法分析器
 tokens = (
-    'NAME', 'NUMBER', 'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'EQUAL', 'EQUAL2',
+    'VERSION', 'NAME', 'NUMBER', 'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'EQUAL', 'EQUAL2',
     'LPAREN', 'RPAREN', 'GREATER', 'LESS', 'GREATER_EQUAL', 'LESS_EQUAL', 'NOT_EQUAL',
     'AND', 'AND2', 'OR', 'OR2', 'NOT', 'NOT2', 'STRING', 'LSQUARE', 'RSQUARE',
-    'IN', 'NOTIN', 'FALSE', 'TRUE'
+    'IN', 'NOTIN', 'FALSE', 'TRUE',
 )
 
 t_PLUS = r'\+'
@@ -82,6 +88,12 @@ def t_NAME(t):
     return t
 
 
+def t_VERSION(t):
+    r'[\d*\.]+[-+.\d]*'
+    t.type = 'VERSION'
+    return t
+
+
 def t_NUMBER(t):
     r'\d+'
     t.value = int(t.value)
@@ -94,7 +106,7 @@ def t_newline(t):
 
 
 def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
+    log.debug("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
 
@@ -115,7 +127,6 @@ precedence = (
     ('left', 'LSQUARE'),
     ('left', 'IN'),
     ('left', 'NOTIN'),
-
 )
 
 
@@ -160,14 +171,19 @@ def p_expression_binop(p):
         else:
             p[0] = p[1] / p[3]
     elif p[2] == '>':
+        p[1], p[3] = convert(p[1], p[3])
         p[0] = p[1] > p[3]
     elif p[2] == '<':
+        p[1], p[3] = convert(p[1], p[3])
         p[0] = p[1] < p[3]
     elif p[2] == '>=':
+        p[1], p[3] = convert(p[1], p[3])
         p[0] = p[1] >= p[3]
     elif p[2] == '<=':
+        p[1], p[3] = convert(p[1], p[3])
         p[0] = p[1] <= p[3]
     elif p[2] == '=' or p[2] == '==':
+        p[1], p[3] = convert(p[1], p[3])
         p[0] = p[1] == p[3]
     elif p[2] == 'and' or p[2] == '&&':
         p[0] = p[1] and p[3]
@@ -177,6 +193,11 @@ def p_expression_binop(p):
         p[0] = not p[2]
     elif p[2] == '!=':
         p[0] = (p[1] != p[3])
+
+def convert(p1,p2):
+    if type(p1)==type(p2):
+        return p1, p2
+    return str(p1), str(p2)
 
 
 def p_expression_uminus(p):
@@ -194,6 +215,34 @@ def p_expression_group(p):
 
 def p_expression_number(p):
     '''expression : NUMBER'''
+    p[0] = p[1]
+
+
+def p_expression_version_binop(p):
+    '''expression :  expression_version GREATER expression_version
+                  | expression_version LESS expression_version
+                  | expression_version GREATER_EQUAL expression_version
+                  | expression_version LESS_EQUAL expression_version
+                  | expression_version EQUAL expression_version
+                  | expression_version EQUAL2 expression_version
+                  | expression_version NOT_EQUAL expression_version'''
+
+    p[1] = LooseVersion(p[1])
+    p[3] = LooseVersion(p[3])
+    if p[2] == '>':
+        p[0] = p[1] > p[3]
+    elif p[2] == '<':
+        p[0] = p[1] < p[3]
+    elif p[2] == '>=':
+        p[0] = p[1] >= p[3]
+    elif p[2] == '<=':
+        p[0] = p[1] <= p[3]
+    elif p[2] == '=' or p[2] == '==':
+        p[0] = p[1] == p[3]
+
+
+def p_expression_version(p):
+    '''expression_version : VERSION'''
     p[0] = p[1]
 
 
@@ -254,7 +303,7 @@ def p_expression_notin(p):
 
 
 def p_error(p):
-    print("Syntax error in input!")
+    log.debug("Syntax error in input! {}".format(str(p)))
 
 
 parser = yacc()

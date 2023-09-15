@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
-from src.core.evaluator.lib.merge_funcs import get_merge_func
 from functools import cmp_to_key
-from src.core.evaluator.expand import expand_macro
-from src.core.common import is_pycode, eval_python
-from src.core.evaluator.lib.merge_funcs import sort_doctype
+
 from src.log import log
+from src.core.evaluator.lib.merge_funcs import get_merge_func
+from src.core.evaluator.expand import expand_macro
+from src.core.common import is_pycode
+from src.core.lib.utils import eval_python
+from src.core.evaluator.lib.merge_funcs import sort_doctype
 from src.core.evaluator.parser.when_parser import parser
 from src.core.constant.tokens import NOT_EXIST
 
@@ -43,15 +45,17 @@ def is_when(item):
     when_statement = ""
     try:
         when_statement = item.get("when")
-        when_value = get_val(when_statement, fspath)
+        when_value = convert_val(when_statement, fspath)
     except Exception as _:
         log.error(f"expand {item.get('when')} failed!")
-        when_value = False
+        when_value = str(False)
 
     if when_value == NOT_EXIST:
         return False
 
     if when_statement:
+        log.info("when expression: {}".format(when_value))
+        print(when_value)
         when_result = parser.parse(when_value)
         if not when_result or str(when_result).upper() == "FALSE":
             return False

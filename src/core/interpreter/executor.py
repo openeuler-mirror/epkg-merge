@@ -28,7 +28,7 @@ def exec_code(py_code) -> str:
         result = eval(py_code)
     except Exception as e:
         result = e
-        return result
+        return py_code
     else:
         return result
 

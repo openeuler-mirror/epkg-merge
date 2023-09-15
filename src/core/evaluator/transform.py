@@ -213,12 +213,11 @@ def transform_key_with_when(key_dict: dict) -> dict:
         when = ""
         for flag in when_statements:
             if flag.startswith("+") or flag.startswith("-"):
-                when = "{} %%defineFlags.{}".format(when, flag)
+                # format中{{ 会专户为{
+                when = "{} ${{{{ pkg.defineFlags.{} }}}}".format(when, flag)
             else:
                 when = "{} {}".format(when, flag.strip())
 
-            if "@version" in flag:
-                flag.replace("@version", "%%version")
         value["when"] = when.strip()
         res[real_key] = value
     return res
