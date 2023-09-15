@@ -44,6 +44,9 @@ def handle_output(package_name, content, output):
 
     for path in ConfigSpace.fspath_loaded:
         package_path, file_name = os.path.split(path)
+        # 不导入其他软件包的内容
+        if "/{}/".format(package_name) not in path:
+            continue
         if file_name == "package.yaml":
             sub_files = os.listdir(package_path)
             for sub_file in sub_files:
