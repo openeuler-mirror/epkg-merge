@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath("."))
 from src.log import log
 from src.core.interpreter.interpreter import StartUp
 from src.cli.cli_handler import handle_load, handle_output, handle_package
-
+import traceback
 
 def main():
     from src.core.config_space import config_space
@@ -28,7 +28,10 @@ def main():
     list_features_info = {}
     arch = args.get("arch", platform.machine())
     config_space.set_arch(arch)
-
+    out_path = os.path.join(os.getcwd(),"merge")
+    if args["output"]:
+        out_path = args["output"]
+    print(out_path)
     if args["list_features"]:
         for k in args["list_features"].split(","):
             list_features_info[k] = {}
@@ -48,11 +51,13 @@ def main():
         packages = args["packages"].split()
     else:
         packages = config_space["allPkgs"]
+    packages = sorted(packages)
     for package in packages:
+        print(package)
         log.info(f"==========parse package {package}===============")
         package_info = handle_package(package, config_space)
         if not list_features_info:
-            handle_output(package, package_info, args["output"])
+            handle_output(package, package_info, out_path)
             continue
         for k, v in package_info.items():
             if "use." in k:
@@ -68,4 +73,5 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
+        traceback.print_stack()
         print(e)

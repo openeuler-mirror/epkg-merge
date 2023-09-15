@@ -55,7 +55,6 @@ def is_when(item):
 
     if when_statement:
         log.info("when expression: {}".format(when_value))
-        print(when_value)
         when_result = parser.parse(when_value)
         if not when_result or str(when_result).upper() == "FALSE":
             return False
