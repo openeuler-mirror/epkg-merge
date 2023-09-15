@@ -54,14 +54,17 @@ def substitute(str_macro, sub_values):
     return str_macro
 
 
-def expand_macro(str_macro, fspath):
+def expand_macro(str_macro, fspath, is_when_statement=False):
     from src.core.config_space import config_space
     str_macro += " "
     macro_keys = {}
     sub_values = {}
     cspath = config_space.get_key(f"files.\"{fspath}\".cspath")
 
-    patterns = [r'(\${{(.+?)}})', r'(@([-+.\d]*:?[-+.\d]*))']
+    patterns = [r'(\${{(.+?)}})']
+    if is_when_statement:
+        patterns.append(r'(@([-+.\d]*:?[-+.\d]*))')
+
     for p_index, pattern in enumerate(patterns):
         for match in re.findall(pattern, str_macro):
             if p_index == 1 and not re.search("\d", match[1]):

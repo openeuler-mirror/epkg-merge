@@ -1,0 +1,45 @@
+meta:
+    summary: A persistent key-value database
+    homepage: "https://redis2.io"
+    description: |
+        Redis is an advanced key-value store. It is often referred to as a dattructure server since keys can contain strings, hashes
+        ,lists, sets anorted sets.
+name: redis2
+version: "4.0.14"
+release: 6
+license: BSD and MIT
+requires:
+    - "/bin/awk"
+    - "logrotate"
+requiresPre:
+    - "shadow-utils"
+requiresPreUn:
+    - "systemd"
+requiresPost:
+    - "systemd"
+requiresPostUn:
+    - "systemd"
+buildRequires:
+    - "systemd"
+    - "gcc"
+source:
+    0: http://download.redis2.io/releases/${{pkg.name}}-${{pkg.version}}.tar.gz
+    1: "${{pkg.name}}.logrotate"
+    2: "${{pkg.name}}-sentinel.service"
+    3: "${{pkg.name}}.service"
+
+patchset:
+    1 when @4.0.14: CVE-2020-14147.patch
+    2 when @4.0.14: improved-HyperLogLog-cardinality-estimation.patch
+    3 when @4.0.15: Aesthetic-changes-to-PR.patch
+#    4: CVE-2019-10193.patch
+#    5: modify-aarch64-architecture-jemalloc-page-size-from-4k-to-64k.patch
+#    6: huawei-deps-jemalloc-support-riscv.patch
+#    7: CVE-2021-21309.patch
+#    8: CVE-2021-3470.patch
+#    9: CVE-2021-29478.patch
+#    10: CVE-2021-32672.patch
+#    11: redis2-4.0.14-sw.patch
+#    12: CVE-2022-36021.patch
+#    13: CVE-2023-28856.patch
+#    14: CVE-2022-24834.patch
