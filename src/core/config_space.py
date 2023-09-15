@@ -170,7 +170,7 @@ class ConfigSpace(dict):
 
     def set_arch(self, arch="aarch64"):
         self.arch = arch
-        self["top.arch"] = arch
+        self["arch"] = arch
 
 
 config_space = ConfigSpace()

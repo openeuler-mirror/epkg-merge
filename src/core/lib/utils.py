@@ -14,6 +14,9 @@ def version_compare():
 def parse_version_expression(expression, cspath):
     from src.core.config_space import config_space
     version = config_space.get_key(f"{cspath}.version")
+    release = config_space.get_key(f"{cspath}.release")
+    if "-" in expression:
+        version = "{}-{}".format(version, release)
     if version is None:
         return False
     while True:

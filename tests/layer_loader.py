@@ -13,11 +13,12 @@ from src.core.interpreter.interpreter import StartUp
 from src.core.common import format_package_json
 
 current_dir = os.path.abspath(os.curdir)
-config_file = os.path.join(current_dir, "demo/config.yaml")
-LayerLoader(config_file).load("x86_64")
+# config_file = os.path.join(current_dir, "demo/config.yaml")
+config_file = r'/Users/duan/workspace/hperf/config.yaml'
+LayerLoader(config_file).load("aarch64")
 StartUp.startup(config_space)
-config_space.set_arch("x86_64")
-p = "qt5-qtbase"
+config_space.set_arch("aarch64")
+p = "gcc"
 x = config_space.get_package_format_json(p)
 import yaml
 

@@ -19,7 +19,6 @@ def get_version_value(v, cspath):
         v = f"version>={v.rstrip(':')}"
     else:
         v = v.replace(":", "<=version<=")
-
     return parse_version_expression(v, cspath)
 
 
@@ -39,9 +38,13 @@ def get_macro_values(v, cspath):
     for temp_match in pkg_match:
         cspath_pkg_key = temp_match.replace("pkg.", cspath + ".", 1)
         key_value = config_space.get_key(cspath_pkg_key)
-        if key_value == NOT_EXIST and ".defineFlags." in cspath_pkg_key:
-            key_value = "False"
-        v = v.replace(temp_match, key_value)
+        if ".defineFlags." in cspath_pkg_key:
+            if key_value == NOT_EXIST:
+                key_value = "False"
+            else:
+                key_value = "True"
+
+        v = v.replace(temp_match, str(key_value))
     return v
 
 
