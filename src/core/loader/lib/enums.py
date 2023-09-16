@@ -43,3 +43,4 @@ class ImportConfig(Enum):
     TOP_VAL = "(top[\.\'\"\\]*[\w]*)"
     PKG_VAL = "(pkg[\.\'\"\\]*[\w+-]*)"
     RC_VAL = "(rpmrc[\.\'\"\\]*[\w]*)"
+    RG_VAL = "(rpmGlobal[\.\'\"\\]*[\w]*)"
