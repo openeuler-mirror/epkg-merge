@@ -30,6 +30,12 @@ def get_macro_values(v, cspath):
     for temp_match in rc_match:
         cspath_pkg_key = temp_match.replace("rpmrc.", "rpmGlobal.", 1)
         v = v.replace(temp_match, config_space.get_key(cspath_pkg_key))
+
+    rc_match = re.findall(ImportConfig.RG_VAL.value, v)
+    for temp_match in rc_match:
+        cspath_pkg_key = temp_match
+        v = v.replace(temp_match, config_space.get_key(cspath_pkg_key))
+
     top_match = re.findall(ImportConfig.TOP_VAL.value, v)
     for temp_match in top_match:
         cspath_pkg_key = temp_match.replace("top.", "", 1)
