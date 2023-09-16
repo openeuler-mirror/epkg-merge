@@ -451,12 +451,12 @@ $print_script($script)
 #if $item['condition'] == ''
 %$trigger_name $item['param']
 $item['value']
-%end
+
 #else
 $parse_when($item['condition'])
 %$trigger_name $item['param']
 $item['value']
-%end
+
 $print_endif($item['condition'])
 #end if
 #end for

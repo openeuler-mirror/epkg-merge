@@ -40,7 +40,8 @@ LIST_KEYS = ('recommends',
              'buildConflicts',
              'provides',
              'conflicts',
-             'includeSource'
+             'includeSource',
+             'obsoletes'
              )
 
 DICT_KEYS = ('source',
@@ -159,6 +160,9 @@ class SpecWriter:
                     condition = ''
                     if main_filed.__contains__(' rpmWhen '):
                         condition = main_filed[main_filed.find(' rpmWhen ') + 1:]
+                    if self.target_metadata.get(key,{}).get(condition):
+                        self.target_metadata[key][condition].extend( self.metadata[main_filed])
+                        break
                     self.target_metadata.setdefault(key, {}).\
                         update({condition: self.metadata[main_filed]})
                     break
