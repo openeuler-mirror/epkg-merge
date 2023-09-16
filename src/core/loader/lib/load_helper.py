@@ -15,7 +15,8 @@ def expand_implicit_fields(val: Any, implicit_fields: Dict[str, str] = None) -> 
 def merge_key(key: str, prefix: str) -> (str, str):
     if IF_TOKEN not in prefix:
         return key, prefix
-    prefix_key, if_statement = prefix.split(IF_TOKEN)
+    when_statment = prefix.split(IF_TOKEN)
+    prefix_key, if_statement = when_statment[0], when_statment[1]
     key = str(key)
     if IF_TOKEN in key:
         new_key = key + " && {}".format(if_statement)
