@@ -75,12 +75,11 @@ def format_subpackage(k, v, format_json, raw_json):
         return
     subpackage, name, key = split_sub(k)
     rpm_when_name = "{}.{}:rpmWhen".format(subpackage, name)
-    if raw_json.get(rpm_when_name):
-        name = "{} rpmWhen {}".format(name, raw_json.get(rpm_when_name))
-
     rpm_when_key = "{}.{}.{}:rpmWhen".format(subpackage, name, key)
     if raw_json.get(rpm_when_key):
         key = "{} rpmWhen {}".format(key, raw_json.get(rpm_when_key))
+    elif raw_json.get(rpm_when_name):
+        name = "{} rpmWhen {}".format(name, raw_json.get(rpm_when_name))
 
     subpackage_name = subpackage + "." + name
 
