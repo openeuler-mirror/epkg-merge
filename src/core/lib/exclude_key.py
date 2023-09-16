@@ -12,13 +12,11 @@ def is_strategy_key(key):
 
 
 def is_yaml_key(key):
-    excludes_key = [":remove", ":append", ":prepend", ":replace"]
+    includes_key = [":rpm_macro_param", ":rpmWhen"]
     if ":" not in key:
         return True
-    for exclude_item in excludes_key:
-        if exclude_item in key:
-            return False
-    if ":rpm_macro_param" in key:
-        return True
-    else:
-        return False
+    for include_item in includes_key:
+        if include_item in key:
+            return True
+
+    return False
