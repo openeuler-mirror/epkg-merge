@@ -392,13 +392,13 @@ $data_when_list_keys('BuildConflicts', 'buildConflicts', $values)
 #end if
 ## AutoReq
 #if 'autoReq' in $values
-AutoReq: $bool_value_lower($value['autoReq'][''])
+AutoReq: $bool_value_lower($values['autoReq'][''])
 #end if
 #if 'autoProv' in $values
-AutoProv: $bool_value_lower($value['autoProv'][''])
+AutoProv: $bool_value_lower($values['autoProv'][''])
 #end if
 #if 'autoReqProv' in $values
-AutoReqProv: $bool_value_lower($value['autoReqProv'][''])
+AutoReqProv: $bool_value_lower($values['autoReqProv'][''])
 #end if
 ## description
 #if "description" in $values
