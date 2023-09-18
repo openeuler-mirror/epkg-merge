@@ -31,7 +31,6 @@ def main():
     out_path = os.path.join(os.getcwd(),"merge")
     if args["output"]:
         out_path = args["output"]
-    print(out_path)
     if args["list_features"]:
         for k in args["list_features"].split(","):
             list_features_info[k] = {}
@@ -53,7 +52,6 @@ def main():
         packages = config_space["allPkgs"]
     packages = sorted(packages)
     for package in packages:
-        print(package)
         log.info(f"==========parse package {package}===============")
         package_info = handle_package(package, config_space)
         if not list_features_info:
