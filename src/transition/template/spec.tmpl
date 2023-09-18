@@ -26,6 +26,14 @@ $print_endif($condition)
 #end for
 #end def
 ########
+#def bool_value_lower($value)
+#if $value == True
+true
+#else
+false
+#end if
+#end def
+########
 ########
 ## defineFlags
 #if 'defineFlags' in $metadata
@@ -381,6 +389,16 @@ $data_when_list_keys('BuildRequires', 'buildRequires', $values)
 ## BuildConflicts
 #if "buildConflicts" in $values
 $data_when_list_keys('BuildConflicts', 'buildConflicts', $values)
+#end if
+## AutoReq
+#if 'autoReq' in $values
+AutoReq: $bool_value_lower($values['autoReq'][''])
+#end if
+#if 'autoProv' in $values
+AutoProv: $bool_value_lower($values['autoProv'][''])
+#end if
+#if 'autoReqProv' in $values
+AutoReqProv: $bool_value_lower($values['autoReqProv'][''])
 #end if
 ## description
 #if "description" in $values
