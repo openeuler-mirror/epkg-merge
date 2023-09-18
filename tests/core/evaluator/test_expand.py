@@ -75,3 +75,33 @@ class TestExpand(unittest.TestCase):
         res = expand_macro(str_macro, "", False)
         self.assertEqual(res, str_macro)
 
+
+    def test_expand_pkg(self):
+        from src.core.config_space import config_space
+        config_space["pkgs.kernel.rpmGlobal.dd"] = "4.2.1"
+        str_macro = r"${{pkg.rpmGlobal.dd}}"
+        config_space[f"files.\"\".cspath"] =  "pkgs.kernel"
+        res = expand_macro(str_macro, "", True)
+        self.assertEqual(res, "4.2.1")
+
+    def test_expand_rpmGlobal(self):
+        from src.core.config_space import config_space
+        config_space["rpmGlobal.dd"] = "4.2.1"
+        str_macro = r"${{rpmGlobal.dd}}"
+        res = expand_macro(str_macro, "", True)
+        self.assertEqual(res, "4.2.1")
+
+    def test_expand_rpmrc(self):
+        from src.core.config_space import config_space
+        config_space["rpmGlobal.cc"] = "4.2.1"
+        str_macro = r"${{rpmrc.cc}}"
+        res = expand_macro(str_macro, "", True)
+        self.assertEqual(res, "4.2.1")
+
+
+    def test_expand_top(self):
+        from src.core.config_space import config_space
+        config_space["pkgs.kernel.cc"] = "4.2.1"
+        str_macro = r"${{top.pkgs.kernel.cc}}"
+        res = expand_macro(str_macro, "", True)
+        self.assertEqual(res, "4.2.1")
