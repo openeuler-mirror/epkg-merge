@@ -247,7 +247,7 @@ class SpecWriter:
             elif compile_type == "configure":
                 configure_name = main_field.split(".")[1]
                 pre_command = ""
-                if pre_command != "":
+                if configure_name != "configure":
                     pre_command =  f"%define build_configure_flags %build_{configure_name}_flags{os.linesep}"
                 if f"phase.{configure_name}" in self.metadata and \
                         re.search("^\.+/configure", self.metadata[f"phase.{configure_name}"]):
