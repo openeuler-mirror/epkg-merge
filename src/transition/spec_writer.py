@@ -246,13 +246,18 @@ class SpecWriter:
                 break_line = "\\\\\\"
             elif compile_type == "configure":
                 configure_name = main_field.split(".")[1]
+                pre_command = ""
+                if pre_command != "":
+                    pre_command =  f"%define build_configure_flags %build_{configure_name}_flags{os.linesep}"
                 if f"phase.{configure_name}" in self.metadata and \
                         re.search("^\.+/configure", self.metadata[f"phase.{configure_name}"]):
                     command = re.findall("^\.+/configure", self.metadata[f"phase.{configure_name}"])[0]
                     if f"build.{configure_name}.flags" in self.metadata and \
                             "%{?add_configure_flags}" not in self.metadata[f"phase.{configure_name}"]:
                         self.metadata[f"phase.{configure_name}"] = self.metadata[f"phase.{configure_name}"].replace(
-                            command, "%{?add_configure_flags} " + command)
+                            command, pre_command + "%{?add_configure_flags} " + command)
+                elif pre_command != "" and f"phase.{configure_name}" in self.metadata:
+                    self.metadata[f"phase.{configure_name}"] = pre_command + self.metadata[f"phase.{configure_name}"]
             flags = copy.deepcopy(self.metadata.get(main_field))
             flags_value = "%global {0} {1}{2}".format(main_field.replace(".", "_"), break_line, os.linesep)
             for flag, value in flags.items():
