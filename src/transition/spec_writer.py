@@ -460,24 +460,23 @@ class SpecWriter:
                     condition = result.split("-")[1]
                     judgement += "%if %{without " + condition + "}" + "\n"
         # do(rpmWhen %%%{rpmGlobal.openEuler}=>%if 0%{?openEuler})
-        if re.search("rpmWhen\s+%+\{[\w|_.]+}", line) is not None:
-            results = re.findall("rpmWhen\s+%+\{[\w|_.]+}", line)
+        if re.search("rpmWhen\s+0?%\{\??[\w.]+}", line) is not None:
+            results = re.findall("rpmWhen\s+0?%\{\??[\w.]+}", line)
             for result in results:
                 line = line.replace(result, "")
-            conditions = list(map(lambda x: x.split("{")[1].rstrip("}").replace("rpmGlobal.", ""), results))
-            for condition in conditions:
-                judgement += "%if %{" + condition + "}" + "\n"
+            conditions = list(map(lambda x: x.replace("rpmGlobal.", "").replace("rpmWhen", "%if"), results))
+            judgement += os.linesep.join(conditions) + os.linesep
         # do(rpmWhen arch in=>%ifarch|%ifos|%ifnarch|%ifnos)
-        if re.search("rpmWhen arch|os in [\w|_.]+", line) is not None:
-            results = re.findall("rpmWhen arch in [\w|_.]+", line) + re.findall("rpmWhen os in [\w|_.]+", line)
+        if re.search("rpmWhen arch|os in [\w.]+", line) is not None:
+            results = re.findall("rpmWhen arch in [\w.]+", line) + re.findall("rpmWhen os in [\w.]+", line)
             for result in results:
                 line = line.replace(result, "")
             conditions = list(
                 map(lambda x: x.replace("rpmWhen arch in", "%ifarch").replace("rpmWhen os in", "%ifos"), results))
             for condition in conditions:
                 judgement += condition + "\n"
-        if re.search("rpmWhen arch|os not in [\w|_.]+", line) is not None:
-            results = re.findall("rpmWhen arch not in [\w|_.]+", line) + re.findall("rpmWhen os not in [\w|_.]+", line)
+        if re.search("rpmWhen arch|os not in [\w.]+", line) is not None:
+            results = re.findall("rpmWhen arch not in [\w.]+", line) + re.findall("rpmWhen os not in [\w.]+", line)
             for result in results:
                 line = line.replace(result, "")
             conditions = list(map(lambda x: x.replace("rpmWhen arch not in", "%ifnarch").replace(
