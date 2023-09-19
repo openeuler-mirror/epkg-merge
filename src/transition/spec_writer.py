@@ -370,11 +370,11 @@ class SpecWriter:
                 param_key = key.replace(spec_key, key_param, 1)
                 if param_key in meta_json:
                     param += ' ' + meta_json[param_key]
-                if key.__contains__(' rpmwhen '):
+                if key.__contains__(' rpmWhen '):
                     if condition:
-                        condition += ' and ' + key[key.find(' rpmwhen ') + len(' rpmwhen '):]
+                        condition += ' and ' + key[key.find(' rpmWhen ') + len(' rpmWhen '):]
                     else:
-                        condition = key[key.find(' rpmwhen '):]
+                        condition = key[key.find(' rpmWhen '):]
                 self.target_metadata.setdefault(spec_key, []).append(
                     {'condition': condition, 'param': param, 'value': value})
             # 只有参数
@@ -383,11 +383,11 @@ class SpecWriter:
                 if target_key not in meta_json:
                     value = ""
                     param += ' ' + meta_json[key]
-                    if key.__contains__(' rpmwhen '):
+                    if key.__contains__(' rpmWhen '):
                         if condition:
-                            condition += ' and ' + key[key.find(' rpmwhen ') + len(' rpmwhen '):]
+                            condition += ' and ' + key[key.find(' rpmWhen ') + len(' rpmWhen '):]
                         else:
-                            condition = key[key.find(' rpmwhen '):]
+                            condition = key[key.find(' rpmWhen '):]
                     self.target_metadata.setdefault(spec_key, []).append(
                         {'condition': condition, 'param': param, 'value': value})
 
