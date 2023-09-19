@@ -466,7 +466,7 @@ class SpecWriter:
                 line = line.replace(result, "")
             conditions = list(map(lambda x: x.split("{")[1].rstrip("}").replace("rpmGlobal.", ""), results))
             for condition in conditions:
-                judgement += "%if 0%{?" + condition + "}" + "\n"
+                judgement += "%if %{" + condition + "}" + "\n"
         # do(rpmWhen arch in=>%ifarch|%ifos|%ifnarch|%ifnos)
         if re.search("rpmWhen arch|os in [\w|_.]+", line) is not None:
             results = re.findall("rpmWhen arch in [\w|_.]+", line) + re.findall("rpmWhen os in [\w|_.]+", line)
