@@ -105,3 +105,15 @@ class TestExpand(unittest.TestCase):
         str_macro = r"${{top.pkgs.kernel.cc}}"
         res = expand_macro(str_macro, "", True)
         self.assertEqual(res, "4.2.1")
+
+    def test_expand_define_flags(self):
+        from src.core.config_space import config_space
+        config_space["pkgs.kernel.defineFlags.-compat"] = ""
+        str_macro = r"${{pkg.defineFlags.+compat}}
+        config_space[f"files.\"\".cspath"] = "pkgs.kernel"
+        res = expand_macro(str_macro, "", True)
+        self.assertEqual(res, "False")
+        config_space["pkgs.kernel.defineFlags.+compat"] = ""
+        res = expand_macro(str_macro, "", True)
+        self.assertEqual(res, "True")
+

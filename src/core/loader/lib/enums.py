@@ -41,6 +41,6 @@ class ImportConfig(Enum):
     TOP_KEY = "(\$\{\{top\[[\\'\\\"]([-\\'\\\"\w.]+)[\\'\\\"]]}})"
     TOP_HAS = "(\$\{\{top\.has\(([-\\'\\\"\w.]+)\)}})"
     TOP_VAL = "(^top[\.\'\"\\]*[\w]*)"
-    PKG_VAL = "(^pkg[\.\'\"\\]*[\w+-]*)"
+    PKG_VAL = "(^pkg[\.\'\"\\]*[\w\+-]*)"
     RC_VAL = "(^rpmrc[\.\'\"\\]*[\w]*)"
     RG_VAL = "(^rpmGlobal[\.\'\"\\]*[\w]*)"

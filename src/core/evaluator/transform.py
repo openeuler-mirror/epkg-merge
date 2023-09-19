@@ -214,7 +214,7 @@ def transform_key_with_when(key_dict: dict) -> dict:
         for flag in when_statements:
             if flag.startswith("+") or flag.startswith("-"):
                 # format中{{ 会转换为{
-                when = "{} ${{{{ pkg.defineFlags.{} }}}}".format(when, flag)
+                when = "{} ${{{{pkg.defineFlags.{}}}}}".format(when, flag)
             else:
                 when = "{} {}".format(when, flag.strip())
 
