@@ -151,13 +151,13 @@ class ConfigSpace(dict):
     def merge_inherit(self, inherit: InheritConfig):
         inherit_lang_info = self.get_key(inherit.value.split(".", 1)[-1])
         for inherit_key, inherit_value in inherit_lang_info.items():
-            if inherit_key in self:
+            if self.get(inherit_key):
                 if isinstance(inherit_value, list):
                     self[inherit_key] = list(set(self[inherit_key] + inherit_value))
                 elif isinstance(inherit_value, dict):
                     self[inherit_key] = self[inherit_key].update(inherit_value)
             else:
-                self.setdefault(inherit_key, inherit_value)
+                self[inherit_key] = inherit_value
             keys_cur = self.get(f"{inherit.cspath}:loadedKeys", [])
             if not keys_cur:
                 self[f"{inherit.cspath}:loadedKeys"] = keys_cur
