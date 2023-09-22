@@ -111,10 +111,10 @@ post:%{wxbasename}-devel(){
         res = transform_key_with_rpmWhen({k2: value})
         self.assertEqual(res, {'subpackage.python2-perf.meta.summary': {'fspath': 'fspath', 'value': 'test'},
                                'subpackage.python2-perf:rpmWhen': {
-                                   'value': '%{with_perf} rpmWhen 0%{?with_python2}',
+                                   'value': '%{with_perf} rpmWhen 0%{?with_python2} rpmWhen 0%{?with_python3}',
                                    'fspath': 'fspath'}
                                })
         res = transform_key_with_rpmWhen({k3: value})
         self.assertEqual(res, {'subpackage.python2-perf.files': {'fspath': 'fspath', 'value': 'test'},
-                               'subpackage.python2-perf.files:rpmWhen': {'fspath': 'fspath', 'value': '%{with_perf}})
+                               'subpackage.python2-perf.files:rpmWhen': {'fspath': 'fspath', 'value': '%{with_perf}'}})
 
