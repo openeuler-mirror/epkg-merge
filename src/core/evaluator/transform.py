@@ -234,10 +234,18 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
             continue
         key_info = key.split(" rpmWhen ")
         subpackage = key_info[0]
-        if "." in key_info[1]:
-            condition_info = key_info[1].split(".", maxsplit=1)
-            condition = condition_info[0]
-            field = condition_info[1]
+        find_out = False
+        start = 1
+        for i, item in enumerate(key_info[start:]):
+            if "." in item:
+                find_out = True
+                start = i + 1
+        if find_out:
+            condition_info = key_info[start].split(".", maxsplit=1)
+            if start > 1:
+                condition_info = key_info[1: start] + condition_info
+            condition = " rpmWhen ".join(condition_info[:-1])
+            field = condition_info[-1]
             condition_value = copy.copy(value)
             condition_value["value"] = condition
             res["{}.{}".format(subpackage, field)] = value
@@ -245,7 +253,7 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
         else:
             res[subpackage] = value
             condition_value = copy.copy(value)
-            condition_value["value"] = key_info[1]
+            condition_value["value"] = " rpmWhen ".join(key_info[1:])
             res["{}:rpmWhen".format(subpackage)] = condition_value
 
     return res
