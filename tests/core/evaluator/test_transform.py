@@ -1,7 +1,7 @@
 import unittest
 
 from src.core.evaluator.transform import parse_shell_file, transform_key_with_when, parse_file_name, \
-    transform_key_default
+    transform_key_default, transform_key_with_rpmWhen
 
 
 class TestExpand(unittest.TestCase):
@@ -96,3 +96,25 @@ post:%{wxbasename}-devel(){
         expectation = {'subpackage.help.summary': {'value': 'test', 'fspath': 'fs', 'when': None},
                        'subpackage.help:rpmWhen': {'value': '%ifarch %{arm}', 'fspath': 'fs', 'when': None}}
         self.assertEqual(res, expectation)
+
+    def test_transform_key_with_rpmWhen(self):
+        k1 = "subpackage.python2-perf rpmWhen %{with_perf} rpmWhen 0%{?with_python2}.meta.summary rpmWhen %{with_perf}"
+        k2 = "subpackage.python2-perf rpmWhen %{with_perf} rpmWhen 0%{?with_python2} rpmWhen 0%{?with_python3}.meta.summary"
+        k3 = "subpackage.python2-perf.files rpmWhen %{with_perf}"
+        value = {
+            "value": "test",
+            "fspath": "fspath"
+        }
+        res = transform_key_with_rpmWhen({k1: value})
+        self.assertEqual(res, {'subpackage.python2-perf.meta.summary': {'fspath': 'fspath', 'value': 'test'},
+                               'subpackage.python2-perf:rpmWhen': {'value': '%{with_perf} rpmWhen 0%{?with_python2}', 'fspath': 'fspath'}})
+        res = transform_key_with_rpmWhen({k2: value})
+        self.assertEqual(res, {'subpackage.python2-perf.meta.summary': {'fspath': 'fspath', 'value': 'test'},
+                               'subpackage.python2-perf:rpmWhen': {
+                                   'value': '%{with_perf} rpmWhen 0%{?with_python2} rpmWhen 0%{?with_python3}',
+                                   'fspath': 'fspath'}
+                               })
+        res = transform_key_with_rpmWhen({k3: value})
+        self.assertEqual(res, {'subpackage.python2-perf.files': {'fspath': 'fspath', 'value': 'test'},
+                               'subpackage.python2-perf.files:rpmWhen': {'fspath': 'fspath', 'value': '%{with_perf}'}})
+
