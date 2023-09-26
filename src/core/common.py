@@ -69,17 +69,18 @@ def split_sub(k):
 
 
 def format_subpackage(k, v, format_json, raw_json):
-    if ":rpmWhen" in k:
-        return
     if len(k.split(".")) < 3:
         return
     subpackage, name, key = split_sub(k)
-    rpm_when_name = "{}.{}:rpmWhen".format(subpackage, name)
-    rpm_when_key = "{}.{}.{}:rpmWhen".format(subpackage, name, key)
-    if raw_json.get(rpm_when_key):
-        key = "{} rpmWhen {}".format(key, raw_json.get(rpm_when_key))
-    elif raw_json.get(rpm_when_name):
-        name = "{} rpmWhen {}".format(name, raw_json.get(rpm_when_name))
+    if ":rpmWhen" in k:
+        rpm_condition = k.split(":rpmWhen")[1]
+        rpm_when_name = "{} rpmWhen{}".format(name, rpm_condition)  # 先假设rpmWhen是子包的条件
+        if rpm_when_name in format_json:
+            name = rpm_when_name  # 如果子包带条件的情况已出现，则确认为子包的条件，key就不用加条件了
+        elif rpm_condition not in key:
+            key = "{} rpmWhen{}".format(key, rpm_condition)  # 子包不带条件，则key带条件
+        if ":rpmWhen" in key and rpm_condition in key:
+            key = key.replace(":rpmWhen", " rpmWhen")  # 替换条件的表达，yaml>spec时用
 
     subpackage_name = subpackage + "." + name
 

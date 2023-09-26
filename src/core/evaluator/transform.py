@@ -247,14 +247,13 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
             condition = " rpmWhen ".join(condition_info[:-1])
             field = condition_info[-1]
             condition_value = copy.copy(value)
-            condition_value["value"] = condition
             res["{}.{}".format(subpackage, field)] = value
-            res["{}:rpmWhen".format(subpackage)] = condition_value
+            res["{}:rpmWhen {}".format(subpackage, condition)] = condition_value
         else:
             res[subpackage] = value
             condition_value = copy.copy(value)
-            condition_value["value"] = " rpmWhen ".join(key_info[1:])
-            res["{}:rpmWhen".format(subpackage)] = condition_value
+            rpm_condition = " rpmWhen ".join(key_info[1:])
+            res["{}:rpmWhen {}".format(subpackage, rpm_condition)] = condition_value
 
     return res
 
