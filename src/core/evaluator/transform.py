@@ -240,20 +240,17 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
             if "." in item:
                 find_out = True
                 start = i + 1
+        if subpackage in res and res[subpackage] == value:
+            del res[subpackage]
         if find_out:
             condition_info = key_info[start].split(".", maxsplit=1)
             if start > 1:
                 condition_info = key_info[1: start] + condition_info
             condition = " rpmWhen ".join(condition_info[:-1])
-            field = condition_info[-1]
-            condition_value = copy.copy(value)
-            res["{}.{}".format(subpackage, field)] = value
-            res["{}:rpmWhen {}".format(subpackage, condition)] = condition_value
+            res["{}:rpmWhen {}".format(subpackage, condition)] = value
         else:
-            res[subpackage] = value
-            condition_value = copy.copy(value)
             rpm_condition = " rpmWhen ".join(key_info[1:])
-            res["{}:rpmWhen {}".format(subpackage, rpm_condition)] = condition_value
+            res["{}:rpmWhen {}".format(subpackage, rpm_condition)] = value
 
     return res
 
