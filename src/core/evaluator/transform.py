@@ -246,7 +246,7 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
             condition_info = key_info[start].split(".", maxsplit=1)
             if start > 1:
                 condition_info = key_info[1: start] + condition_info
-            condition = " rpmWhen ".join(condition_info[:-1])
+            condition = "rpmWhen " + " rpmWhen ".join(condition_info[:-1])
             key_condition = " rpmWhen ".join(key_info[start + 1:])
             if key_condition != "":
                 key_condition = ":rpmWhen " + key_condition
