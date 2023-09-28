@@ -247,7 +247,10 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
             if start > 1:
                 condition_info = key_info[1: start] + condition_info
             condition = " rpmWhen ".join(condition_info[:-1])
-            res["{}:rpmWhen {}".format(subpackage, condition)] = value
+            key_condition = " rpmWhen ".join(key_info[start + 1:])
+            if key_condition != "":
+                key_condition = ":rpmWhen " + key_condition
+            res["{} {}.{}{}".format(subpackage, condition, condition_info[-1], key_condition)] = value
         else:
             rpm_condition = " rpmWhen ".join(key_info[1:])
             res["{}:rpmWhen {}".format(subpackage, rpm_condition)] = value
