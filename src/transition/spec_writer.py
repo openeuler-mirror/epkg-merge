@@ -299,7 +299,7 @@ class SpecWriter:
                 if arch != "" and "phase.prep" in self.metadata:
                     config_path = config_path.format(arch)
                     self.metadata["phase.prep"] += f"{MERGE_SCRIPTS.get('merge_config')} -m {config_path} " \
-                                                   f"{config_name}{os.linesep}" \
+                                                   "%{_sourcedir}/"  + f"{config_name}{os.linesep}" \
                                                    f"mv .config {config_path} -f{os.linesep}"
 
     def parse_phase(self):
