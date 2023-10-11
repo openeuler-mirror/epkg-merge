@@ -33,6 +33,3 @@ BASE_FLAGS_REPLACE = {
     "strip": "__strip",
 }
 
-MERGE_SCRIPTS = {
-    "merge_config": "/opt/merge_configs/merge_config.sh"
-}

@@ -5,7 +5,7 @@ import re
 from src.log import log
 from Cheetah.Template import Template
 from src.transition.template import *
-from src.core.loader.lib.config import CONFIG_SET_FILES, MERGE_SCRIPTS
+from src.core.loader.lib.config import CONFIG_SET_FILES
 
 # only these keys can be parsed
 STR_KEYS = ('name',
@@ -298,8 +298,9 @@ class SpecWriter:
                         f.write(f"{key}={value}{os.linesep}")
                 if arch != "" and "phase.prep" in self.metadata:
                     config_path = config_path.format(arch)
-                    self.metadata["phase.prep"] += f"{MERGE_SCRIPTS.get('merge_config')} -m {config_path} " \
-                                                   f"{config_name}{os.linesep}" \
+                    self.metadata["phase.prep"] = self.metadata["phase.prep"].rstrip()
+                    self.metadata["phase.prep"] += f"{os.linesep}merge_config.sh -m {config_path} " \
+                                                   "%{_sourcedir}/"  + f"{config_name}{os.linesep}" \
                                                    f"mv .config {config_path} -f{os.linesep}"
 
     def parse_phase(self):
