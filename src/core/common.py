@@ -188,7 +188,7 @@ def format_compile_flags(k, v, format_json, raw_json):
         from src.core.config_space import config_space
         key = k.split(".")[-1]
         config_key_name = k.split(".")[1]
-        format_json.setdefault(config_key_name, {"ARCH": ARCH_SYS.get(config_space.arch, config_space.arch)}) \
+        format_json.setdefault(f"build.{config_key_name}", {"ARCH": ARCH_SYS.get(config_space.arch, config_space.arch)}) \
             .setdefault(key, v)
     elif re.match("build\.(" + ("|".join(list(BASE_FLAGS_CANTACT.keys()))) + ")", k):
         key = k.split(".")[-1]
