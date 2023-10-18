@@ -31,7 +31,7 @@ systemd_ordering: |
   %{nil}
 
 __systemd_someargs_0(:): "%{error:The %%%1 macro requires some arguments}"
-__systemd_twoargs_2(): "%%%{rpmGlobal.nil}"
+__systemd_twoargs_2(): "${{rpmGlobal.nil}}"
 systemd_post(): |
     %{expand:%%{?__systemd_someargs_%#:%%__systemd_someargs_%# systemd_post}} \
     if [ $1 -eq 1 ] && [ -x %{_bindir}/systemctl ]; then \
@@ -83,9 +83,9 @@ systemd_user_postun_with_restart(): |
   %{expand:%%{?__systemd_someargs_%#:%%__systemd_someargs_%# systemd_postun_with_restart}} \
   %{nil}
 
-udev_hwdb_update(): "%%%{rpmGlobal.nil}"
-udev_rules_update(): "%%%{rpmGlobal.nil}"
-journal_catalog_update(): "%%%{rpmGlobal.nil}"
+udev_hwdb_update(): "${{rpmGlobal.nil}}"
+udev_rules_update(): "${{rpmGlobal.nil}}"
+journal_catalog_update(): "${{rpmGlobal.nil}}"
 tmpfiles_create(): |
   %{expand:%%{?__systemd_someargs_%#:%%__systemd_someargs_%# tmpfiles_create}} \
   [ -x %{_bindir}/systemd-tmpfiles ] && %{_bindir}/systemd-tmpfiles --create %{?*} || : \

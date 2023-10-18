@@ -1,6 +1,6 @@
 lua_version: "%{lua: print(string.sub(_VERSION, 5))}"
-lua_libdir: "%%%{rpmGlobal._libdir}/lua/%%%{rpmGlobal.lua_version}"
-lua_pkgdir: "%%%{rpmGlobal._datadir}/lua/%%%{rpmGlobal.lua_version}"
+lua_libdir: "${{rpmGlobal._libdir}}/lua/${{rpmGlobal.lua_version}}"
+lua_pkgdir: "${{rpmGlobal._datadir}}/lua/${{rpmGlobal.lua_version}}"
 lua_requires: |
   Requires: lua(abi) = %{lua_version} \
   %{nil}
