@@ -14,8 +14,8 @@ perl_default_filter: |
   %global __requires_exclude %{?__requires_exclude:%__requires_exclude|}^perl\\\\(VMS|^perl\\\\(Win32
   }
 
-perl_version: "%(eval \"`%%%{rpmGlobal.__perl} -V:version`\"; echo $version)"
-perl_testdir: "%%%{rpmGlobal._libexecdir}/perl5-tests"
+perl_version: "%(eval \"`${{rpmGlobal.__perl}} -V:version`\"; echo $version)"
+perl_testdir: "${{rpmGlobal._libexecdir}}/perl5-tests"
 cpan_dist_name: "%(eval echo %{name} | %{__sed} -e 's/^perl-//')"
 tests_req(): |
   %{expand:\

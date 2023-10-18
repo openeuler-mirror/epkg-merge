@@ -82,10 +82,10 @@ python_enable_dependency_generator(): |
   %{nil}
 
 __python2: /usr/bin/python2
-python2_sitelib: "%(%%%{rpmGlobal.__python2} -Esc \"from distutils.sysconfig import get_python_lib; print(get_python_lib())\")"
-python2_sitearch: "%(%%%{rpmGlobal.__python2} -Esc \"from distutils.sysconfig import get_python_lib; print(get_python_lib(1))\")"
-python2_version: "%(%%%{rpmGlobal.__python2} -Esc \"import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))\")"
-python2_version_nodots: "%(%%%{rpmGlobal.__python2} -Esc \"import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))\")"
+python2_sitelib: "%(${{rpmGlobal.__python2}} -Esc \"from distutils.sysconfig import get_python_lib; print(get_python_lib())\")"
+python2_sitearch: "%(${{rpmGlobal.__python2}} -Esc \"from distutils.sysconfig import get_python_lib; print(get_python_lib(1))\")"
+python2_version: "%(${{rpmGlobal.__python2}} -Esc \"import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))\")"
+python2_version_nodots: "%(${{rpmGlobal.__python2}} -Esc \"import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))\")"
 py2_shbang_opts: -s
 py2_build(): |
   %{expand:\\\
@@ -126,11 +126,11 @@ py2_install_wheel(): |
   }
 
 __python3: /usr/bin/python3
-python3_sitelib: "%(%%%{rpmGlobal.__python3} -Ic \"from distutils.sysconfig import get_python_lib; print(get_python_lib())\")"
-python3_sitearch: "%(%%%{rpmGlobal.__python3} -Ic \"from distutils.sysconfig import get_python_lib; print(get_python_lib(1))\")"
-python3_version: "%(%%%{rpmGlobal.__python3} -Ic \"import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))\")"
-python3_version_nodots: "%(%%%{rpmGlobal.__python3} -Ic \"import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))\")"
-python3_platform: "%(%%%{rpmGlobal.__python3} -Ic \"import sysconfig; print(sysconfig.get_platform())\")"
+python3_sitelib: "%(${{rpmGlobal.__python3}} -Ic \"from distutils.sysconfig import get_python_lib; print(get_python_lib())\")"
+python3_sitearch: "%(${{rpmGlobal.__python3}} -Ic \"from distutils.sysconfig import get_python_lib; print(get_python_lib(1))\")"
+python3_version: "%(${{rpmGlobal.__python3}} -Ic \"import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))\")"
+python3_version_nodots: "%(${{rpmGlobal.__python3}} -Ic \"import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))\")"
+python3_platform: "%(${{rpmGlobal.__python3}} -Ic \"import sysconfig; print(sysconfig.get_platform())\")"
 py3dir: "%{_builddir}/python3-%{name}-%{version}-%{release}"
 py3_shbang_opts: -s
 py3_build(): |
@@ -253,8 +253,8 @@ pypi_source(): |
     }
 
 __python: /usr/bin/python
-python_sitelib: "%(%%%{rpmGlobal.__python} -c \"from distutils.sysconfig import get_python_lib; import sys; sys.stdout.write(get_python_lib())\")"
-python_sitearch: "%(%%%{rpmGlobal.__python} -c \"from distutils.sysconfig import get_python_lib; import sys; sys.stdout.write(get_python_lib(1))\")"
-python_version: "%(%%%{rpmGlobal.__python} -c \"import sys; sys.stdout.write(sys.version[:3])\")"
+python_sitelib: "%(${{rpmGlobal.__python}} -c \"from distutils.sysconfig import get_python_lib; import sys; sys.stdout.write(get_python_lib())\")"
+python_sitearch: "%(${{rpmGlobal.__python}} -c \"from distutils.sysconfig import get_python_lib; import sys; sys.stdout.write(get_python_lib(1))\")"
+python_version: "%(${{rpmGlobal.__python}} -c \"import sys; sys.stdout.write(sys.version[:3])\")"
 
 

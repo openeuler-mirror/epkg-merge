@@ -1,7 +1,7 @@
-_fontbasedir: "%%%{rpmGlobal._datadir}/fonts"
-_fontconfig_masterdir: "%%%{rpmGlobal._sysconfdir}/fonts"
-_fontconfig_confdir: "%%%{rpmGlobal._sysconfdir}/fonts/conf.d"
-_fontconfig_templatedir: "%%%{rpmGlobal._datadir}/fontconfig/conf.avail"
+_fontbasedir: "${{rpmGlobal._datadir}}/fonts"
+_fontconfig_masterdir: "${{rpmGlobal._sysconfdir}}/fonts"
+_fontconfig_confdir: "${{rpmGlobal._sysconfdir}}/fonts/conf.d"
+_fontconfig_templatedir: "${{rpmGlobal._datadir}}/fontconfig/conf.avail"
 fontcontact: fonts@lists.fedoraproject.org
 fontorg: org.fedoraproject
 fontrpmname(): |
