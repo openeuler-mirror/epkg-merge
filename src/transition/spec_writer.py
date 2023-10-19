@@ -448,49 +448,42 @@ class SpecWriter:
         :param line: 条件表达式
         :return:
         """
-        judgement = ""
-        # do(when +***=>%if %{with ***})
         if re.search("rpmWhen\s+[+-][\w_]+", line) is not None:
             results = re.findall("rpmWhen\s+[+-][\w_]+", line)
             for result in results:
-                line = line.replace(result, "")
                 if "+" in result:
                     condition = result.split("+")[1]
-                    judgement += "%if %{with " + condition + "}" + "\n"
+                    line = line.replace(result, "%if %{with " + condition + "}")
                 elif "-" in result:
                     condition = result.split("-")[1]
-                    judgement += "%if %{without " + condition + "}" + "\n"
-        # do(rpmWhen %%%{rpmGlobal.openEuler}=>%if 0%{?openEuler})
-        if re.search("rpmWhen\s+0?%\{\??[\w.]+}", line) is not None:
+                    line = line.replace(result, "%if %{without " + condition + "}")
+            # do(rpmWhen %%%{rpmGlobal.openEuler}=>%if 0%{?openEuler})
+        if re.search("rpmWhen\s+0?%\{\??[\w.]+}.*0?%\{\??[\w.]+}", line) is not None:
+            results = re.findall("rpmWhen\s+0?%\{\??[\w.]+}.*0?%\{\??[\w.]+}", line)
+            for result in results:
+                line = line.replace(result, result.replace("rpmWhen", "%if"))
+        elif re.search("rpmWhen\s+0?%\{\??[\w.]+}", line) is not None:
             results = re.findall("rpmWhen\s+0?%\{\??[\w.]+}", line)
             for result in results:
-                line = line.replace(result, "")
-            conditions = list(map(lambda x: x.replace("rpmGlobal.", "").replace("rpmWhen", "%if"), results))
-            judgement += os.linesep.join(conditions) + os.linesep
-        # do(rpmWhen arch in=>%ifarch|%ifos|%ifnarch|%ifnos)
+                line = line.replace(result, result.replace("rpmGlobal.", "").replace("rpmWhen", "%if"))
+            # do(rpmWhen arch in=>%ifarch|%ifos|%ifnarch|%ifnos)
         if re.search("rpmWhen arch|os in [\w.]+", line) is not None:
             results = re.findall("rpmWhen arch in [\w.]+", line) + re.findall("rpmWhen os in [\w.]+", line)
             for result in results:
-                line = line.replace(result, "")
-            conditions = list(
-                map(lambda x: x.replace("rpmWhen arch in", "%ifarch").replace("rpmWhen os in", "%ifos"), results))
-            for condition in conditions:
-                judgement += condition + "\n"
+                line = line.replace(result,
+                                    result.replace("rpmWhen arch in", "%ifarch").replace("rpmWhen os in", "%ifos"))
         if re.search("rpmWhen arch|os not in [\w.]+", line) is not None:
             results = re.findall("rpmWhen arch not in [\w.]+", line) + re.findall("rpmWhen os not in [\w.]+", line)
             for result in results:
-                line = line.replace(result, "")
-            conditions = list(map(lambda x: x.replace("rpmWhen arch not in", "%ifnarch").replace(
-                "rpmWhen os not in", "%ifnos"), results))
-            for condition in conditions:
-                judgement += condition + "\n"
+                line = line.replace(result, result.replace("rpmWhen arch not in", "%ifnarch").replace(
+                    "rpmWhen os not in", "%ifnos"))
         if "rpmWhen" in line:
             results = re.findall("rpmWhen\s+.*", line)
             for result in results:
-                judgement += result.replace("rpmWhen not", "%if !").replace("rpmWhen", "%if") + "\n"
-        if judgement.endswith("\n"):
-            judgement = judgement[0:-1]
-        return judgement
+                line = line.replace(result, result.replace("rpmWhen not", "%if !").replace("rpmWhen", "%if"))
+        if line.endswith("\n"):
+            line = line[0:-1]
+        return line.replace(" %if", " \n%if")
 
     def print_endif(self, condition):
         """
@@ -517,7 +510,7 @@ class SpecWriter:
         end_count = len(inline_conditions) - len(inline_endif)
         if end_count >= 0:
             for _ in range(end_count):
-                value += "%endif\n"
+                value = value.rstrip() + "\n%endif\n"
         else:
             value = value.replace("%endif\n", "", abs(end_count))
         return value
