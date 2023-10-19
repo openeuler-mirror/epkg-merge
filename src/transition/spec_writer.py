@@ -373,7 +373,9 @@ class SpecWriter:
                     param += ' ' + meta_json[param_key]
                 if key.__contains__(' rpmWhen '):
                     if condition:
-                        condition += ' and ' + key[key.find(' rpmWhen ') + len(' rpmWhen '):]
+                        key_condition = key[key.find(' rpmWhen ') + len(' rpmWhen '):]
+                        if condition != "rpmWhen " + key_condition:
+                            condition += ' && ' + key[key.find(' rpmWhen ') + len(' rpmWhen '):]
                     else:
                         condition = key[key.find(' rpmWhen '):]
                 self.target_metadata.setdefault(spec_key, []).append(
@@ -386,7 +388,9 @@ class SpecWriter:
                     param += ' ' + meta_json[key]
                     if key.__contains__(' rpmWhen '):
                         if condition:
-                            condition += ' and ' + key[key.find(' rpmWhen ') + len(' rpmWhen '):]
+                            key_condition = key[key.find(' rpmWhen ') + len(' rpmWhen '):]
+                            if condition != "rpmWhen " + key_condition:
+                                condition += ' && ' + key_condition
                         else:
                             condition = key[key.find(' rpmWhen '):]
                     self.target_metadata.setdefault(spec_key, []).append(
@@ -554,19 +558,6 @@ class SpecWriter:
             """
             while "\n\n\n\n" in content:
                 content = content.replace("\n\n\n\n", "\n\n\n")
-            if "\n%endif\n%endif\n" in content:
-                temp_text = content.split("\n%endif\n%endif\n")[0]
-                if re.search("\n%if.*\n%if.*\n", temp_text) is not None:
-                    cutter1 = re.findall("\n%if.*\n%if.*\n", temp_text)[0]
-                    temp_text = temp_text.split(cutter1)[1]
-                    if len(re.findall("%if", temp_text)) != len(re.findall("%endif", temp_text)):
-                        body_text = temp_text.replace("%endif\n", "")
-                        content = content.replace(temp_text, body_text)
-            if re.search(r"\n\s*\\b", content) is not None:
-                some_texts = re.findall(r"\n\s*\\b", content)
-                for some_text in some_texts:
-                    content = content.replace(some_text, " ")
-            # content = content.replace("\\\\\n", "\\\n")
             return content
 
         spec_content = collation_spec_content(spec_content)
