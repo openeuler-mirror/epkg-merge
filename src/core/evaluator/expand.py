@@ -87,7 +87,10 @@ def expand_macro(str_macro, fspath, is_when_statement=False):
             # sub_values[k] = v
         if k.startswith("${{") and k.endswith("}}"):
             v = get_macro_values(v, cspath)
-            v = eval_python(v)
+            try:
+                float(v)
+            except ValueError:
+                v = eval_python(v)
             # sub_values[k] = v
 
         sub_values[k] = str(v)
