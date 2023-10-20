@@ -33,7 +33,7 @@ def merge_policy_first(collect_str, new_val, merge_params):
 def merge_policy_concat(collect_str, new_val, merge_params="\n"):
     if collect_str == "":
         return new_val, True
-    concat_val = merge_params.join([collect_str, new_val])
+    concat_val = merge_params.join([new_val, collect_str])
     return concat_val, True
 
 
@@ -48,24 +48,24 @@ def merge_policy_config_concat(collect_str, new_val, merge_params=" \\\n"):
 def merge_policy_pre_concat(collect_str, new_val, merge_params="\n"):
     if collect_str == "":
         return new_val, True
-    concat_val = merge_params.join([new_val, collect_str])
+    concat_val = merge_params.join([collect_str, new_val])
     return concat_val, True
 
 
 def merge_policy_pre_extend(collect_str, new_val, merge_params):
+    if collect_str == "":
+        collect_str = []
+    collect_str.extend(new_val)
+    return collect_str, True
+
+
+def merge_policy_extend(collect_str, new_val, merge_params):
     extend_val = []
     if collect_str == "":
         return new_val, True
     extend_val.extend(new_val)
     extend_val.extend(collect_str)
     return extend_val, True
-
-
-def merge_policy_extend(collect_str, new_val, merge_params):
-    if collect_str == "":
-        collect_str = []
-    collect_str.extend(new_val)
-    return collect_str, True
 
 
 def merge_policy_append(collect_set, new_val, merge_params):
@@ -102,3 +102,4 @@ def get_merge_func(key):
     if merge_func:
         return merge_funcs.get(merge_func), merge_params
     return merge_policy_first, ""
+
