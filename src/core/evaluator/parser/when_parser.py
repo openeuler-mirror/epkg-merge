@@ -89,7 +89,7 @@ def t_NAME(t):
 
 
 def t_VERSION(t):
-    r'[\d*\.]+[-+.\d]*'
+    r'\d*\.[\d*\.]+[-+.\d]*'
     t.type = 'VERSION'
     return t
 
