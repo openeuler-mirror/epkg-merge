@@ -1,0 +1,17 @@
+/c/os/gentoo/gentoo/eclass/
+/c/os/gentoo/gentoo/profiles/
+
+/c/os/spack/lib/spack/spack/build_systems/
+/c/os/spack/lib/spack/spack/compilers/
+/c/os/spack/lib/spack/spack/schema/
+/c/os/spack/lib/spack/spack/test/data/config/compilers.yaml
+/c/os/spack/lib/spack/env/
+/c/os/spack/lib/spack/docs/
+/c/os/spack/docs/
+/c/os/spack/etc/spack/defaults/packages.yaml
+
+/c/os/yocto/poky/bitbake/doc/bitbake-user-manual/
+/c/os/yocto/poky/documentation/
+/c/os/yocto/poky/meta/classes/
+/c/os/yocto/poky/meta/conf/distro/include/
+/c/os/yocto/poky/meta/conf/machine/include/
