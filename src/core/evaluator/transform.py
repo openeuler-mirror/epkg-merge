@@ -37,7 +37,7 @@ def parse_shell_file(file_name, content):
             if is_first_line and symbol_count:
                 is_first_line = False
                 if "rpm_macro_param" in _line:
-                    rpm_macro_param = _line.split(":")[-1].lstrip()
+                    rpm_macro_param = _line.split("rpm_macro_param:")[-1].lstrip()
                     continue
             if _line == "{":
                 function_content += line

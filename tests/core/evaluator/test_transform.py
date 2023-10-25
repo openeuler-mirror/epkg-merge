@@ -47,6 +47,7 @@ function test_h{
 }
 
 post:%{wxbasename}-devel(){
+        #:rpm_macro_param:  -- %{name} < 2:0.56-3
         echo "subpackage"
 }
         '''
@@ -63,7 +64,8 @@ post:%{wxbasename}-devel(){
             'runtimePhase.test_g': '        echo "test_g"\n',
             'runtimePhase.test_h': '        echo "test_h"\n',
             "subpackage.%{wxbasename}-devel.runtimePhase.post": '        echo '
-                                                                '"subpackage"\n'
+                                                                '"subpackage"\n',
+            'subpackage.%{wxbasename}-devel.runtimePhase.post:rpm_macro_param': '-- %{name} < 2:0.56-3'
         }
         res = parse_shell_file("runtimePhase", file_content.splitlines(keepends=True))
         for k,v in res.items():
