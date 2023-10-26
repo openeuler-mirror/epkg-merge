@@ -17,6 +17,8 @@ def is_yaml_key(key):
     includes_key = [":rpm_macro_param", ":rpmWhen"]
     if ":" not in key:
         return True
+    if "rpmWhen" in key:
+        return True
     for include_item in includes_key:
         if include_item in key:
             return True
