@@ -1,0 +1,66 @@
+_arch: i386
+_build_arch: i386
+_vendor: openEuler
+_os: linux
+_gnu: -gnu
+_target_platform: "${{rpmGlobal._target_cpu}}-${{rpmGlobal._vendor}}-${{rpmGlobal._target_os}}"
+optflags: -O2 -g -march=i386 -mtune=i686
+__isa_name: x86
+__isa_bits: 32
+__isa: "${{rpmGlobal.__isa_name}}-${{rpmGlobal.__isa_bits}}"
+_transaction_color: 0
+_prefix: /usr
+_exec_prefix: "${{rpmGlobal._prefix}}"
+_bindir: "${{rpmGlobal._exec_prefix}}/bin"
+_sbindir: "${{rpmGlobal._exec_prefix}}/sbin"
+_libexecdir: "${{rpmGlobal._exec_prefix}}/libexec"
+_datarootdir: "${{rpmGlobal._prefix}}/share"
+_datadir: "${{rpmGlobal._datarootdir}}"
+_sysconfdir: /etc
+_sharedstatedir: /var/lib
+_localstatedir: /var
+_lib: lib
+_libdir: "${{rpmGlobal._prefix}}/lib"
+_includedir: "${{rpmGlobal._prefix}}/include"
+_oldincludedir: /usr/include
+_infodir: "${{rpmGlobal._datarootdir}}/info"
+_mandir: "${{rpmGlobal._datarootdir}}/man"
+_initddir: "${{rpmGlobal._sysconfdir}}/rc.d/init.d"
+_initrddir: "${{rpmGlobal._initddir}}"
+_rundir: /run
+_defaultdocdir: "${{rpmGlobal._datadir}}/doc"
+_smp_build_ncpus: |
+  %([ -z "$RPM_BUILD_NCPUS" ] \\\
+  && RPM_BUILD_NCPUS="%{getncpus}"; \\\
+  ncpus_max=%{?_smp_ncpus_max}; \\\
+  if [ -n "$ncpus_max" ] && [ "$ncpus_max" -gt 0 ] && [ "$RPM_BUILD_NCPUS" -gt "$ncpus_max" ]; then RPM_BUILD_NCPUS="$ncpus_max"; fi; \\\
+  echo "$RPM_BUILD_NCPUS";)
+
+_smp_mflags: -j${{rpmGlobal._smp_build_ncpus}}
+_smp_build_nthreads: "${{rpmGlobal._smp_build_ncpus}}"
+__spec_install_pre: |
+  %{___build_pre}\
+  %{__rm} -rf "%{buildroot}"\
+  %{__mkdir_p} "%{dirname:%{buildroot}}"\
+  %{__mkdir} "%{buildroot}"\
+  %{nil}
+
+__arch_install_post: "${{rpmGlobal.nil}}"
+_python_bytecompile_errors_terminate_build: 0
+_python_bytecompile_extra: 1
+__brp_compress: "${{rpmGlobal._rpmconfigdir}}/brp-compress %{?_prefix}"
+__brp_python_bytecompile: "${{rpmGlobal._rpmconfigdir}}/brp-python-bytecompile \"\" \"%{?_python_bytecompile_errors_terminate_build}\" \"%{?_python_bytecompile_extra}\""
+__brp_strip: "${{rpmGlobal._rpmconfigdir}}/brp-strip ${{rpmGlobal.__strip}}"
+__brp_strip_comment_note: "${{rpmGlobal._rpmconfigdir}}/brp-strip-comment-note ${{rpmGlobal.__strip}} ${{rpmGlobal.__objdump}}"
+__brp_strip_static_archive: "${{rpmGlobal._rpmconfigdir}}/brp-strip-static-archive ${{rpmGlobal.__strip}}"
+__brp_elfperms: "${{rpmGlobal._rpmconfigdir}}/brp-elfperms"
+__brp_remove_la_files: "${{rpmGlobal._rpmconfigdir}}/brp-remove-la-files"
+__os_install_post: |
+  %{?__brp_compress} \
+  %{?__brp_elfperms} \
+  %{?__brp_strip} \
+  %{?__brp_strip_static_archive} \
+  %{?__brp_strip_comment_note} \
+  %{?__brp_remove_la_files} \
+  %{nil}
+

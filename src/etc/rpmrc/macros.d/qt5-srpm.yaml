@@ -1,0 +1,3 @@
+qt5_qtwebengine_arches: "${{rpmGlobal.ix86}} x86_64 ${{rpmGlobal.arm}} aarch64 mips mipsel mips64el"
+
+

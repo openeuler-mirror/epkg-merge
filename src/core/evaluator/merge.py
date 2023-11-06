@@ -1,13 +1,16 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
-from src.core.evaluator.lib.merge_funcs import get_merge_func
 from functools import cmp_to_key
-from src.core.evaluator.expand import expand_macro
-from src.core.common import is_pycode, eval_python
-from src.core.evaluator.lib.merge_funcs import sort_doctype
+
 from src.log import log
+from src.core.evaluator.lib.merge_funcs import get_merge_func
+from src.core.evaluator.expand import expand_macro
+from src.core.common import is_pycode
+from src.core.lib.utils import eval_python
+from src.core.evaluator.lib.merge_funcs import sort_doctype
 from src.core.evaluator.parser.when_parser import parser
 from src.core.constant.tokens import NOT_EXIST
+
 
 def cmp(v_left, v_right):
     from src.core.config_space import config_space
@@ -24,9 +27,10 @@ def cmp(v_left, v_right):
     v_right_layername = config_space.get_key(f"files.\"{v_right_fspath}\".cspath")
     if v_left_layername < v_right_layername:
         return 1
+    elif v_left_layername == v_right_layername:
+        return 0
     else:
         return -1
-
 
 
 def eval_val(val):
@@ -34,6 +38,92 @@ def eval_val(val):
     if is_pycode(val):
         result = eval_python(val)
     return result
+
+
+def is_when(item):
+    fspath = item.get('fspath')
+    when_statement = ""
+    try:
+        when_statement = item.get("when")
+        when_value = convert_val(when_statement, fspath, True)
+    except Exception as _:
+        log.error(f"expand {item.get('when')} failed!")
+        when_value = str(False)
+
+    if when_value == NOT_EXIST:
+        return False
+
+    if when_statement:
+        log.info("when expression: {}".format(when_value))
+        when_result = parser.parse(when_value)
+        if not when_result or str(when_result).upper() == "FALSE":
+            return False
+
+    return True
+
+
+def replace_item(ori_value, items: list) -> object:
+    ori_type = type(ori_value)
+    if ori_type is list:
+        result_values = []
+    else:
+        result_values = ori_value
+
+    for i in items:
+        if not is_when(i):
+            continue
+        item_value = i.get("value")
+        item_type = type(item_value)
+        if item_type == ori_type:
+            result_values = item_value
+        elif item_type is str and ori_type is list:
+            result_values = [item_type]
+
+    return result_values
+
+
+def remove_cal(ori_value, sub_value) -> object:
+    result_values = []
+    ori_type = type(ori_value)
+    if ori_type is list:
+        for sub_ori_value in ori_value:
+            if sub_value in sub_ori_value and " " in sub_ori_value:
+                new_sub_value = sub_ori_value.split(" ").remove(sub_value).join(" ")
+                if new_sub_value:
+                    result_values.append(new_sub_value)
+            elif sub_value != sub_ori_value:
+                result_values.append(sub_ori_value)
+    elif ori_type is str:
+        if sub_value in ori_value and " " in ori_value:
+            new_sub_value = ori_value.split(" ").remove(sub_value).join(" ")
+            if new_sub_value:
+                result_values.append(new_sub_value)
+        elif sub_value != ori_value:
+            result_values.append(ori_value)
+        result_values = result_values[0]
+
+    return result_values
+
+
+def remove_item(ori_value, items: list) -> object:
+    ori_type = type(ori_value)
+    result_values = ori_value
+
+    for i in items:
+        if not is_when(i):
+            continue
+        item_value = i.get("value")
+        item_type = type(item_value)
+        if item_type is list:
+            for sub_values in item_value:
+                for sub_value in sub_values.split(" "):
+                    result_values = remove_cal(result_values, sub_value)
+
+        elif item_type is str:
+            for sub_value in item_value.split(" "):
+                result_values = remove_cal(result_values, sub_value)
+
+    return result_values
 
 
 def merge_sorted(values):
@@ -45,34 +135,24 @@ def merge_sorted(values):
 def merge_overrides(key, values):
     from src.core.config_space import config_space
     temp_values = values
-    prepend_values = config_space.get(f"{key}:prepend:values")
-    append_values = config_space.get(f"{key}:append:values")
-    remove_values = config_space.get(f"{key}:remove:values")
-    replace_values = config_space.get(f"{key}:replace:values")
-    # 依次处理，这里假设prepend和append是解耦的
-    for i in prepend_values:
-        if i.info in temp_values:
-            temp_values.insert(temp_values.index(i.info), i)
+    remove_values = config_space.get(f"{key}:remove:values", [])
+    replace_values = config_space.get(f"{key}:replace:values", [])
+    if not (remove_values or replace_values):
+        return values
 
-    for i in append_values:
-        if i.info in temp_values:
-            temp_values.insert(temp_values.index(i.info + 1), i)
+    if replace_values:
+        temp_values = replace_item(temp_values, replace_values)
 
-    for i in replace_values:
-        if i.info in temp_values:
-            temp_values[temp_values.index(i.info)] = i
-
-    for i in remove_values:
-        if i.info in temp_values:
-            temp_values.remove(i)
+    if remove_values:
+        temp_values = remove_item(temp_values, remove_values)
 
     return temp_values
 
 
-def convert_val(val, fspath):
+def convert_val(val, fspath, is_when_statement=False):
     if type(val) is not str:
         return val
-    val_expanded = expand_macro(val, fspath)
+    val_expanded = expand_macro(val, fspath, is_when_statement)
     value = eval_val(val_expanded)
     return value
 
@@ -91,32 +171,16 @@ def get_val(val, fspath):
 
 def merge_with_func(merge_func, merge_params, values_all):
     current = ""
-    have_value = False
+
+    if not values_all:
+        return NOT_EXIST
+
     for cur_value in values_all:
-        fspath = cur_value.get('fspath')
-        try:
-            when_statement = cur_value.get("when")
-            when_value = get_val(when_statement, fspath)
-        except Exception as _:
-            log.error(f"expand {cur_value.get('when')} failed!")
-            when_value = False
-
-        if when_value == NOT_EXIST:
-            continue
-
-        if when_statement:
-            when_result = parser.parse(when_value)
-            if not when_result or str(when_result).upper() == "FALSE":
-                continue
-        have_value = True
         raw_value = cur_value.get("value", "")
-        value = get_val(raw_value, fspath)
+        value = get_val(raw_value, cur_value.get('fspath'))
         current, is_continue = merge_func(current, value, merge_params)
         if not is_continue:
             break
-
-    if not have_value:
-        return NOT_EXIST
 
     return current
 
@@ -125,7 +189,9 @@ def merge_values(key):
     from src.core.config_space import config_space
     values = config_space.get(f"{key}:values")
     values_sorted = merge_sorted(values)
-    # values_all = merge_overrides(key, values_sorted)
     values_all = values_sorted
+    values_all = list(filter(is_when, values_all))
     merge_func, merge_params = get_merge_func(key)
-    return merge_with_func(merge_func, merge_params, values_all)
+    final_value = merge_with_func(merge_func, merge_params, values_all)
+    final_value = merge_overrides(key, final_value)
+    return final_value

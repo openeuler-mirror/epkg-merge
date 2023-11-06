@@ -4,12 +4,12 @@ import os
 import re
 import threading
 from typing import Any, Dict, List
-
 import yaml
-
 from src.core.loader.lib.enums import Config, MainConfigKey, Directory, IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
+from src.etc import etc_path
+from src.etc.rpmrc import rpmrc_path
 from src.log import log
 
 
@@ -23,7 +23,7 @@ class LayerLoader:
         self._config_file = config_file
         self._dir_name = os.path.dirname(os.path.abspath(config_file))
 
-    def load(self) -> None:
+    def load(self, arch) -> None:
         with self.__LOCK:
             log.info(f"Loading layers with main config: '{self._config_file}'")
             layers: Dict[str, List[str]] = yaml.safe_load(open(self._config_file, encoding="utf-8"))
@@ -32,24 +32,27 @@ class LayerLoader:
                     f"Invalid main config: can't find yaml key '{MainConfigKey.LAYERS.value}' or empty value")
 
             for layer in layers.get(str(MainConfigKey.LAYERS.value)):
-                _LayerConfigLoader(layer, os.path.join(self._dir_name, layer)).load()
+                _LayerConfigLoader(layer, os.path.join(self._dir_name, layer), arch).load()
             log.info(f"Successfully load layers with main config: '{self._config_file}'")
 
 
 class _LayerConfigLoader:
-    def __init__(self, layer: str, layer_path: str) -> None:
+    def __init__(self, layer: str, layer_path: str, target_arch: str) -> None:
         if not os.path.isdir(layer_path):
             raise LoadException(f"The path of layer '{layer}' [{layer_path}] is not a directory")
 
         self._layer = layer
         self._layer_path = layer_path
+        self.arch = target_arch
 
     def load(self) -> None:
         log.info(f"Loading layer: '{self._layer}' with layer path: '{self._layer_path}'")
+        self._load_languages()
         self._load_pkgs()
         self._load_python_libs()
         self._load_use()
         self._load_types()
+        self._load_rpmrc()
         log.info(f"Successfully load layer: '{self._layer}' with layer path: '{self._layer_path}'")
 
     def _load_pkgs(self) -> None:
@@ -61,10 +64,8 @@ class _LayerConfigLoader:
 
     def _load_pkgs_index_yaml(self, pkgs_dir: str) -> None:
         index_yaml = os.path.join(pkgs_dir, str(Config.INDEX.value))
-        if not os.path.isfile(index_yaml):
-            log.error(f"Pkgs index file of layer '{self._layer}' is missing")
-            raise LoadException(f"Pkgs index file of layer '{self._layer}' is missing")
-
+        if not os.path.exists(index_yaml):
+            index_yaml = os.path.join(etc_path, str(Config.INDEX.value))
         index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
         pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
@@ -79,7 +80,7 @@ class _LayerConfigLoader:
                     break
 
             if not pkg_config:
-                log.error(f"layer '{self._layer}' lacks of {pkg}.yaml")
+                log.error(f"layer '{self._layer}' lacks of {pkg}/package.yaml")
                 continue
 
             _ElementConfigLoader(pkg, pkg_config, index_config).load()
@@ -88,7 +89,7 @@ class _LayerConfigLoader:
 
     def _load_python_libs(self) -> None:
         lib_path = os.path.join(self._layer_path, str(Directory.LIBS.value))
-        if not os.path.isdir(lib_path):
+        if not os.path.exists(lib_path) or not os.path.isdir(lib_path):
             return
 
         from src.core.config_space import config_space
@@ -98,16 +99,13 @@ class _LayerConfigLoader:
 
     def _load_use(self) -> None:
         use_dir = os.path.join(self._layer_path, str(Directory.USE.value))
-        if not os.path.isdir(use_dir):
+        if not os.path.exists(use_dir) or not os.path.isdir(use_dir):
             return
 
         self._load_use_index_yaml(use_dir)
 
     def _load_use_index_yaml(self, use_dir: str) -> None:
-        index_yaml = os.path.join(use_dir, str(Config.INDEX.value))
-        if not os.path.isfile(index_yaml):
-            raise LoadException(f"Use index file of layer '{self._layer}' is missing")
-
+        index_yaml = os.path.join(etc_path, str(Config.INDEX.value))
         index_config: Dict[str, Any] = yaml.safe_load(open(index_yaml, encoding="utf-8"))
         pattern = index_config.get(str(IndexConfigKey.CONFIG_FILES_PATTERN.value))
         if not pattern:
@@ -120,23 +118,66 @@ class _LayerConfigLoader:
 
     def _load_types(self) -> None:
         types_path = os.path.join(self._layer_path, str(Directory.TYPES.value))
-        if not os.path.isdir(types_path):
+        if not os.path.exists(types_path) or not os.path.isdir(types_path):
             return
 
-        from src.core.config_space import config_space
+        from src.core.config_space import config_space, inherit_config
+        if "base_layer" not in inherit_config:
+            inherit_config["base_layer"] = self._layer
         for f in os.listdir(types_path):
             if re.match(r".*\.yaml", f):
                 result = expand_yaml(yaml.safe_load(open(os.path.join(types_path, f), encoding="utf-8")))
                 for k, v in result.items():
                     config_space[k] = v
 
+    def _load_rpmrc(self) -> None:
+        if not os.path.exists(rpmrc_path) or not os.path.isdir(rpmrc_path):
+            return
+        from src.core.config_space import config_space
+        rpmrc_path_list = [
+            "rpmrc.yaml",
+            os.path.join("openEuler", "rpmrc.yaml"),
+            os.path.join("platform", "{0}-linux".format(self.arch), "rpmrc.yaml")
+        ]
+        for rpmrc_file in rpmrc_path_list:
+            rpmrc_file_path = os.path.join(rpmrc_path, rpmrc_file)
+            if not os.path.exists(rpmrc_file_path):
+                log.warn("Don't have this arch in rpmrc")
+                continue
+            result = expand_yaml(yaml.safe_load(open(rpmrc_file_path, encoding="utf-8")))
+            for k, v in result.items():
+                rpmrc_key = "rpmGlobal.{}".format(k)
+                config_space.add_key(rpmrc_key, v, rpmrc_file_path)
+        if os.path.exists(os.path.join(rpmrc_path, "macros.d")):
+            for method in os.listdir(os.path.join(rpmrc_path, "macros.d")):
+                if method.endswith(".yaml"):
+                    method_rpmrc = os.path.join(rpmrc_path, "macros.d", method)
+                    result = expand_yaml(yaml.safe_load(open(method_rpmrc, encoding="utf-8")))
+                    for k, v in result.items():
+                        rpmrc_key = "rpmGlobal.{}".format(k)
+                        config_space.add_key(rpmrc_key, v, method_rpmrc)
+
+    def _load_languages(self):
+        language_path = os.path.join(self._layer_path, str(Directory.LANG.value))
+        if not os.path.exists(language_path) or not os.path.isdir(language_path):
+            return
+        from src.core.config_space import config_space, inherit_config
+        if "base_layer" not in inherit_config:
+            inherit_config["base_layer"] = self._layer
+        language_list = os.listdir(language_path)
+        for language_yaml in language_list:
+            language_yaml_path = os.path.join(language_path, language_yaml)
+            language_name = language_yaml.split(".")[0]
+            result = expand_yaml(yaml.safe_load(open(language_yaml_path, encoding="utf-8")), "top")
+            config_space.add_key(f"lang.{language_name}", result, language_yaml_path)
+
 
 class _ElementConfigLoader:
     IMPLICIT_FIELDS = {
-        "basename": "%%_basename",
-        "filepath": "%%_filepath",
-        "dirname": "%%_dirname",
-        "filename": "%%_filename",
+        "basename": "${{pkg._basename}}",
+        "filepath": "${{pkg._filepath}}",
+        "dirname": "${{pkg._dirname}}",
+        "filename": "${{pkg._filename}}",
     }
 
     def __init__(self, element: str, element_config_path: str, index_config: Dict[str, Any]) -> None:

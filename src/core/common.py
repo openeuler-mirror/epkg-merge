@@ -2,15 +2,38 @@
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
 import re
+from src.log import log
+from src.core.loader.lib.config import *
 
 
 def is_pycode(val: str):
     val = val.strip()
-    if not val.startswith("{{"):
+    if not val.startswith("${{"):
         return False
     if not val.endswith("}}"):
         return False
+    tmp_val = val.replace("${{", "", 1).replace("}}", "")
+    try:
+        eval(tmp_val)
+    except Exception as e:
+        log.info(str(e))
+        return False
     return True
+
+
+def remove_tab(val: str):
+    line_list = val.split(os.linesep)
+    if line_list:
+        first_line = line_list[0]
+        tab_count = 0
+        for word in first_line:
+            if word != " ":
+                break
+            tab_count += 1
+        for line_index, line in enumerate(line_list):
+            line_list[line_index] = line.replace(" " * tab_count, "", 1)
+        val = os.linesep.join(line_list)
+    return val
 
 
 def eval_python(val: str):
@@ -24,7 +47,7 @@ def eval_python(val: str):
     #     'result': exec_code(py_code)
     # }
     val = val.strip()
-    val = val.lstrip("{{")
+    val = val.lstrip("${{")
     val = val.rstrip("}}")
     result = src.core.interpreter.executor.call(val.strip())
 
@@ -34,28 +57,52 @@ def eval_python(val: str):
         raise Exception("pycode parse failed, {}".format(val))
 
 
+def split_sub(k):
+    pattern = r"\d+\.\d+"
+    # 适配glibc: subpackage.glibc-compat-2.17.*
+    if re.search(pattern, k):
+        pattern = r"(\w+)\.(.*\d+)\.(.*$)"
+        match = re.match(pattern, k)
+        if match:
+            return match.groups()
+    return k.split(".", 2)
+
+
 def format_subpackage(k, v, format_json, raw_json):
-    if ":rpmWhen" in k:
-        return
     if len(k.split(".")) < 3:
         return
-    subpackage, name, key = k.split(".", 2)
-    pattern = r"\d+.\d+"
-    if re.search(pattern, k):
-        pattern_k = r"(\w+)\.(.*\d+)\.(.*$)"
-        match = re.match(pattern_k, k)
-        if match:
-            subpackage, name, key = match.groups()
-    rpm_when_name = "{}.{}:rpmWhen".format(subpackage, name)
-    if raw_json.get(rpm_when_name):
-        name = "{} rpmWhen {}".format(name, raw_json.get(rpm_when_name))
+    subpackage, name, key = split_sub(k)
+    name_condition = ""
+    if " rpmWhen " in name:
+        name_condition = name.split("rpmWhen", 1)[1]
+    if ":rpmWhen" in k:
+        rpm_condition = k.split(":rpmWhen")[1]
+        if rpm_condition in name_condition:
+            key = key.split(":rpmWhen")[0]
+        else:
+            rpm_when_name = "{} rpmWhen{}".format(name, rpm_condition)  # 先假设rpmWhen是子包的条件
+            if rpm_when_name in format_json:
+                name = rpm_when_name  # 如果子包带条件的情况已出现，则确认为子包的条件，key就不用加条件了
+            elif rpm_condition not in key:
+                key = "{} rpmWhen{}".format(key, rpm_condition)  # 子包不带条件，则key带条件
+            if ":rpmWhen" in key and rpm_condition in key:
+                key = key.replace(":rpmWhen", " rpmWhen")  # 替换条件的表达，yaml>spec时用
 
-    rpm_when_key = "{}.{}.{}:rpmWhen".format(subpackage, name, key)
-    if raw_json.get(rpm_when_key):
-        key = "{} rpmWhen {}".format(key, raw_json.get(rpm_when_key))
+    subpackage_name = subpackage + "." + name
 
-    sub_name = "{}.{}".format(subpackage, name)
-    format_json.setdefault(sub_name, {}).setdefault(key, v)
+    if ".runtimePhase." in k:
+        v = remove_tab(v)
+    if " rpmWhen " in key and "files" in key and subpackage_name not in format_json:
+        tmp_key = key.split(" rpmWhen ")[0].strip()
+        subpackage_name += key.replace(tmp_key, "")
+    if key.startswith("meta."):
+        meta, m_key = key.split(".", 1)
+        format_json.setdefault(subpackage_name, {}).\
+            setdefault(meta, {}).\
+            setdefault(m_key, v)
+    else:
+        format_json.setdefault(subpackage_name, {}).\
+            setdefault(key, v)
 
 
 def format_patchset(k, v, format_json, raw_json):
@@ -69,19 +116,47 @@ def format_source(k, v, format_json, raw_json):
     format_json.setdefault(source, {}) \
         .setdefault(key, v)
 
+
 def format_rpm_global(k, v, format_json, raw_json):
     if "." not in k:
         return
-    source, key = k.split(".", 1)
-    format_json.setdefault(source, {}) \
+    rpm_global, key = k.split(".", 1)
+    format_json.setdefault(rpm_global, {}) \
         .setdefault(key, v)
+
 
 def format_define_flags(k, v, format_json, raw_json):
     if "." not in k:
         return
-    source, key = k.split(".", 1)
-    format_json.setdefault(source, {}) \
+    if isinstance(v, dict):
+        compile_name = ""
+        option = ""
+        for param, val in v.items():
+            if re.fullmatch("configure\w*\.(options|vars)", param):
+                compile_name = param.split(".")[0]
+                option = val
+                break
+        if not compile_name:
+            log.error("error customization: {0}".format(k))
+            return
+        condition = v.get("when", "")
+        default = v.get("default", "")
+        build_requires = v.get("buildRequires", "")
+        if build_requires != "" and default is True:
+            for build_require in build_requires.split():
+                if "buildRequires" in format_json and build_require not in format_json["buildRequires"] or \
+                        "buildRequires" not in format_json:
+                    format_json.setdefault('buildRequires', []).append(build_require)
+        if "options" in param and "=" in val:
+            option, default = val.split("=", 1)
+        if condition:
+            option += " when " + condition
+        format_json.setdefault(f'build.{compile_name}.flags', {}).setdefault(option, default)
+        return
+    define_flags, key = k.split(".", 1)
+    format_json.setdefault(define_flags, {}) \
         .setdefault(key, v)
+
 
 def format_rpm_macros(k, v, format_json, raw_json):
     if "." not in k:
@@ -91,19 +166,64 @@ def format_rpm_macros(k, v, format_json, raw_json):
     format_json.setdefault(source, {}) \
         .setdefault(key, v)
 
+
 def format_phase(k, v, format_json, raw_json):
-    line_list = v.split(os.linesep)
-    if line_list:
-        first_line = line_list[0]
-        tab_count = 0
-        for word in first_line:
-            if word != " ":
-                break
-            tab_count += 1
-        for line_index, line in enumerate(line_list):
-            line_list[line_index] = line.replace(" "*tab_count, "", 1)
-        v = os.linesep.join(line_list)
-        format_json.setdefault(k, v)
+    v = remove_tab(v)
+    format_json.setdefault(k, v)
+
+
+def format_meta(k, v, format_json, raw_json):
+    meta, key = k.split(".", 1)
+    format_json.setdefault(meta, {}) \
+        .setdefault(key, v)
+
+
+def format_compile_flags(k, v, format_json, raw_json):
+    if "build." not in k:
+        return
+    if ".flags." in k:
+        build, key = k.split(".flags.", 1)
+        format_json.setdefault(f'{build}.flags', {}).setdefault(key, v)
+    elif re.match("build\." + ("|".join(list(CONFIG_SET_FILES.keys()))), k):
+        from src.core.config_space import config_space
+        key = k.split(".")[-1]
+        config_key_name = k.split(".")[1]
+        format_json.setdefault(f"build.{config_key_name}", {"ARCH": ARCH_SYS.get(config_space.arch, config_space.arch)}) \
+            .setdefault(key, v)
+    elif re.match("build\.(" + ("|".join(list(BASE_FLAGS_CANTACT.keys()))) + ")", k):
+        key = k.split(".")[-1]
+        format_json.setdefault("rpmGlobal", {}).setdefault(BASE_FLAGS_CANTACT.get(key, key), "%{?" + BASE_FLAGS_CANTACT.get(key, key) + "} " + v)
+    elif re.match("build\.(" + ("|".join(list(BASE_FLAGS_REPLACE.keys()))) + ")", k):
+        key = k.split(".")[-1]
+        format_json.setdefault("rpmGlobal", {}).setdefault(BASE_FLAGS_REPLACE.get(key, key),  v )
+
+
+def format_top(k, v, format_json, raw_json):
+    if k.startswith("top."):
+        k = k.replace("top.", "")
+        if "defineFlags." in k:
+            if not isinstance(v, dict):
+                format_json.setdefault(k, v)
+                return
+            compile_name = ""
+            option = ""
+            for param, val in v.items():
+                if re.fullmatch("(configure|cmake|make)\w*\.(options|vars)", param):
+                    compile_name = param.split(".")[0]
+                    option = val
+                    break
+            if not compile_name:
+                log.error("error customization: {0}".format(k))
+                return
+            condition = v.get("when", "")
+            default = v.get("default", "")
+            if "options" in param and "=" in val:
+                option, default = val.split("=", 1)
+            if condition:
+                option += " when " + condition
+            format_json.setdefault(f'build.{compile_name}.flags', {}).setdefault(option, default)
+        else:
+            format_json.setdefault(k, v)
 
 
 format_funcs = {
@@ -113,7 +233,11 @@ format_funcs = {
     "rpmGlobal": format_rpm_global,
     "defineFlags": format_define_flags,
     "rpmMacros": format_rpm_macros,
-    "phase": format_phase
+    "phase": format_phase,
+    "runtimePhase": format_phase,
+    "meta": format_meta,
+    "build": format_compile_flags,
+    "top": format_top,
 }
 
 
@@ -125,6 +249,8 @@ def format_package_json(package_json):
         if k in filter:
             continue
         first_key = k.split(".", 1)[0]
+        if " rpmWhen " in first_key:
+            first_key = first_key.split("rpmWhen")[0].strip()
         func = format_funcs.get(first_key)
         if func is None:
             format_json[k] = v

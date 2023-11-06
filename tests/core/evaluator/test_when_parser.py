@@ -20,8 +20,8 @@ class TestWhenParser(unittest.TestCase):
         self.assertEqual(parser.parse("x86 in arch64 arm64"), False)
         
     def test_parse_not_in(self):
-        self.assertEqual(parser.parse("arch not in a b"), True)
-        self.assertEqual(parser.parse("arch not in arch a"), False)
+        self.assertEqual(parser.parse("arch1 not in a b"), True)
+        self.assertEqual(parser.parse("arch1 not in arch1 a"), False)
 
     
     def test_parse_comparison(self):
@@ -109,7 +109,14 @@ class TestWhenParser(unittest.TestCase):
         self.assertEqual(parser.parse("not False or not (True and True)"), True)
         self.assertEqual(parser.parse("not False or not (True and False)"), True)
 
+    def test_parse_version(self):
+        self.assertEqual(parser.parse("4.2.1 <= 4.5.2"), True)
+        self.assertEqual(parser.parse("1.12 <= 1.2"), False)
+        # self.assertEqual(parser.parse("True and (False or False)"), False)
 
+    def test_parse_single_number(self):
+        self.assertEqual(parser.parse("1"), True)
+        self.assertEqual(parser.parse("0"), False)
 
 
 if __name__ == '__main__':

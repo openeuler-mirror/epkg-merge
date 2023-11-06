@@ -6,7 +6,7 @@ from enum import Enum
 # Enum of config files
 class Config(Enum):
     MAIN_CONFIG = "config.yaml"
-    INDEX = "index.yaml"
+    INDEX = "default.yaml"
 
 
 # Enum of keys in main config file
@@ -29,3 +29,18 @@ class Directory(Enum):
     LIBS = "libs"
     USE = "use"
     TYPES = "types"
+    RPMRC = "rpmrc"
+    LANG = "lang"
+
+
+# Enum of partner of import config
+class ImportConfig(Enum):
+    PKG_GET = "(\$\{\{pkg\.get\(([-\\'\\\"\w.]+)\)}})"
+    PKG_KEY = "(\$\{\{pkg\[([-\'\"\w.]+)]}})"
+    PKG_HAS = "(\$\{\{pkg\.has\(([-\\'\\\"\w.]+)\)}})"
+    TOP_KEY = "(\$\{\{top\[[\\'\\\"]([-\\'\\\"\w.]+)[\\'\\\"]]}})"
+    TOP_HAS = "(\$\{\{top\.has\(([-\\'\\\"\w.]+)\)}})"
+    TOP_VAL = "(^top[\.\'\"\\]*[\w]*)"
+    PKG_VAL = "(^pkg[\.\'\"\\]*[\w\+-]*)"
+    RC_VAL = "(^rpmrc[\.\'\"\\]*[\w]*)"
+    RG_VAL = "(^rpmGlobal[\.\'\"\\]*[\w]*)"

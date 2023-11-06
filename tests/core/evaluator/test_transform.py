@@ -1,7 +1,7 @@
 import unittest
 
 from src.core.evaluator.transform import parse_shell_file, transform_key_with_when, parse_file_name, \
-    transform_key_default
+    transform_key_default, transform_key_with_rpmWhen
 
 
 class TestExpand(unittest.TestCase):
@@ -47,6 +47,7 @@ function test_h{
 }
 
 post:%{wxbasename}-devel(){
+        #:rpm_macro_param:  -- %{name} < 2:0.56-3
         echo "subpackage"
 }
         '''
@@ -63,7 +64,8 @@ post:%{wxbasename}-devel(){
             'runtimePhase.test_g': '        echo "test_g"\n',
             'runtimePhase.test_h': '        echo "test_h"\n',
             "subpackage.%{wxbasename}-devel.runtimePhase.post": '        echo '
-                                                                '"subpackage"\n'
+                                                                '"subpackage"\n',
+            'subpackage.%{wxbasename}-devel.runtimePhase.post:rpm_macro_param': '-- %{name} < 2:0.56-3'
         }
         res = parse_shell_file("runtimePhase", file_content.splitlines(keepends=True))
         for k,v in res.items():
@@ -96,3 +98,22 @@ post:%{wxbasename}-devel(){
         expectation = {'subpackage.help.summary': {'value': 'test', 'fspath': 'fs', 'when': None},
                        'subpackage.help:rpmWhen': {'value': '%ifarch %{arm}', 'fspath': 'fs', 'when': None}}
         self.assertEqual(res, expectation)
+
+    def test_transform_key_with_rpmWhen(self):
+        k1 = "subpackage.python2-perf rpmWhen %{with_perf} rpmWhen 0%{?with_python2}.meta.summary rpmWhen %{with_perf}"
+        k2 = "subpackage.python2-perf rpmWhen %{with_perf} rpmWhen 0%{?with_python2} rpmWhen 0%{?with_python3}.meta.summary"
+        k3 = "subpackage.python2-perf.files rpmWhen %{with_perf}"
+        value = {
+            "value": "test",
+            "fspath": "fspath"
+        }
+        res = transform_key_with_rpmWhen({k1: value})
+        self.assertEqual(res, {'subpackage.python2-perf rpmWhen %{with_perf} rpmWhen 0%{?with_python2}.meta.summary:rpmWhen %{with_perf}':
+                                   {'value': 'test', 'fspath': 'fspath'}})
+        res = transform_key_with_rpmWhen({k2: value})
+        self.assertEqual(res, {'subpackage.python2-perf rpmWhen %{with_perf} rpmWhen 0%{?with_python2} rpmWhen 0%{?with_python3}.meta.summary':
+                                   {'value': 'test','fspath': 'fspath'}
+                               })
+        res = transform_key_with_rpmWhen({k3: value})
+        self.assertEqual(res, {'subpackage.python2-perf.files:rpmWhen %{with_perf}':
+                                   {'fspath': 'fspath', 'value': 'test'}})

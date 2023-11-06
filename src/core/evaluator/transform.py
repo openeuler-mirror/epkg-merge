@@ -13,9 +13,11 @@ def transform_include_phase(file):
     with open(file, "r") as f:
         content = f.readlines()
         file_name = parse_file_name(file)
+        if file.endswith(".lua"):
+            return parse_lua_file(file_name, content)
         return parse_shell_file(file_name, content)
 
-
+    
 def parse_file_name(file):
     file = os.path.split(file)[-1]
     file_name = file.split(".")[0]
@@ -27,12 +29,23 @@ def parse_shell_file(file_name, content):
     function_name = ""
     function_content = ""
     symbol_count = 0
+    is_first_line = True
+    rpm_macro_param = ""
     for line in content:
         _line = line.rstrip()
         if function_name:
+            if is_first_line and symbol_count:
+                is_first_line = False
+                if "rpm_macro_param" in _line:
+                    rpm_macro_param = _line.split("rpm_macro_param:")[-1].lstrip()
+                    continue
             if _line == "{":
                 function_content += line
                 symbol_count += 1
+                continue
+            if symbol_count > 1 and _line.lstrip() == "}":
+                function_content += line
+                symbol_count -= 1
                 continue
             if _line == "}":
                 symbol_count -= 1
@@ -40,7 +53,10 @@ def parse_shell_file(file_name, content):
                     function_content += line
                     continue
                 functions[function_name] = function_content
-                function_name, function_content = "", ""
+                if rpm_macro_param:
+                    function_param = function_name + ":" + "rpm_macro_param"
+                    functions[function_param] = rpm_macro_param
+                function_name, function_content, rpm_macro_param, is_first_line = "", "", "", True
                 continue
             if "(){" in line or "() {" in line:
                 symbol_count += 1
@@ -50,6 +66,34 @@ def parse_shell_file(file_name, content):
             function_name = combinate_function_name(file_name, shell_function_name)
             if function_name and "{" in line:
                 symbol_count += 1
+    return functions
+
+
+def parse_lua_file(file_name, content):
+    functions = {}
+    function_name = ""
+    function_content = ""
+    is_first_line = True
+    rpm_macro_param = ""
+    for line in content:
+        _line = line.rstrip()
+        if function_name:
+            if is_first_line:
+                is_first_line = False
+                if "rpm_macro_param" in _line:
+                    rpm_macro_param = _line.split(":")[-1].lstrip()
+                    continue
+            if _line != "end":
+                function_content += line.lstrip()
+                continue
+            functions[function_name] = function_content
+            if rpm_macro_param:
+                function_param = function_name + ":" + "rpm_macro_param"
+                functions[function_param] = rpm_macro_param
+            function_name, function_content, rpm_macro_param, is_first_line = "", "", "", True
+        else:
+            shell_function_name = get_shell_function_name(line)
+            function_name = combinate_function_name(file_name, shell_function_name)
     return functions
 
 
@@ -169,12 +213,11 @@ def transform_key_with_when(key_dict: dict) -> dict:
         when = ""
         for flag in when_statements:
             if flag.startswith("+") or flag.startswith("-"):
-                when = "{} %%defineFlags.{}".format(when, flag)
+                # format中{{ 会转换为{
+                when = "{} ${{{{pkg.defineFlags.{}}}}}".format(when, flag)
             else:
                 when = "{} {}".format(when, flag.strip())
 
-            if "@version" in flag:
-                flag.replace("@version", "%%version")
         value["when"] = when.strip()
         res[real_key] = value
     return res
@@ -186,21 +229,31 @@ def transform_key_with_rpmWhen(key_dict: dict) -> dict:
         if "rpmWhen" not in key:
             res[key] = value
             continue
+        elif "subpackage." not in key:
+            res[key] = value
+            continue
         key_info = key.split(" rpmWhen ")
         subpackage = key_info[0]
-        if "." in key_info[1]:
-            condition_info = key_info[1].split(".", maxsplit=1)
-            condition = condition_info[0]
-            field = condition_info[1]
-            condition_value = copy.copy(value)
-            condition_value["value"] = condition
-            res["{}.{}".format(subpackage, field)] = value
-            res["{}:rpmWhen".format(subpackage)] = condition_value
+        find_out = False
+        start = 1
+        for i, item in enumerate(key_info[start:]):
+            if "." in item:
+                find_out = True
+                start = i + 1
+        if subpackage in res and res[subpackage] == value:
+            del res[subpackage]
+        if find_out:
+            condition_info = key_info[start].split(".", maxsplit=1)
+            if start > 1:
+                condition_info = key_info[1: start] + condition_info
+            condition = "rpmWhen " + " rpmWhen ".join(condition_info[:-1])
+            key_condition = " rpmWhen ".join(key_info[start + 1:])
+            if key_condition != "":
+                key_condition = ":rpmWhen " + key_condition
+            res["{} {}.{}{}".format(subpackage, condition, condition_info[-1], key_condition)] = value
         else:
-            res[subpackage] = value
-            condition_value = copy.copy(value)
-            condition_value["value"] = key_info[1]
-            res["{}:rpmWhen".format(subpackage)] = condition_value
+            rpm_condition = " rpmWhen ".join(key_info[1:])
+            res["{}:rpmWhen {}".format(subpackage, rpm_condition)] = value
 
     return res
 

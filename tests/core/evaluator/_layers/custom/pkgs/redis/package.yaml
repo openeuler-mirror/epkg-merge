@@ -1,0 +1,7 @@
+version: "4.0.15"
+
+defineFlags:
+  +ncurse: "use it library"
+
+source.5 when +ncurse: "plus.patch"
+source.6 when -ncurse: "minus.patch"

@@ -1,11 +1,11 @@
-configFilesPattern: (?P<_pkgname>[-0-9a-z]+)(/|\\)\1\.yaml
+configFilesPattern: (?P<_pkgname>[-0-9a-zA-Z_]+)(/|\\)\1\.yaml
 registerConfigSpaceForEachFile:
   pkgs.%%_basename:fspath: "%%_filepath"
   files."%%_filepath":
     name: "%%_basename" # can catch spell error if conflict with the name defined in yaml
     docType: base
     includePhase: phase.sh
-    includeRuntimePhase: runtimePhase.sh
+    includeRuntimePhase: runtimePhase.sh runtimePhase.lua
     include: versions.yaml files.yaml
     :referAttrs: types.package
     meta:referAttrs: types.package.meta

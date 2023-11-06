@@ -1,14 +1,12 @@
 # SPDX-License-Identifier: MulanPSL-2.0+
 # Copyright (c) 2022 Huawei Technologies Co., Ltd. All rights reserved.
 import os
-
 import yaml
-
 from src.core.evaluator import transform
 from src.core.loader.lib.enums import IndexConfigKey
 from src.core.loader.lib.load_helper import expand_yaml
 from src.core.loader.load_exception import LoadException
-
+from src.core.lib.exclude_key import is_strategy_key
 
 class YamlLoader:
 
@@ -29,10 +27,10 @@ class YamlLoader:
         configs = yaml.safe_load(open(self._fspath, encoding="utf-8"))
         configs = self.load_include(configs)
         result = expand_yaml(configs, self._cspath)
-        result = self.load_inherit(result)
+        self.save_inherit_item(result)
         for k, v in result.items():
             actual_keys = config_space.add_key(k, v, self._fspath)
-            if ":" in k and ":rpm" not in k:
+            if is_strategy_key(k):
                 continue
             for actual_key in actual_keys:
                 keys_cur = config_space.get(f"{self._cspath}:loadedKeys", [])
@@ -40,27 +38,16 @@ class YamlLoader:
                     config_space[f"{self._cspath}:loadedKeys"] = keys_cur
                 if actual_key not in keys_cur:
                     keys_cur.append(actual_key)
-                # config_space.setdefault(f"{self._cspath}:loadedKeys", set()).add(actual_key)
 
-    def load_inherit(self, package_info):
-        final_package_info = {}
-        for k, v in package_info.items():
-            if k != f"{self._cspath}.inherit":
-                YamlLoader.sequential_update(k, v, final_package_info)
-                continue
-            self.merge_inherit(v, final_package_info)
-        return final_package_info
-
-    def merge_inherit(self, inherits, final_package_info):
-        from src.core.config_space import config_space
-        for inherit in inherits.split(","):
-            inherit_package = inherit.split(".")[1]
-            inherit_package_info = config_space.get_package(inherit_package)
-            inherit_key = inherit.replace(f"pkgs.{inherit_package}", "")
-            for inherit_k, inherit_v in inherit_package_info.items():
-                if inherit_key and not inherit_k.startswith(inherit_key):
-                    continue
-                final_package_info[f"{self._cspath}.{inherit_k}"] = inherit_v
+    def save_inherit_item(self, items: dict):
+        from src.core.config_space import inherit_config
+        for k, v in items.items():
+            if ".inherit" in k:
+                inherit_config[k] = {
+                    "value": v,
+                    "fspath": self._fspath,
+                    "cspath": self._cspath
+                }
 
     @staticmethod
     def load_include(configs):
@@ -95,7 +82,7 @@ class YamlLoader:
                     result = expand_yaml(transform_result, self._cspath)
                     for k, v in result.items():
                         actual_keys = config_space.add_key(k, v, self._fspath)
-                        if ":" in k:
+                        if is_strategy_key(k):
                             continue
                         for actual_key in actual_keys:
                             keys_cur = config_space.get(f"{self._cspath}:loadedKeys", [])

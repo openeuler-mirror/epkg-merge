@@ -1,3 +1,19 @@
+2023.09.09 v0.1.2:
+1、when解析语句支持版本比较
+2、整理${{}}语句解析
+3、修正defineFlags匹配
+
+2023.09.09 v0.1.1:
+1、更新build.cflags为叠加
+2、更新build.cc为替换
+
+2023.08.15 v0.1.0:
+1、自动生成index.yaml
+2、package.yaml替换$pkg.yaml
+3、支持通过${{ }}中添加top，pkg替换%%%，%%
+4、支持:remove语法
+5、支持build.cflags, build.ldflags配置
+
 2023.03.20 v0.0.6:
 优化merge和check函数查找策略
 
