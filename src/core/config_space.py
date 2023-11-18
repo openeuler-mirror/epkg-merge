@@ -118,7 +118,7 @@ class ConfigSpace(dict):
         for key in loaded_keys:
             value = config_space.get_key(key)
             if re.search("\$\{\{pkg\.\w+}}", key):
-                key = expand_implicit_fields(key, {"${{pkg.name}}": package_name})
+                key = expand_implicit_fields(key, {"${{pkg.name}}": "%{name}" if "." in package_name else package_name})
             if value == NOT_EXIST:
                 continue
             if not is_yaml_key(key):
