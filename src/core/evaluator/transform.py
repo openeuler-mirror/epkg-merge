@@ -108,18 +108,24 @@ def combinate_function_name(file_name, function_name):
     function_info = function_name.split(":", maxsplit=1)
     real_name = function_info[0]
     subpackage_name = function_info[1]
+    if " when " in subpackage_name:
+        when_statement = " when " + subpackage_name.split(" when ")[1]
+        subpackage_name = subpackage_name.split(" when ")[0]
+        real_name += when_statement
     return "subpackage.{}.{}.{}".format(subpackage_name, file_name, real_name)
 
 
 def get_shell_function_name(line):
-    if line.startswith("function"):
-        name = line.strip().split()[1]
-        return parse_function_name(name)
-    if len(line.split()) > 2:
-        return ""
     if "()" not in line:
         return ""
-    name = line.split()[0]
+    if line.startswith("function"):
+        name = line[9:].strip().split("()")[0]
+        return parse_function_name(name)
+    # if len(line.split()) > 2:
+    #     return ""
+    if "()" not in line:
+        return ""
+    name = line.split("()")[0].strip()
     return parse_function_name(name)
 
 
