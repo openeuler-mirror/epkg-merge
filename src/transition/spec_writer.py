@@ -235,6 +235,7 @@ class SpecWriter:
                 remove_list.append(line)
         for line in remove_list:
             macros_line_list.remove(line)
+        self.target_metadata['rpmMacros'] = os.linesep.join(macros_line_list)
         self.target_metadata.setdefault("appliedMacros", {}).setdefault("", os.linesep.join(remove_list))
 
     def merge_compile_flags(self):
