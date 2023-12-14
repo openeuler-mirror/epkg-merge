@@ -367,6 +367,7 @@ class SpecWriter:
                         condition = key[key.find(' rpmWhen ') + 1:]
                     else:
                         sub_name = key[key.find(".") + 1:]
+                        condition = ""
                     sub_values = self.metadata[key]
                     param = "-n " + sub_name
                     self.trans_shell(sub_values, spec_key, condition, param)
