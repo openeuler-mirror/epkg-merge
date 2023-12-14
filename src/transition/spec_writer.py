@@ -228,14 +228,14 @@ class SpecWriter:
                 break
 
     def parse_applied_macros(self):
-        macros_line_list = self.target_matadata['rpmMacros'].split(os.linesep)
+        macros_line_list = self.target_metadata['rpmMacros'].split(os.linesep)
         remove_list = []
         for line in macros_line_list:
             if re.fullmatch("%\{load:%\{SOURCE\w*}}", line):
                 remove_list.append(line)
         for line in remove_list:
             macros_line_list.remove(line)
-        self.target_matadata.setdefault("appliedMacros", {}).setdefault("", os.linesep.join(remove_list))
+        self.target_metadata.setdefault("appliedMacros", {}).setdefault("", os.linesep.join(remove_list))
 
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
