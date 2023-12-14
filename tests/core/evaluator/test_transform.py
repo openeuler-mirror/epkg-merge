@@ -1,7 +1,7 @@
 import unittest
 
 from src.core.evaluator.transform import parse_shell_file, transform_key_with_when, parse_file_name, \
-    transform_key_default, transform_key_with_rpmWhen
+    transform_key_default, transform_key_with_rpmWhen, get_shell_function_name
 
 
 class TestExpand(unittest.TestCase):
@@ -81,11 +81,11 @@ post:%{wxbasename}-devel(){
             "fspath": "fspath"
         }
         res = transform_key_with_when({k1: value})
-        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': '%%use.ssl'}})
+        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': '${{pkg.rpmGlobal.+ssl}}'}})
         res = transform_key_with_when({k2: value})
-        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': '%%use.ssl'}})
+        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': 'ssl'}})
         res = transform_key_with_when({k3: value})
-        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': '{{ not %%use.ssl }}'}})
+        self.assertEqual(res, {'patch.1': {'fspath': 'fspath', 'value': 'test', 'when': '${{pkg.rpmGlobal.-ssl}}'}})
 
     def test_parse_file_name(self):
         file = "/tmp/xxx/runtimePhase.sh"
@@ -95,8 +95,8 @@ post:%{wxbasename}-devel(){
     def test_transform_key_default(self):
         key = "subpackage.help rpmWhen %ifarch %{arm}.summary"
         res = transform_key_default(key, "test", "fs")
-        expectation = {'subpackage.help.summary': {'value': 'test', 'fspath': 'fs', 'when': None},
-                       'subpackage.help:rpmWhen': {'value': '%ifarch %{arm}', 'fspath': 'fs', 'when': None}}
+        expectation = {'subpackage.help rpmWhen %ifarch %{arm}.summary': {
+            'value': 'test', 'fspath': 'fs', 'when': None}}
         self.assertEqual(res, expectation)
 
     def test_transform_key_with_rpmWhen(self):
@@ -117,3 +117,15 @@ post:%{wxbasename}-devel(){
         res = transform_key_with_rpmWhen({k3: value})
         self.assertEqual(res, {'subpackage.python2-perf.files:rpmWhen %{with_perf}':
                                    {'fspath': 'fspath', 'value': 'test'}})
+
+    def test_get_function_name(self):
+        k1 = "function post:${{pkg.name}}-common when ${{pkg.rpmGlobal.f1}}() "
+        k2 = "postun:${{pkg.name}}-devel rpmWhen %{?f2}() {"
+        k3 = "pre:${{pkg.name}}-lib() {"
+        res = get_shell_function_name(k1)
+        self.assertEqual(res, 'post:${{pkg.name}}-common when ${{pkg.rpmGlobal.f1}}')
+        res = get_shell_function_name(k2)
+        self.assertEqual(res, 'postun:${{pkg.name}}-devel rpmWhen %{?f2}')
+        res = get_shell_function_name(k3)
+        self.assertEqual(res, 'pre:${{pkg.name}}-lib')
+
