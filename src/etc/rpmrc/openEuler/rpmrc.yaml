@@ -224,5 +224,5 @@ perl_vendorlib: "%(eval \"`${{rpmGlobal.__perl}} -V:installvendorlib`\"; echo $i
 perl_archlib: "%(eval \"`${{rpmGlobal.__perl}} -V:installarchlib`\"; echo $installarchlib)"
 perl_privlib: "%(eval \"`${{rpmGlobal.__perl}} -V:installprivlib`\"; echo $installprivlib)"
 
-
-
+dist: "%{nil}"
+openEuler: "2"

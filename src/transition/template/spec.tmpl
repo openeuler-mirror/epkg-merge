@@ -243,6 +243,11 @@ $when_list_keys('Obsoletes', 'obsoletes')
 $metadata['description']['']
 #end if
 
+## appliedMacros
+#if 'appliedMacros' in $metadata
+$metadata['appliedMacros']['']
+#end if
+
 ##rpmMacros
 #if 'rpmMacros' in $metadata
 #if '%package' in $metadata['rpmMacros']

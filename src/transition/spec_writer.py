@@ -205,6 +205,7 @@ class SpecWriter:
         self.target_metadata['defineFlags'] = {}
         if 'rpmMacros' in self.metadata:
             self.target_metadata['rpmMacros'] = self.metadata['rpmMacros']
+            self.parse_applied_macros()
         if 'rpmGlobal' in self.metadata:
             self.target_metadata['rpmGlobal'] = self.metadata['rpmGlobal']
         for field in self.metadata:
@@ -225,6 +226,17 @@ class SpecWriter:
                 # todo defineFlags后的值添加为评论
                 self.target_metadata['defineFlags'][condition] = target_dict
                 break
+
+    def parse_applied_macros(self):
+        macros_line_list = self.target_metadata['rpmMacros'].split(os.linesep)
+        remove_list = []
+        for line in macros_line_list:
+            if re.fullmatch("%\{load:%\{SOURCE\w*}}", line):
+                remove_list.append(line)
+        for line in remove_list:
+            macros_line_list.remove(line)
+        self.target_metadata['rpmMacros'] = os.linesep.join(macros_line_list)
+        self.target_metadata.setdefault("appliedMacros", {}).setdefault("", os.linesep.join(remove_list))
 
     def merge_compile_flags(self):
         # configureFlags merge to phase.configure, cmakeFlags merge to phase.cmake
@@ -355,6 +367,7 @@ class SpecWriter:
                         condition = key[key.find(' rpmWhen ') + 1:]
                     else:
                         sub_name = key[key.find(".") + 1:]
+                        condition = ""
                     sub_values = self.metadata[key]
                     param = "-n " + sub_name
                     self.trans_shell(sub_values, spec_key, condition, param)
