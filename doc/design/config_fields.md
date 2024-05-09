@@ -33,10 +33,10 @@
 	Name            =>  name
 	Version         =>  version
 	Release         =>  release
-	Epoch		=>  epoch
+	Epoch		    =>  epoch
 
 	Summary         =>  meta.summary
-	Group		=>  meta.group
+	Group		    =>  meta.group
 	License         =>  meta.license 
 	URL             =>  meta.homepage 
 	%description    =>  meta.description  
@@ -47,7 +47,8 @@
 	Provides        =>  provides
 	Requires        =>  requires
 	BuildRequires   =>  buildRequires
-	(new) 		=>  testRequires
+	(new) 		    =>  testRequires
+	(new) 		    =>  linkRequires
 	Recommends      =>  recommends
 	Suggests        =>  suggests
 	Supplements     =>  supplements
