@@ -398,6 +398,26 @@ patches经常是有一个版本适用范围的，可以用when condition来限�
 - rule2: default ordered by 在yaml里出现的顺序, for the same patchset-name with different when conditions
   (对于多个yaml合并的情况，顺序未定义。建议在自己的yaml中创建新的patchset-name，并以rule3指定依赖)
 
+Example:
+
+```
+patchset:
+    feature1 when 1: patch1
+    feature1 when @v1:v2: patch2 patch3
+    feature1 when arch=aarch64: patch4
+    feature1: patch5 patch6
+
+若以上条件都满足，则合并后为如下顺序：
+
+patchset:
+    feature1: patch1 patch2 patch3 patch4 patch5 patch6
+
+若以上只有版本条件未满足，则合并后为如下顺序：
+
+patchset:
+    feature1: patch1 patch4 patch5 patch6
+```
+
 - rule3: can specify explicit dependencies with attribute ":after"
 
 	patchset.<patchset-name1>:after: <patchset-name2> <patchset-name3>
