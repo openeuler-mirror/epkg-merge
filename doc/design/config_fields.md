@@ -391,6 +391,17 @@ patches经常是有一个版本适用范围的，可以用when condition来限�
 
 	patchset.<patchset-name> when @v1:v2: patches
 
+### patchset 的 apply 顺序
+
+- rule1: default ordered by patchset-name
+
+- rule2: default ordered by 在yaml里出现的顺序, for the same patchset-name with different when conditions
+  (对于多个yaml合并的情况，顺序未定义。建议在自己的yaml中创建新的patchset-name，并以rule3指定依赖)
+
+- rule3: can specify explicit dependencies with attribute ":after"
+
+	patchset.<patchset-name1>:after: <patchset-name2> <patchset-name3>
+
 ## languages 字段
 
 该字段可通过工具扫描source code tree，自动生成/校验/更新。
