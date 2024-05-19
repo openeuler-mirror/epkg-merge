@@ -175,7 +175,7 @@ How do I choose the appropriate "layer type" for my layer?
 - Miscellaneous: if your layer doesn't fall into any other category you can choose this type; however there shouldn't be too many miscellaneous layers and it may be an indication that the purpose isn't well defined or that you should consider splitting the layer.
 
 
-## 取值空间极其删减
+## 取值空间及其删减
 
 对一个包的一个字段的定制，涉及以下几个维度
 1) default value(s): 取值范围是客观的，值的先后顺序可以是主观的

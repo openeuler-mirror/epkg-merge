@@ -561,6 +561,77 @@ Rule3: 真值、假值判断原则同python，但"off"作为假值处理
 
 注意：这一能力先不实现，如果确实用的多，再考虑引入。
 
+## buildRequires 依赖间依赖
+
+一个依赖pkg1可以有对其他依赖pkg2, pkg3, ...的前提条件，此时可以在pkg1前加上&&或者||，
+并在前面加上前提条件：
+
+    buildRequires:
+    - (conditions on pkg2, pkg3, ...) && pkg1
+
+    buildRequires:
+    - (conditions on pkg2, pkg3, ...) || pkg1
+
+举例：
+
+    buildRequires when +WITH_DVO:
+    - dvo_core
+    buildRecommends when +WITH_OKVIS:
+    - okvis = 1.1
+    buildRequires when +WITH_OKVIS:
+    - okvis && brisk = 2
+    - okvis && opengv
+    - okvis && ceres = 1.9.0
+    buildRequires when +WITH_CERES:
+    - (okvis || floam) || ceres
+    buildRequires when +WITH_VINS:
+    - vins
+    buildRequires when +WITH_FLOAM:
+    - floam
+    - floam && ceres
+
+为了解析依赖间依赖，实例化过程需要增加一个递归过程。先假设以上`WITH_xxx`都是true
+
+1. 获得所有确定性依赖，所有条件依赖
+
+    buildRequires:
+    - dvo_core
+    - okvis = 1.1
+    - vins
+    - floam
+
+    buildRequires:
+    - okvis && brisk = 2
+    - okvis && opengv
+    - okvis && ceres = 1.9.0
+    - (okvis || floam) || ceres
+    - floam && ceres
+
+2. 把确定性依赖的值，代入条件依赖(此步骤可递归进行)
+
+    buildRequires:
+    - true && brisk = 2
+    - true && opengv
+    - true && ceres = 1.9.0
+    - (true || true) || ceres
+    - true && ceres
+
+=> 通过条件归约，推导出新的确定性依赖：
+
+    buildRequires:
+    - brisk = 2
+    - opengv
+    - ceres = 1.9.0
+    - !ceres
+    - ceres
+
+=> 保留最严格的依赖
+
+    buildRequires:
+    - brisk = 2
+    - opengv
+    - ceres = 1.9.0
+
 ## python import modules/functions 列表
 
 YAML python code应当是无副作用的纯函数，禁止访问本地存储、网络、时钟、随机数等外在数据源。
