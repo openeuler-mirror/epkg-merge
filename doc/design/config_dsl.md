@@ -442,17 +442,20 @@ YAML内置python code可以引用如下两类函数
 可用YAML表达为
 
 	var1!: func1()
-	var2!: func2(d.var1)
-	var3!: func3(d.var2)
+	var2!: func2(${{pkg.var1}})
+	var3!: func3(${{pkg.var2}})
 
 这样任何一个环节的数据，都可以被overlay定制。
 
 最好进一步把中间变量放在特定名字空间下，以便设置规则，防止非预期的修改和环境变量污染。
 并带上类型信息：
 
-	var.str.var1!: func1()
-	var.int.var2!: func2(d.var.str.var1)
-	var.bool.var3!: func3(d.var.int.var2)
+	var.var1!: func1()
+	var.var1:type: string # the default type if not specified
+	var.var2!: func2(${{pkg.var.var1}})
+	var.var2:type: int
+	var.var3!: func3(${{pkg.var.var2}})
+	var.var3:type: bool
 
 ## 条件取值 (when condition in key)
 
@@ -673,7 +676,6 @@ YAML python code里禁止自行import libs。只能使用python语言服务沙�
 	is_oneof(str, seq)
 	is_pattern(str, regex)		# matches regex
 	is_package(str)			# package name
-	is_path(str)			# path name
 	is_PATH(str)			# shell PATH
 	is_version(str)			# version string
 	is_release(str)			# RPM release string

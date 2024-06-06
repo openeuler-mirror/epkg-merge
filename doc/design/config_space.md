@@ -16,7 +16,7 @@
 	pkgs.bash:referAttrs: types.package
 
 	pkgs.bash.name: bash
-	pkgs.bash.name:type: str
+	pkgs.bash.name:type: string
 
 	types.package
 

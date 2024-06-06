@@ -6,13 +6,15 @@
 
 	:type 属性
 		bool
-		str (default)
+		string (default)
+		stringSet (字符串集合，保序，无重复)
+		dir
+		file
 		int
 		float
-		strSet (字符串集合，保序，无重复)
 
 	:checkFunc 属性
-		str:
+		string:
 			is_oneof(list)
 			is_someof(list, separator=',')
 			is_pattern(regex)	# matches regex
@@ -29,10 +31,10 @@
 		# - replace for basic types
 		# - append  for array types
 		# 请勿设置以上缺省值，以利于未来演进
-		str:
+		string:
 			replace
 			concat(sep) 	# ensures unique parts
-		strSet:
+		stringSet:
 			append		# ensures unique items
 
 其中引用的函数，一般直接在rust定义，以达到最高效率。
@@ -48,25 +50,25 @@
 
 在config space预定义如下常见高级类型
 
-	types.path:type: str
+	types.path:type: string
 	types.path:checkFunc: is_path
 	types.path:doc: filesystem path name
 	types.path:example: pkgs/bash/bash.yaml
 
-	types.PATH:type: str
+	types.PATH:type: string
 	types.PATH:checkFunc: is_PATH
 
 	types.package:validSubkeys: name version versions release meta source patchset requires buildRequires subpackage phase runtimePhase includePhase includeRuntimePhase includeLib files use env ...
-	types.package.name:type: str
-	types.package.version:type: str
+	types.package.name:type: string
+	types.package.version:type: string
 	types.package.version:checkFunc: is_version
-	types.package.release:type: str
+	types.package.release:type: string
 	types.package.release:checkFunc: is_release
-	types.package.meta:type: str
-	types.package.phase:type: str
+	types.package.meta:type: string
+	types.package.phase:type: string
 	types.package.phase:mergeFunc: concat
 	types.package.phase:mergeParams: "\n"
-	types.package.includePhase:type: str
+	types.package.includePhase:type: string
 	types.package.includePhase:checkFunc: is_path
 	types.package.includePhase:transformFunc: transform_phase
 	...
@@ -83,7 +85,7 @@
 	pkgs.bash.phase.build:type <not found>
 	pkgs.bash.phase.build:referAttrs <not found>
 	pkgs.bash.phase:referAttrs = types.package.phase <found, redirect>
-	types.package.phase:type = str <found, finish>
+	types.package.phase:type = string <found, finish>
 
 	pkgs.bash.version:checkFunc <not found>
 	pkgs.bash.version:referAttrs <not found>
@@ -107,7 +109,7 @@
 	`types.ints.{u8, u16, u32}`
 	`types.ints.positive`
 	`types.port`
-	`types.str`
+	`types.string`
 	`types.lines`
 	`types.commas`
 	`types.envVar`
