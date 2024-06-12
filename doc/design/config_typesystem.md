@@ -66,8 +66,6 @@
 	types.package.release:checkFunc: is_release
 	types.package.meta:type: string
 	types.package.phase:type: string
-	types.package.phase:mergeFunc: concat
-	types.package.phase:mergeParams: "\n"
 	types.package.includePhase:type: string
 	types.package.includePhase:checkFunc: is_path
 	types.package.includePhase:transformFunc: transform_phase

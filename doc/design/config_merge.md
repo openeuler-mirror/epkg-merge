@@ -321,7 +321,7 @@ Express needs (declarative) instead of changing things then collide.
 (bbappend文件数量只有bb文件的1/10，内容更少)
 
 2)
-很多字段(patches, phase scripts)都是数组类型，各layer只需定义好
+很多字段(patches, buildRequires)都是数组类型，各layer只需定义好
 
 	key when condition: item
 
